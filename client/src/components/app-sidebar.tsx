@@ -22,7 +22,7 @@ import {
   SidebarMenuItem,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import logoUrl from "@assets/Eska Logo.png";
+import logoUrl from "@assets/ESKA LOGO TASARIMI2_1761496920659.png";
 
 const menuItems = [
   { title: "Ana Sayfa", url: "/", icon: Home },
@@ -42,12 +42,15 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="p-6 border-b border-sidebar-border">
-        <div className="flex items-center gap-4">
-          <img src={logoUrl} alt="Eska Yapı" className="h-14 w-auto" />
-          <div>
-            <h2 className="text-base font-bold text-sidebar-foreground">ESKA YAPI</h2>
-            <p className="text-sm text-muted-foreground">Proje Yönetim</p>
+      <SidebarHeader className="p-6 border-b border-sidebar-border bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <img 
+            src={logoUrl} 
+            alt="ESKA Logo" 
+            className="h-16 w-auto object-contain"
+          />
+          <div className="text-center">
+            <p className="text-xs font-medium text-sidebar-foreground leading-tight">İnşaat Proje Yönetim Sistemi</p>
           </div>
         </div>
       </SidebarHeader>

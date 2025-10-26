@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { PrintHeaderFooter } from "@/components/print-header-footer";
 import { Moon, Sun, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
@@ -23,7 +24,7 @@ import Reports from "@/pages/reports";
 import Invoices from "@/pages/invoices";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
-import logoUrl from "@assets/Eska Logo.png";
+import logoUrl from "@assets/ESKA LOGO TASARIMI2_1761496920659.png";
 
 function ThemeToggle() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -109,6 +110,7 @@ function AppContent() {
   return (
     <TooltipProvider>
       <SidebarProvider style={style as React.CSSProperties}>
+        <PrintHeaderFooter />
         <div className="flex h-screen w-full">
           <AppSidebar />
           <div className="flex flex-col flex-1 overflow-hidden">
@@ -116,8 +118,12 @@ function AppContent() {
               <div className="flex items-center gap-3">
                 <SidebarTrigger data-testid="button-sidebar-toggle" />
                 <div className="flex items-center gap-2">
-                  <img src={logoUrl} alt="Eska Yapı" className="h-10 w-auto" />
-                  <h1 className="text-lg font-bold">ESKA YAPI</h1>
+                  <img 
+                    src={logoUrl} 
+                    alt="ESKA" 
+                    className="h-10 w-auto object-contain"
+                  />
+                  <span className="text-xs font-medium">İnşaat Proje Yönetim Sistemi</span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -125,7 +131,7 @@ function AppContent() {
                 <LogoutButton />
               </div>
             </header>
-            <main className="flex-1 overflow-auto p-6 bg-background">
+            <main className="flex-1 overflow-auto p-6 bg-background print:pt-28 print:pb-20">
               <Router />
             </main>
           </div>
