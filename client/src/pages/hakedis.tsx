@@ -378,10 +378,12 @@ export default function Hakedis() {
                     <TableHead>Hakediş No</TableHead>
                     <TableHead>Proje</TableHead>
                     <TableHead>Tarih</TableHead>
-                    <TableHead>Açıklama</TableHead>
                     <TableHead className="text-right">Tutar</TableHead>
+                    <TableHead className="text-right">Müt. %</TableHead>
+                    <TableHead className="text-right">Brüt Tutar</TableHead>
+                    <TableHead className="text-right">Avans Kesinti</TableHead>
+                    <TableHead className="text-right">Net Ödeme</TableHead>
                     <TableHead className="text-right">Tahsil</TableHead>
-                    <TableHead className="text-right">Kalan</TableHead>
                     <TableHead>Durum</TableHead>
                     <TableHead className="text-right">İşlemler</TableHead>
                   </TableRow>
@@ -389,7 +391,12 @@ export default function Hakedis() {
                 <TableBody>
                   {filteredPayments.map((payment) => {
                     const project = projects.find(p => p.id === payment.projectId);
-                    const remaining = parseFloat(payment.amount as string) - parseFloat(payment.receivedAmount as string);
+                    const amount = parseFloat(payment.amount as string);
+                    const contractorFeeRate = parseFloat(payment.contractorFeeRate as string) || 0;
+                    const grossAmount = parseFloat(payment.grossAmount as string) || (amount + (amount * contractorFeeRate / 100));
+                    const advanceDeduction = parseFloat(payment.advanceDeduction as string) || 0;
+                    const netPayment = parseFloat(payment.netPayment as string) || (grossAmount - advanceDeduction);
+                    const receivedAmount = parseFloat(payment.receivedAmount as string);
                     
                     return (
                       <TableRow key={payment.id} data-testid={`row-payment-${payment.id}`}>
@@ -402,15 +409,23 @@ export default function Hakedis() {
                         <TableCell>
                           {format(parseISO(payment.date as string), "dd MMM yyyy", { locale: tr })}
                         </TableCell>
-                        <TableCell className="max-w-[200px] truncate">{payment.description}</TableCell>
                         <TableCell className="text-right font-mono">
-                          {parseFloat(payment.amount as string).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                          {amount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-sm text-muted-foreground">
+                          {contractorFeeRate > 0 ? `%${contractorFeeRate.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}` : "-"}
+                        </TableCell>
+                        <TableCell className="text-right font-mono font-semibold">
+                          {grossAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-destructive">
+                          {advanceDeduction > 0 ? `-${advanceDeduction.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL` : "-"}
+                        </TableCell>
+                        <TableCell className="text-right font-mono font-semibold text-primary">
+                          {netPayment.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
                         </TableCell>
                         <TableCell className="text-right font-mono">
-                          {parseFloat(payment.receivedAmount as string).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {remaining.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                          {receivedAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
                         </TableCell>
                         <TableCell>
                           <Badge 
@@ -598,6 +613,151 @@ export default function Hakedis() {
                       <FormMessage />
                     </FormItem>
                   )}
+                />
+
+                {/* Contractor Fee Rate */}
+                <FormField
+                  control={form.control}
+                  name="contractorFeeRate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Müteahhitlik Oranı (%)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          {...field}
+                          value={field.value || ""}
+                          data-testid="input-contractor-fee-rate"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Gross Amount (calculated) */}
+                <FormField
+                  control={form.control}
+                  name="grossAmount"
+                  render={({ field }) => {
+                    const amount = parseFloat(form.watch("amount") || "0");
+                    const contractorFeeRate = parseFloat(form.watch("contractorFeeRate") || "0");
+                    const grossAmount = amount + (amount * contractorFeeRate / 100);
+                    
+                    // Update form value
+                    if (field.value !== grossAmount.toFixed(2)) {
+                      form.setValue("grossAmount", grossAmount.toFixed(2));
+                    }
+
+                    return (
+                      <FormItem>
+                        <FormLabel>Brüt Tutar (TL)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="text"
+                            value={grossAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            readOnly
+                            className="bg-muted"
+                            data-testid="input-gross-amount"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
+                />
+
+                {/* Advance Deduction Rate */}
+                <FormField
+                  control={form.control}
+                  name="advanceDeductionRate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Avans Kesinti Oranı (%)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          {...field}
+                          value={field.value || ""}
+                          data-testid="input-advance-deduction-rate"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Advance Deduction (calculated) */}
+                <FormField
+                  control={form.control}
+                  name="advanceDeduction"
+                  render={({ field }) => {
+                    const amount = parseFloat(form.watch("amount") || "0");
+                    const contractorFeeRate = parseFloat(form.watch("contractorFeeRate") || "0");
+                    const advanceDeductionRate = parseFloat(form.watch("advanceDeductionRate") || "0");
+                    const grossAmount = amount + (amount * contractorFeeRate / 100);
+                    const advanceDeduction = grossAmount * (advanceDeductionRate / 100);
+                    
+                    // Update form value
+                    if (field.value !== advanceDeduction.toFixed(2)) {
+                      form.setValue("advanceDeduction", advanceDeduction.toFixed(2));
+                    }
+
+                    return (
+                      <FormItem>
+                        <FormLabel>Avans Kesintisi (TL)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="text"
+                            value={advanceDeduction.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            readOnly
+                            className="bg-muted"
+                            data-testid="input-advance-deduction"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
+                />
+
+                {/* Net Payment (calculated) */}
+                <FormField
+                  control={form.control}
+                  name="netPayment"
+                  render={({ field }) => {
+                    const amount = parseFloat(form.watch("amount") || "0");
+                    const contractorFeeRate = parseFloat(form.watch("contractorFeeRate") || "0");
+                    const advanceDeductionRate = parseFloat(form.watch("advanceDeductionRate") || "0");
+                    const grossAmount = amount + (amount * contractorFeeRate / 100);
+                    const advanceDeduction = grossAmount * (advanceDeductionRate / 100);
+                    const netPayment = grossAmount - advanceDeduction;
+                    
+                    // Update form value
+                    if (field.value !== netPayment.toFixed(2)) {
+                      form.setValue("netPayment", netPayment.toFixed(2));
+                    }
+
+                    return (
+                      <FormItem>
+                        <FormLabel>Net Ödeme (TL)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="text"
+                            value={netPayment.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            readOnly
+                            className="bg-muted font-semibold"
+                            data-testid="input-net-payment"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
 
                 {/* Received Amount */}
