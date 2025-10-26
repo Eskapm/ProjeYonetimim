@@ -138,7 +138,7 @@ export default function Projects() {
       status: "Planlama",
       description: "",
       notes: "",
-      customerId: "",
+      customerId: undefined,
     },
   });
 
@@ -152,7 +152,8 @@ export default function Projects() {
       endDate: data.endDate || null,
       description: data.description || null,
       notes: data.notes || null,
-      customerId: data.customerId || null,
+      // Explicitly convert empty string or undefined to null
+      customerId: (data.customerId === "" || !data.customerId) ? null : data.customerId,
     };
 
     if (editingProject) {

@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertProjectSchema, insertCustomerSchema, insertSubcontractorSchema, insertTransactionSchema, insertSiteDiarySchema } from "@shared/schema";
+import { ZodError } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes: /api/register, /api/login, /api/logout, /api/user
@@ -49,7 +50,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(project);
     } catch (error: any) {
-      if (error.name === 'ZodError') {
+      if (error instanceof ZodError) {
         return res.status(400).send(error.message || "Geçersiz proje verisi");
       }
       res.status(500).send("Proje güncellenirken hata oluştu");
@@ -97,7 +98,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(customer);
     } catch (error: any) {
-      if (error.name === 'ZodError') {
+      if (error instanceof ZodError) {
         return res.status(400).send(error.message || "Geçersiz müşteri verisi");
       }
       res.status(500).send("Müşteri güncellenirken hata oluştu");
@@ -145,7 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(subcontractor);
     } catch (error: any) {
-      if (error.name === 'ZodError') {
+      if (error instanceof ZodError) {
         return res.status(400).send(error.message || "Geçersiz taşeron verisi");
       }
       res.status(500).send("Taşeron güncellenirken hata oluştu");
@@ -193,7 +194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(transaction);
     } catch (error: any) {
-      if (error.name === 'ZodError') {
+      if (error instanceof ZodError) {
         return res.status(400).send(error.message || "Geçersiz işlem verisi");
       }
       res.status(500).send("İşlem güncellenirken hata oluştu");
@@ -241,7 +242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(entry);
     } catch (error: any) {
-      if (error.name === 'ZodError') {
+      if (error instanceof ZodError) {
         return res.status(400).send(error.message || "Geçersiz şantiye defteri verisi");
       }
       res.status(500).send("Şantiye defteri güncellenirken hata oluştu");
