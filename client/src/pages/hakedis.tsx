@@ -53,6 +53,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { format, parseISO } from "date-fns";
 import { tr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import eskaLogo from "@assets/ESKA LOGO TASARIMI_1761521113587.png";
 import {
   Table,
   TableBody,
@@ -1029,19 +1030,13 @@ export default function Hakedis() {
       <Dialog open={viewingPaymentDetail !== null} onOpenChange={(open) => !open && setViewingPaymentDetail(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
-                <DialogTitle className="text-lg leading-tight">
-                  Eska Yapı Mühendislik İnşaat<br />
-                  Emlak Turizm ve Ticaret Limited Şirketi
-                </DialogTitle>
-                <DialogDescription className="mt-2 text-xs space-y-0.5">
-                  <div>Tel: 0505 821 54 79</div>
-                  <div>E-mail: enginkayserili@gmail.com</div>
-                  <div className="mt-2 text-muted-foreground">
-                    {projects.find(p => p.id === viewingPaymentDetail?.projectId)?.name || "Proje"} - Hakediş #{viewingPaymentDetail?.paymentNumber}
-                  </div>
-                </DialogDescription>
+                <img 
+                  src={eskaLogo} 
+                  alt="Eska Yapı Logo" 
+                  className="h-20 w-auto object-contain"
+                />
               </div>
               <Button
                 variant="outline"
@@ -1062,11 +1057,12 @@ export default function Hakedis() {
               <div className="hidden print:block">
                 <div className="flex items-start justify-between mb-6 pb-4 border-b-2 border-black">
                   <div>
-                    <h1 className="text-lg font-bold leading-tight">
-                      Eska Yapı Mühendislik İnşaat<br />
-                      Emlak Turizm ve Ticaret Limited Şirketi
-                    </h1>
-                    <p className="text-xs text-gray-600 mt-2">
+                    <img 
+                      src={eskaLogo} 
+                      alt="Eska Yapı Logo" 
+                      className="h-16 w-auto object-contain mb-2"
+                    />
+                    <p className="text-xs text-gray-600">
                       Tel: 0505 821 54 79 | E-mail: enginkayserili@gmail.com
                     </p>
                   </div>
