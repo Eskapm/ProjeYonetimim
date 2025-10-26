@@ -43,11 +43,11 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="p-6 border-b border-sidebar-border">
-        <div className="flex items-center gap-3">
-          <img src={logoUrl} alt="Eska Yapı" className="h-8 w-auto" />
+        <div className="flex items-center gap-4">
+          <img src={logoUrl} alt="Eska Yapı" className="h-14 w-auto" />
           <div>
-            <h2 className="text-sm font-semibold text-sidebar-foreground">ESKA YAPI</h2>
-            <p className="text-xs text-muted-foreground">Proje Yönetim</p>
+            <h2 className="text-base font-bold text-sidebar-foreground">ESKA YAPI</h2>
+            <p className="text-sm text-muted-foreground">Proje Yönetim</p>
           </div>
         </div>
       </SidebarHeader>

@@ -19,6 +19,7 @@ import Subcontractors from "@/pages/subcontractors";
 import Customers from "@/pages/customers";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
+import logoUrl from "@assets/Eska Logo.png";
 
 function ThemeToggle() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -104,7 +105,13 @@ function AppContent() {
           <AppSidebar />
           <div className="flex flex-col flex-1 overflow-hidden">
             <header className="flex items-center justify-between p-4 border-b border-border">
-              <SidebarTrigger data-testid="button-sidebar-toggle" />
+              <div className="flex items-center gap-3">
+                <SidebarTrigger data-testid="button-sidebar-toggle" />
+                <div className="flex items-center gap-2">
+                  <img src={logoUrl} alt="Eska Yapı" className="h-10 w-auto" />
+                  <h1 className="text-lg font-bold">ESKA YAPI</h1>
+                </div>
+              </div>
               <div className="flex items-center gap-2">
                 <ThemeToggle />
                 <LogoutButton />
