@@ -4,6 +4,21 @@
 
 This is a construction project management system for Eska Yapı Mühendislik İnşaat Emlak Turizm ve Ticaret Limited Şirketi. The application is designed to manage construction projects, track financial transactions, maintain site diaries, manage subcontractors and customers, and calculate Turkish tax obligations. The interface is entirely in Turkish and follows Material Design principles adapted for enterprise construction management.
 
+## Recent Changes (October 26, 2025)
+
+**Reports Module Completed**:
+- Comprehensive financial analytics dashboard with real-time data
+- Date filtering system (Tüm Zamanlar, Bu Ay, Bu Yıl, Özel Tarih Aralığı)
+- Financial summary cards displaying total income, expenses, and net profit
+- Tax summary card showing KDV, corporate tax, net profit after tax, and total tax burden
+- Monthly income/expense trend chart (LineChart) with chronological ordering
+- Category analysis with pie charts for İş Grubu and Rayiç Grubu expense breakdowns
+- Project-wise financial analysis table with profit/loss indicators
+- All date filters use inclusive end-of-day timestamps (23:59:59.999) for accurate reporting
+- Monthly trends sorted by YYYY-MM keys for proper chronological display
+- Tax calculations use per-transaction arrays for accurate KDV computation
+- E2E tested and verified working correctly
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
