@@ -129,10 +129,7 @@ export default function WorkSchedule() {
 
   const createTaskMutation = useMutation({
     mutationFn: async (data: InsertTask) => {
-      return await apiRequest("/api/tasks", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return await apiRequest("POST", "/api/tasks", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
@@ -154,10 +151,7 @@ export default function WorkSchedule() {
 
   const updateTaskMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<InsertTask> }) => {
-      return await apiRequest(`/api/tasks/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      });
+      return await apiRequest("PATCH", `/api/tasks/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
@@ -180,9 +174,7 @@ export default function WorkSchedule() {
 
   const deleteTaskMutation = useMutation({
     mutationFn: async (id: string) => {
-      return await apiRequest(`/api/tasks/${id}`, {
-        method: "DELETE",
-      });
+      return await apiRequest("DELETE", `/api/tasks/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
@@ -201,10 +193,20 @@ export default function WorkSchedule() {
   });
 
   const onSubmit = (data: TaskFormValues) => {
+    // Convert empty strings to null for optional fields
+    const cleanedData = {
+      ...data,
+      projectId: data.projectId || null,
+      description: data.description || null,
+      startDate: data.startDate || null,
+      dueDate: data.dueDate || null,
+      assignedTo: data.assignedTo || null,
+    };
+    
     if (editingTask) {
-      updateTaskMutation.mutate({ id: editingTask.id, data });
+      updateTaskMutation.mutate({ id: editingTask.id, data: cleanedData });
     } else {
-      createTaskMutation.mutate(data as InsertTask);
+      createTaskMutation.mutate(cleanedData as InsertTask);
     }
   };
 
