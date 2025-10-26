@@ -2,7 +2,7 @@ import { StatsCard } from "@/components/stats-card";
 import { ProjectCard } from "@/components/project-card";
 import { TransactionTable } from "@/components/transaction-table";
 import { PrintButton } from "@/components/print-button";
-import { FolderKanban, TrendingUp, TrendingDown, DollarSign, Plus } from "lucide-react";
+import { FolderKanban, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -97,24 +97,6 @@ export default function Dashboard() {
           value="12"
           icon={FolderKanban}
           description="Aktif: 8, Tamamlanan: 4"
-        />
-        <StatsCard
-          title="Toplam Gelir"
-          value="₺2,450,000"
-          icon={TrendingUp}
-          trend={{ value: 12.5, isPositive: true }}
-        />
-        <StatsCard
-          title="Toplam Gider"
-          value="₺1,850,000"
-          icon={TrendingDown}
-          trend={{ value: 8.2, isPositive: false }}
-        />
-        <StatsCard
-          title="Net Kar"
-          value="₺600,000"
-          icon={DollarSign}
-          description="Bu ay"
         />
       </div>
 

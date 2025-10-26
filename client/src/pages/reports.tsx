@@ -1,7 +1,7 @@
 import { PrintButton } from "@/components/print-button";
-import { Button } from "@/components/ui/button";
+import { StatsCard } from "@/components/stats-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, BarChart3, TrendingUp, PieChart } from "lucide-react";
+import { FileText, BarChart3, TrendingUp, TrendingDown, DollarSign, PieChart } from "lucide-react";
 
 export default function Reports() {
   return (
@@ -12,6 +12,27 @@ export default function Reports() {
           <p className="text-muted-foreground mt-1">Detaylı analiz ve raporlama</p>
         </div>
         <PrintButton />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <StatsCard
+          title="Toplam Gelir"
+          value="₺2,450,000"
+          icon={TrendingUp}
+          trend={{ value: 12.5, isPositive: true }}
+        />
+        <StatsCard
+          title="Toplam Gider"
+          value="₺1,850,000"
+          icon={TrendingDown}
+          trend={{ value: 8.2, isPositive: false }}
+        />
+        <StatsCard
+          title="Net Kar"
+          value="₺600,000"
+          icon={DollarSign}
+          description="Bu ay"
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
