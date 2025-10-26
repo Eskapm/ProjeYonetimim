@@ -58,6 +58,7 @@ export const projects = pgTable("projects", {
   contractType: text("contract_type"),
   contractAmount: decimal("contract_amount", { precision: 15, scale: 2 }),
   profitMargin: decimal("profit_margin", { precision: 5, scale: 2 }),
+  advancePayment: decimal("advance_payment", { precision: 15, scale: 2 }).default("0"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -274,6 +275,11 @@ export const progressPayments = pgTable("progress_payments", {
   description: text("description").notNull(),
   workCompleted: text("work_completed"),
   amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  contractorFeeRate: decimal("contractor_fee_rate", { precision: 5, scale: 2 }).default("0"),
+  grossAmount: decimal("gross_amount", { precision: 15, scale: 2 }),
+  advanceDeductionRate: decimal("advance_deduction_rate", { precision: 5, scale: 2 }).default("0"),
+  advanceDeduction: decimal("advance_deduction", { precision: 15, scale: 2 }).default("0"),
+  netPayment: decimal("net_payment", { precision: 15, scale: 2 }),
   receivedAmount: decimal("received_amount", { precision: 15, scale: 2 }).default("0"),
   status: text("status").notNull().default("Bekliyor"),
   dueDate: date("due_date"),
