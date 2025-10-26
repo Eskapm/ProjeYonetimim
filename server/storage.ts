@@ -15,6 +15,8 @@ import {
   type InsertSiteDiary,
   type Timesheet,
   type InsertTimesheet,
+  type Invoice,
+  type InsertInvoice,
   users,
   projects,
   customers,
@@ -22,6 +24,7 @@ import {
   transactions,
   siteDiary,
   timesheets,
+  invoices,
 } from "@shared/schema";
 import session, { type Store } from "express-session";
 import createMemoryStore from "memorystore";
@@ -75,6 +78,13 @@ export interface IStorage {
   createTimesheet(timesheet: InsertTimesheet): Promise<Timesheet>;
   updateTimesheet(id: string, timesheet: Partial<InsertTimesheet>): Promise<Timesheet | undefined>;
   deleteTimesheet(id: string): Promise<boolean>;
+
+  // Invoice methods
+  getInvoices(): Promise<Invoice[]>;
+  getInvoice(id: string): Promise<Invoice | undefined>;
+  createInvoice(invoice: InsertInvoice): Promise<Invoice>;
+  updateInvoice(id: string, invoice: Partial<InsertInvoice>): Promise<Invoice | undefined>;
+  deleteInvoice(id: string): Promise<boolean>;
 
   sessionStore: Store;
 }
@@ -251,6 +261,31 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTimesheet(id: string): Promise<boolean> {
     const result = await db.delete(timesheets).where(eq(timesheets.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Invoice methods
+  async getInvoices(): Promise<Invoice[]> {
+    return await db.select().from(invoices);
+  }
+
+  async getInvoice(id: string): Promise<Invoice | undefined> {
+    const [invoice] = await db.select().from(invoices).where(eq(invoices.id, id)).limit(1);
+    return invoice;
+  }
+
+  async createInvoice(invoice: InsertInvoice): Promise<Invoice> {
+    const [newInvoice] = await db.insert(invoices).values(invoice).returning();
+    return newInvoice;
+  }
+
+  async updateInvoice(id: string, invoice: Partial<InsertInvoice>): Promise<Invoice | undefined> {
+    const [updated] = await db.update(invoices).set(invoice).where(eq(invoices.id, id)).returning();
+    return updated;
+  }
+
+  async deleteInvoice(id: string): Promise<boolean> {
+    const result = await db.delete(invoices).where(eq(invoices.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 }

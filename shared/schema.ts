@@ -31,6 +31,12 @@ export const taskStatusEnum = ["Bekliyor", "Devam Ediyor", "Tamamlandı", "İpta
 // İşlem tipleri
 export const transactionTypeEnum = ["Gelir", "Gider"] as const;
 
+// Fatura tipleri
+export const invoiceTypeEnum = ["Alış", "Satış"] as const;
+
+// Fatura durumları
+export const invoiceStatusEnum = ["Ödenmedi", "Kısmi Ödendi", "Ödendi"] as const;
+
 // Projeler tablosu
 export const projects = pgTable("projects", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -118,11 +124,21 @@ export type Transaction = typeof transactions.$inferSelect;
 // Faturalar tablosu
 export const invoices = pgTable("invoices", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  projectId: varchar("project_id").notNull(),
   invoiceNumber: text("invoice_number").notNull(),
+  type: text("type").notNull(), // Alış veya Satış
+  projectId: varchar("project_id"), // Optional - fatura bir projeye bağlı olabilir
+  customerId: varchar("customer_id"), // Satış faturası için müşteri
+  subcontractorId: varchar("subcontractor_id"), // Alış faturası için taşeron
   date: date("date").notNull(),
-  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  dueDate: date("due_date"), // Vade tarihi
+  subtotal: decimal("subtotal", { precision: 12, scale: 2 }).notNull(), // KDV hariç tutar
+  taxRate: decimal("tax_rate", { precision: 5, scale: 2 }).notNull().default("20"), // KDV oranı (%)
+  taxAmount: decimal("tax_amount", { precision: 12, scale: 2 }).notNull(), // KDV tutarı
+  total: decimal("total", { precision: 12, scale: 2 }).notNull(), // KDV dahil toplam
+  status: text("status").notNull().default("Ödenmedi"), // Ödeme durumu
+  paidAmount: decimal("paid_amount", { precision: 12, scale: 2 }).default("0"), // Ödenen tutar
   description: text("description"),
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

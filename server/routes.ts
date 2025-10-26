@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { insertProjectSchema, insertCustomerSchema, insertSubcontractorSchema, insertTransactionSchema, insertSiteDiarySchema, insertTimesheetSchema } from "@shared/schema";
+import { insertProjectSchema, insertCustomerSchema, insertSubcontractorSchema, insertTransactionSchema, insertSiteDiarySchema, insertTimesheetSchema, insertInvoiceSchema } from "@shared/schema";
 import { ZodError } from "zod";
 
 // Authentication middleware - Giriş yapmayan kullanıcıları engeller
@@ -332,6 +332,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.sendStatus(204);
     } catch (error) {
       res.status(500).send("Puantaj kaydı silinirken hata oluştu");
+    }
+  });
+
+  // Invoice routes
+  app.get("/api/invoices", requireAuth, async (req, res) => {
+    try {
+      const invoices = await storage.getInvoices();
+      res.json(invoices);
+    } catch (error) {
+      res.status(500).send("Faturalar yüklenirken hata oluştu");
+    }
+  });
+
+  app.post("/api/invoices", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertInvoiceSchema.parse(req.body);
+      const invoice = await storage.createInvoice(validatedData);
+      res.status(201).json(invoice);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        console.error("Invoice validation error:", error.errors);
+        return res.status(400).send(error.message || "Geçersiz fatura verisi");
+      }
+      console.error("Invoice creation error:", error);
+      res.status(500).send("Fatura oluşturulurken hata oluştu");
+    }
+  });
+
+  app.patch("/api/invoices/:id", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertInvoiceSchema.partial().parse(req.body);
+      const invoice = await storage.updateInvoice(req.params.id, validatedData);
+      if (!invoice) {
+        return res.status(404).send("Fatura bulunamadı");
+      }
+      res.json(invoice);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).send(error.message || "Geçersiz fatura verisi");
+      }
+      res.status(500).send("Fatura güncellenirken hata oluştu");
+    }
+  });
+
+  app.delete("/api/invoices/:id", requireAuth, async (req, res) => {
+    try {
+      const success = await storage.deleteInvoice(req.params.id);
+      if (!success) {
+        return res.status(404).send("Fatura bulunamadı");
+      }
+      res.sendStatus(204);
+    } catch (error) {
+      res.status(500).send("Fatura silinirken hata oluştu");
     }
   });
 

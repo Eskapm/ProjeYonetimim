@@ -72,9 +72,33 @@ export function setupAuth(app: Express) {
     done(null, user);
   });
 
-  // Kayıt sistemi KAPALI - Tek kullanıcılı sistem için güvenlik
+  // Kayıt sistemi - Sadece development ortamında aktif
   app.post("/api/register", async (req, res) => {
-    res.status(403).send("Kayıt sistemi kapatılmıştır. Yönetici ile iletişime geçin.");
+    // Production ortamında kayıt kapalı
+    if (process.env.NODE_ENV === "production") {
+      return res.status(403).send("Kayıt sistemi kapatılmıştır. Yönetici ile iletişime geçin.");
+    }
+
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).send("Kullanıcı adı ve şifre gereklidir.");
+    }
+
+    const existingUser = await storage.getUserByUsername(username);
+    if (existingUser) {
+      return res.status(400).send("Bu kullanıcı adı zaten kullanılıyor.");
+    }
+
+    const hashedPassword = await hashPassword(password);
+    const user = await storage.createUser({
+      username,
+      password: hashedPassword,
+    });
+
+    // Remove password from response
+    const { password: _, ...userWithoutPassword } = user;
+    res.status(201).json(userWithoutPassword);
   });
 
   app.post("/api/login", passport.authenticate("local"), (req, res) => {

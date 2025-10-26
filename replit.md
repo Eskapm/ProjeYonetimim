@@ -58,15 +58,16 @@ Preferred communication style: Simple, everyday language.
 - 401 responses handled gracefully in frontend
 
 **Storage Interface**:
-- Abstraction layer (IStorage interface) allows switching between in-memory and database storage
-- Currently using MemStorage for development
-- Prepared for PostgreSQL/Neon database integration via Drizzle ORM
+- Abstraction layer (IStorage interface) supports both in-memory and database storage
+- **Currently using DatabaseStorage with PostgreSQL/Neon** for persistent data
+- Drizzle ORM for type-safe database operations
 
 **Key Design Decisions**:
-- Storage abstraction pattern enables easy migration from in-memory to persistent database
+- Storage abstraction pattern enables easy migration between storage implementations
 - Middleware pattern for request logging and JSON response capture
 - Session secret configuration with environment variable support
 - Credential-based authentication suitable for enterprise internal tools
+- Registration endpoint restricted to development environment only for security
 
 ### Data Schema
 
@@ -81,6 +82,7 @@ Preferred communication style: Simple, everyday language.
 - **Site Diary Entries**: Daily construction logs with weather, work done, materials, workers
 - **Budget Items**: Detailed cost estimation with quantity, unit pricing, and categorization
 - **Timesheets**: Worker hour tracking by work group
+- **Invoices**: Sales (Satış) and purchase (Alış) invoice management with automatic KDV calculation, payment tracking, customer/subcontractor linking, and optional project association
 
 **Categorization System**:
 - İş Grubu (Work Groups): Kaba İmalat, İnce İmalat, Mekanik Tesisat, Elektrik Tesisat, Çevre Düzenlemesi ve Altyapı, Genel Giderler ve Endirekt Giderler
