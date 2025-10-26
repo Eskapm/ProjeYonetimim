@@ -317,6 +317,7 @@ export default function Projects() {
                 endDate={project.endDate || undefined}
                 status={project.status}
                 costPerSqm={projectWithCost.costPerSqm}
+                onView={() => {}}
                 onEdit={() => handleEditProject(project)}
                 onDelete={() => handleDeleteProject(project.id)}
               />

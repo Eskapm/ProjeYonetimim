@@ -8,6 +8,7 @@ import { FolderKanban, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import {
   Dialog,
   DialogContent,
@@ -42,6 +43,8 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [deleteProjectId, setDeleteProjectId] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Fetch projects from API
@@ -72,12 +75,60 @@ export default function Dashboard() {
         description: "Proje başarıyla oluşturuldu",
       });
       setIsDialogOpen(false);
+      setEditingProject(null);
       form.reset();
     },
     onError: (error: Error) => {
       toast({
         title: "Hata",
         description: error.message || "Proje oluşturulurken bir hata oluştu",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update project mutation
+  const updateProjectMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<InsertProject> }) => {
+      const response = await apiRequest("PATCH", `/api/projects/${id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      toast({
+        title: "Başarılı",
+        description: "Proje başarıyla güncellendi",
+      });
+      setIsDialogOpen(false);
+      setEditingProject(null);
+      form.reset();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Hata",
+        description: error.message || "Proje güncellenirken bir hata oluştu",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete project mutation
+  const deleteProjectMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/projects/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      toast({
+        title: "Başarılı",
+        description: "Proje başarıyla silindi",
+      });
+      setDeleteProjectId(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Hata",
+        description: error.message || "Proje silinirken bir hata oluştu",
         variant: "destructive",
       });
     },
@@ -112,10 +163,15 @@ export default function Dashboard() {
       customerId: (data.customerId === "" || data.customerId === "none" || !data.customerId) ? null : data.customerId,
     };
 
-    createProjectMutation.mutate(cleanedData);
+    if (editingProject) {
+      updateProjectMutation.mutate({ id: editingProject.id, data: cleanedData });
+    } else {
+      createProjectMutation.mutate(cleanedData);
+    }
   };
 
   const handleAddProject = () => {
+    setEditingProject(null);
     form.reset({
       name: "",
       location: "",
@@ -128,6 +184,32 @@ export default function Dashboard() {
       customerId: "none",
     });
     setIsDialogOpen(true);
+  };
+
+  const handleEditProject = (project: Project) => {
+    setEditingProject(project);
+    form.reset({
+      name: project.name,
+      location: project.location ?? "",
+      area: project.area ?? "",
+      startDate: project.startDate ?? "",
+      endDate: project.endDate ?? "",
+      status: project.status,
+      description: project.description ?? "",
+      notes: project.notes ?? "",
+      customerId: project.customerId ?? "none",
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleDeleteProject = (id: string) => {
+    setDeleteProjectId(id);
+  };
+
+  const confirmDelete = () => {
+    if (deleteProjectId) {
+      deleteProjectMutation.mutate(deleteProjectId);
+    }
   };
 
   // Calculate stats
@@ -209,8 +291,9 @@ export default function Dashboard() {
                       endDate={project.endDate || "-"}
                       status={project.status}
                       costPerSqm="-"
-                      onView={() => window.location.href = `/projeler/${project.id}`}
-                      onEdit={() => window.location.href = `/projeler`}
+                      onView={() => {}}
+                      onEdit={() => handleEditProject(project)}
+                      onDelete={() => handleDeleteProject(project.id)}
                     />
                   ))}
                 </div>
@@ -245,9 +328,11 @@ export default function Dashboard() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Yeni Proje Ekle</DialogTitle>
+            <DialogTitle>{editingProject ? "Proje Düzenle" : "Yeni Proje Ekle"}</DialogTitle>
             <DialogDescription>
-              Yeni bir proje oluşturmak için aşağıdaki bilgileri doldurun
+              {editingProject 
+                ? "Proje bilgilerini güncelleyin" 
+                : "Yeni bir proje oluşturmak için aşağıdaki bilgileri doldurun"}
             </DialogDescription>
           </DialogHeader>
 
@@ -451,19 +536,41 @@ export default function Dashboard() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={createProjectMutation.isPending}
+                  disabled={createProjectMutation.isPending || updateProjectMutation.isPending}
                   data-testid="button-save-project"
                 >
-                  {createProjectMutation.isPending && (
+                  {(createProjectMutation.isPending || updateProjectMutation.isPending) && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Kaydet
+                  {editingProject ? "Güncelle" : "Kaydet"}
                 </Button>
               </DialogFooter>
             </form>
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteProjectId !== null} onOpenChange={() => setDeleteProjectId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Projeyi Sil</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bu projeyi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">İptal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
+              Sil
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
