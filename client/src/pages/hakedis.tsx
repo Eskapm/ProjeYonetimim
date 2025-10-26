@@ -1029,18 +1029,25 @@ export default function Hakedis() {
       <Dialog open={viewingPaymentDetail !== null} onOpenChange={(open) => !open && setViewingPaymentDetail(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <DialogTitle>Hakediş Detayları - #{viewingPaymentDetail?.paymentNumber}</DialogTitle>
-                <DialogDescription>
-                  {projects.find(p => p.id === viewingPaymentDetail?.projectId)?.name || "Proje"} - Hakediş kalem dökümü ve özeti
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <DialogTitle className="text-lg leading-tight">
+                  Eska Yapı Mühendislik İnşaat<br />
+                  Emlak Turizm ve Ticaret Limited Şirketi
+                </DialogTitle>
+                <DialogDescription className="mt-2 text-xs space-y-0.5">
+                  <div>Tel: 0505 821 54 79</div>
+                  <div>E-mail: enginkayserili@gmail.com</div>
+                  <div className="mt-2 text-muted-foreground">
+                    {projects.find(p => p.id === viewingPaymentDetail?.projectId)?.name || "Proje"} - Hakediş #{viewingPaymentDetail?.paymentNumber}
+                  </div>
                 </DialogDescription>
               </div>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => window.print()}
-                className="no-print"
+                className="no-print shrink-0"
                 data-testid="button-print-hakedis"
               >
                 <FileText className="h-4 w-4 mr-2" />
@@ -1055,10 +1062,12 @@ export default function Hakedis() {
               <div className="hidden print:block">
                 <div className="flex items-start justify-between mb-6 pb-4 border-b-2 border-black">
                   <div>
-                    <h1 className="text-xl font-bold">Eska Yapı Mühendislik İnşaat</h1>
-                    <p className="text-xs mt-1">Emlak Turizm ve Ticaret Limited Şirketi</p>
+                    <h1 className="text-lg font-bold leading-tight">
+                      Eska Yapı Mühendislik İnşaat<br />
+                      Emlak Turizm ve Ticaret Limited Şirketi
+                    </h1>
                     <p className="text-xs text-gray-600 mt-2">
-                      Tel: (0212) XXX XX XX | Email: info@eskayapi.com.tr
+                      Tel: 0505 821 54 79 | E-mail: enginkayserili@gmail.com
                     </p>
                   </div>
                   <div className="text-right">
@@ -1067,11 +1076,11 @@ export default function Hakedis() {
                   </div>
                 </div>
                 
-                <h2 className="text-center text-lg font-bold mb-4 uppercase">
+                <h2 className="text-center text-base font-bold mb-4 uppercase">
                   HAKEDİŞ TUTANAĞI
                 </h2>
                 
-                <div className="mb-4 text-sm">
+                <div className="mb-4 text-xs">
                   <p><strong>Proje:</strong> {projects.find(p => p.id === viewingPaymentDetail?.projectId)?.name || "Bilinmiyor"}</p>
                   <p><strong>Hakediş Tarihi:</strong> {format(parseISO(viewingPaymentDetail.date as string), "dd MMMM yyyy", { locale: tr })}</p>
                 </div>
@@ -1084,7 +1093,7 @@ export default function Hakedis() {
                     <CardTitle className="text-sm">Toplam Tutar</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-lg font-bold font-mono">
+                    <p className="text-base font-bold font-mono whitespace-nowrap">
                       {parseFloat(viewingPaymentDetail.amount as string).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
                     </p>
                   </CardContent>
@@ -1095,7 +1104,7 @@ export default function Hakedis() {
                     <CardTitle className="text-sm">Müteahhitlik Karı</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-lg font-bold font-mono text-blue-600">
+                    <p className="text-base font-bold font-mono text-blue-600 whitespace-nowrap">
                       +{((parseFloat(viewingPaymentDetail.grossAmount as string || "0") - parseFloat(viewingPaymentDetail.amount as string))).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
                     </p>
                     <p className="text-xs text-muted-foreground">
@@ -1109,7 +1118,7 @@ export default function Hakedis() {
                     <CardTitle className="text-sm">Brüt Tutar</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-lg font-bold font-mono text-primary">
+                    <p className="text-base font-bold font-mono text-primary whitespace-nowrap">
                       {parseFloat(viewingPaymentDetail.grossAmount as string || "0").toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
                     </p>
                   </CardContent>
@@ -1120,10 +1129,10 @@ export default function Hakedis() {
                     <CardTitle className="text-sm">Net Ödeme</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-lg font-bold font-mono text-green-600">
+                    <p className="text-base font-bold font-mono text-green-600 whitespace-nowrap">
                       {parseFloat(viewingPaymentDetail.netPayment as string || "0").toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground whitespace-nowrap">
                       Avans kesintisi: {parseFloat(viewingPaymentDetail.advanceDeduction as string || "0").toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
                     </p>
                   </CardContent>
@@ -1207,7 +1216,10 @@ export default function Hakedis() {
                     <div className="h-16"></div>
                     <div className="border-t border-black pt-2">
                       <p className="text-sm font-semibold">Müteahhit</p>
-                      <p className="text-xs">Eska Yapı Mühendislik İnşaat Ltd. Şti.</p>
+                      <p className="text-xs leading-tight">
+                        Eska Yapı Mühendislik İnşaat<br />
+                        Emlak Turizm ve Ticaret Limited Şirketi
+                      </p>
                     </div>
                   </div>
                   <div className="text-center">
