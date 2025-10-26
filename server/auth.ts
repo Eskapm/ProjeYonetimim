@@ -72,10 +72,43 @@ export function setupAuth(app: Express) {
     done(null, user);
   });
 
-  // Kayıt sistemi KAPALI - Tek kullanıcılı sistem için güvenlik
-  // Yeni kullanıcı eklemek için veritabanını manuel olarak düzenleyin
-  app.post("/api/register", async (req, res) => {
-    res.status(403).send("Kayıt sistemi kapatılmıştır. Yönetici ile iletişime geçin.");
+  app.post("/api/register", async (req, res, next) => {
+    try {
+      // Validate request body
+      const { username, password } = req.body;
+      if (!username || !password) {
+        return res.status(400).send("Kullanıcı adı ve şifre gerekli");
+      }
+      if (typeof username !== "string" || typeof password !== "string") {
+        return res.status(400).send("Geçersiz veri formatı");
+      }
+      if (username.length < 3) {
+        return res.status(400).send("Kullanıcı adı en az 3 karakter olmalı");
+      }
+      if (password.length < 6) {
+        return res.status(400).send("Şifre en az 6 karakter olmalı");
+      }
+
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).send("Kullanıcı adı zaten kullanılıyor");
+      }
+
+      const user = await storage.createUser({
+        username,
+        password: await hashPassword(password),
+      });
+
+      // Remove password from response
+      const { password: _, ...userWithoutPassword } = user;
+
+      req.login(user, (err) => {
+        if (err) return next(err);
+        res.status(201).json(userWithoutPassword);
+      });
+    } catch (error) {
+      next(error);
+    }
   });
 
   app.post("/api/login", passport.authenticate("local"), (req, res) => {

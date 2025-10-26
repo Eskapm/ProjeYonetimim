@@ -5,14 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Building2, Lock, User } from "lucide-react";
 import logoUrl from "@assets/ESKA LOGO TASARIMI_1761497797352.png";
 
 export default function AuthPage() {
-  const { user, loginMutation } = useAuth();
+  const { user, loginMutation, registerMutation } = useAuth();
   const [, setLocation] = useLocation();
   const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [registerUsername, setRegisterUsername] = useState("");
+  const [registerPassword, setRegisterPassword] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -25,6 +28,14 @@ export default function AuthPage() {
     loginMutation.mutate({
       username: loginUsername,
       password: loginPassword,
+    });
+  };
+
+  const handleRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+    registerMutation.mutate({
+      username: registerUsername,
+      password: registerPassword,
     });
   };
 
@@ -42,58 +53,122 @@ export default function AuthPage() {
             <p className="text-lg font-medium text-foreground mt-4">İnşaat Proje Yönetim Sistemi</p>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Giriş Yap</CardTitle>
-              <CardDescription>
-                Hesabınıza giriş yapmak için kullanıcı bilgilerinizi girin
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="login-username">Kullanıcı Adı</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="login-username"
-                      type="text"
-                      placeholder="Kullanıcı adınızı girin"
-                      className="pl-10"
-                      value={loginUsername}
-                      onChange={(e) => setLoginUsername(e.target.value)}
-                      required
-                      data-testid="input-login-username"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="login-password">Şifre</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="login-password"
-                      type="password"
-                      placeholder="Şifrenizi girin"
-                      className="pl-10"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      required
-                      data-testid="input-login-password"
-                    />
-                  </div>
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={loginMutation.isPending}
-                  data-testid="button-login-submit"
-                >
-                  {loginMutation.isPending ? "Giriş yapılıyor..." : "Giriş Yap"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Giriş Yap</TabsTrigger>
+              <TabsTrigger value="register">Kayıt Ol</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="login">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Giriş Yap</CardTitle>
+                  <CardDescription>
+                    Hesabınıza giriş yapmak için kullanıcı bilgilerinizi girin
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="login-username">Kullanıcı Adı</Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="login-username"
+                          type="text"
+                          placeholder="Kullanıcı adınızı girin"
+                          className="pl-10"
+                          value={loginUsername}
+                          onChange={(e) => setLoginUsername(e.target.value)}
+                          required
+                          data-testid="input-login-username"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="login-password">Şifre</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="login-password"
+                          type="password"
+                          placeholder="Şifrenizi girin"
+                          className="pl-10"
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
+                          required
+                          data-testid="input-login-password"
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={loginMutation.isPending}
+                      data-testid="button-login-submit"
+                    >
+                      {loginMutation.isPending ? "Giriş yapılıyor..." : "Giriş Yap"}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="register">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Kayıt Ol</CardTitle>
+                  <CardDescription>
+                    Yeni bir hesap oluşturmak için bilgilerinizi girin
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleRegister} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="register-username">Kullanıcı Adı</Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="register-username"
+                          type="text"
+                          placeholder="Kullanıcı adı seçin (en az 3 karakter)"
+                          className="pl-10"
+                          value={registerUsername}
+                          onChange={(e) => setRegisterUsername(e.target.value)}
+                          required
+                          data-testid="input-register-username"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="register-password">Şifre</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="register-password"
+                          type="password"
+                          placeholder="Güçlü bir şifre seçin (en az 6 karakter)"
+                          className="pl-10"
+                          value={registerPassword}
+                          onChange={(e) => setRegisterPassword(e.target.value)}
+                          required
+                          data-testid="input-register-password"
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={registerMutation.isPending}
+                      data-testid="button-register-submit"
+                    >
+                      {registerMutation.isPending ? "Kayıt yapılıyor..." : "Kayıt Ol"}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
 
