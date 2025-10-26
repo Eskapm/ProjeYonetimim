@@ -597,7 +597,7 @@ export default function WorkSchedule() {
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={handleDialogClose}
+                        onClick={() => handleDialogChange(false)}
                         data-testid="button-cancel-task"
                       >
                         İptal
