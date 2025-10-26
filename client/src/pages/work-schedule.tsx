@@ -395,14 +395,13 @@ export default function WorkSchedule() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Proje</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <Select onValueChange={field.onChange} value={field.value || undefined}>
                               <FormControl>
                                 <SelectTrigger data-testid="select-task-project">
-                                  <SelectValue placeholder="Proje seçin" />
+                                  <SelectValue placeholder="Proje seçin (opsiyonel)" />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="">Seçim yapılmadı</SelectItem>
                                 {projects?.map((project) => (
                                   <SelectItem key={project.id} value={project.id}>
                                     {project.name}
