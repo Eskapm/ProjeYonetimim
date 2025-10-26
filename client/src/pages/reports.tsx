@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { type TransactionWithProject, type Project, type Invoice, type Task } from "@shared/schema";
+import { type TransactionWithProject, type Project, type Invoice, type Task, type ProgressPayment } from "@shared/schema";
 import { calculateTaxSummary } from "@shared/taxCalculations";
 import { BarChart, Bar, PieChart as RePieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -48,7 +48,11 @@ export default function Reports() {
     queryKey: ["/api/tasks"],
   });
 
-  const isLoading = transactionsLoading || projectsLoading || invoicesLoading || tasksLoading;
+  const { data: progressPayments = [], isLoading: paymentsLoading } = useQuery<ProgressPayment[]>({
+    queryKey: ["/api/progress-payments"],
+  });
+
+  const isLoading = transactionsLoading || projectsLoading || invoicesLoading || tasksLoading || paymentsLoading;
 
   // Filter transactions by date
   const filteredTransactions = useMemo(() => {
@@ -338,7 +342,7 @@ export default function Reports() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3" data-testid="tabs-report-type">
+        <TabsList className="grid w-full grid-cols-4" data-testid="tabs-report-type">
           <TabsTrigger value="financial" data-testid="tab-financial">
             <Receipt className="h-4 w-4 mr-2" />
             Mali Raporlar
@@ -350,6 +354,10 @@ export default function Reports() {
           <TabsTrigger value="project" data-testid="tab-project">
             <FolderKanban className="h-4 w-4 mr-2" />
             Proje Raporları
+          </TabsTrigger>
+          <TabsTrigger value="hakedis" data-testid="tab-hakedis">
+            <DollarSign className="h-4 w-4 mr-2" />
+            Hakediş Raporları
           </TabsTrigger>
         </TabsList>
 
@@ -904,6 +912,160 @@ export default function Reports() {
                       <FolderKanban className="h-16 w-16 mx-auto mb-4 opacity-50" />
                       <p className="text-lg font-medium mb-2">Henüz proje bulunmuyor</p>
                       <p className="text-sm">Proje ekleyerek proje raporlarınızı görüntüleyebilirsiniz</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          )}
+        </TabsContent>
+
+        {/* Hakediş Reports Tab */}
+        <TabsContent value="hakedis" className="space-y-6">
+          {isLoading ? (
+            <div className="space-y-4">
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-64 w-full" />
+            </div>
+          ) : (
+            <>
+              {/* Summary Statistics */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <StatsCard
+                  title="Toplam Hakediş"
+                  value={`${progressPayments.reduce((sum, p) => sum + parseFloat(p.amount as string), 0).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
+                  icon={DollarSign}
+                  trend="neutral"
+                  data-testid="card-total-hakedis"
+                />
+                <StatsCard
+                  title="Alınan Ödemeler"
+                  value={`${progressPayments.reduce((sum, p) => sum + parseFloat(p.receivedAmount as string), 0).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
+                  icon={CheckCircle2}
+                  trend="positive"
+                  data-testid="card-received-hakedis"
+                />
+                <StatsCard
+                  title="Bekleyen Ödemeler"
+                  value={`${progressPayments.reduce((sum, p) => sum + (parseFloat(p.amount as string) - parseFloat(p.receivedAmount as string)), 0).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
+                  icon={Clock}
+                  trend="negative"
+                  data-testid="card-pending-hakedis"
+                />
+              </div>
+
+              {/* Status Distribution Chart */}
+              {progressPayments.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <PieChart className="h-5 w-5" />
+                      Hakediş Durumu Dağılımı
+                    </CardTitle>
+                    <CardDescription>Ödeme durumlarına göre hakediş sayıları</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <RePieChart>
+                        <Pie
+                          data={[
+                            { name: 'Bekliyor', value: progressPayments.filter(p => p.status === 'Bekliyor').length },
+                            { name: 'Kısmi Ödendi', value: progressPayments.filter(p => p.status === 'Kısmi Ödendi').length },
+                            { name: 'Ödendi', value: progressPayments.filter(p => p.status === 'Ödendi').length }
+                          ].filter(item => item.value > 0)}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={100}
+                          label={(entry) => `${entry.name}: ${entry.value}`}
+                        >
+                          {[
+                            { name: 'Bekliyor', color: 'hsl(var(--chart-3))' },
+                            { name: 'Kısmi Ödendi', color: 'hsl(var(--chart-2))' },
+                            { name: 'Ödendi', color: 'hsl(var(--chart-1))' }
+                          ].map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </RePieChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Payments by Project */}
+              {progressPayments.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FolderKanban className="h-5 w-5" />
+                      Projelere Göre Hakediş Özeti
+                    </CardTitle>
+                    <CardDescription>Her projenin toplam hakediş tutarları ve ödeme durumu</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Proje Adı</TableHead>
+                          <TableHead className="text-right">Hakediş Sayısı</TableHead>
+                          <TableHead className="text-right">Toplam Tutar</TableHead>
+                          <TableHead className="text-right">Alınan</TableHead>
+                          <TableHead className="text-right">Kalan</TableHead>
+                          <TableHead className="text-right">Tamamlanma</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {projects
+                          .filter(project => progressPayments.some(p => p.projectId === project.id))
+                          .map(project => {
+                            const projectPayments = progressPayments.filter(p => p.projectId === project.id);
+                            const totalAmount = projectPayments.reduce((sum, p) => sum + parseFloat(p.amount as string), 0);
+                            const totalReceived = projectPayments.reduce((sum, p) => sum + parseFloat(p.receivedAmount as string), 0);
+                            const remaining = totalAmount - totalReceived;
+                            const completionRate = totalAmount > 0 ? (totalReceived / totalAmount) * 100 : 0;
+
+                            return (
+                              <TableRow key={project.id}>
+                                <TableCell className="font-medium">{project.name}</TableCell>
+                                <TableCell className="text-right">{projectPayments.length}</TableCell>
+                                <TableCell className="text-right font-mono">
+                                  {totalAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                                </TableCell>
+                                <TableCell className="text-right font-mono">
+                                  {totalReceived.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                                </TableCell>
+                                <TableCell className="text-right font-mono">
+                                  {remaining.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex items-center gap-2">
+                                    <Progress value={completionRate} className="h-2 flex-1" />
+                                    <span className="text-sm text-muted-foreground w-12">
+                                      {completionRate.toFixed(0)}%
+                                    </span>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Empty State */}
+              {progressPayments.length === 0 && (
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center py-8 text-muted-foreground">
+                      <DollarSign className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                      <p className="text-lg font-medium mb-2">Henüz hakediş bulunmuyor</p>
+                      <p className="text-sm">Hakediş ekleyerek ödeme raporlarınızı görüntüleyebilirsiniz</p>
                     </div>
                   </CardContent>
                 </Card>
