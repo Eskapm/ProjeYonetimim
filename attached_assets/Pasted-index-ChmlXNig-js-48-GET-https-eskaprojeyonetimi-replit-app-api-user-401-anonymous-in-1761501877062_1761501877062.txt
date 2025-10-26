@@ -1,0 +1,60 @@
+index-ChmlXNig.js:48          GET https://eskaprojeyonetimi.replit.app/api/user 401
+(anonymous) @ index-ChmlXNig.js:48
+a @ index-ChmlXNig.js:48
+w @ index-ChmlXNig.js:48
+start @ index-ChmlXNig.js:48
+fetch @ index-ChmlXNig.js:48
+al @ index-ChmlXNig.js:48
+onSubscribe @ index-ChmlXNig.js:48
+subscribe @ index-ChmlXNig.js:48
+(anonymous) @ index-ChmlXNig.js:48
+IN @ index-ChmlXNig.js:38
+Kd @ index-ChmlXNig.js:40
+Ci @ index-ChmlXNig.js:40
+(anonymous) @ index-ChmlXNig.js:40
+N @ index-ChmlXNig.js:25
+F @ index-ChmlXNig.js:25
+index-ChmlXNig.js:40 Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at index-ChmlXNig.js:352:66196
+    at ag (index-ChmlXNig.js:38:16998)
+    at Dy (index-ChmlXNig.js:40:1571)
+    at wS (index-ChmlXNig.js:40:46001)
+    at vS (index-ChmlXNig.js:40:39766)
+    at YR (index-ChmlXNig.js:40:39694)
+    at id (index-ChmlXNig.js:40:39547)
+    at Im (index-ChmlXNig.js:40:35914)
+    at Wy (index-ChmlXNig.js:40:36717)
+    at la (index-ChmlXNig.js:38:3274)
+Sm @ index-ChmlXNig.js:40
+XN.n.callback @ index-ChmlXNig.js:40
+Sy @ index-ChmlXNig.js:38
+$y @ index-ChmlXNig.js:40
+hS @ index-ChmlXNig.js:40
+GR @ index-ChmlXNig.js:40
+XR @ index-ChmlXNig.js:40
+va @ index-ChmlXNig.js:40
+Wy @ index-ChmlXNig.js:40
+la @ index-ChmlXNig.js:38
+(anonymous) @ index-ChmlXNig.js:40
+index-ChmlXNig.js:352 Uncaught Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at index-ChmlXNig.js:352:66196
+    at ag (index-ChmlXNig.js:38:16998)
+    at Dy (index-ChmlXNig.js:40:1571)
+    at wS (index-ChmlXNig.js:40:46001)
+    at vS (index-ChmlXNig.js:40:39766)
+    at YR (index-ChmlXNig.js:40:39694)
+    at id (index-ChmlXNig.js:40:39547)
+    at Im (index-ChmlXNig.js:40:35914)
+    at Wy (index-ChmlXNig.js:40:36717)
+    at la (index-ChmlXNig.js:38:3274)
+(anonymous) @ index-ChmlXNig.js:352
+ag @ index-ChmlXNig.js:38
+Dy @ index-ChmlXNig.js:40
+wS @ index-ChmlXNig.js:40
+vS @ index-ChmlXNig.js:40
+YR @ index-ChmlXNig.js:40
+id @ index-ChmlXNig.js:40
+Im @ index-ChmlXNig.js:40
+Wy @ index-ChmlXNig.js:40
+la @ index-ChmlXNig.js:38
+(anonymous) @ index-ChmlXNig.js:40
