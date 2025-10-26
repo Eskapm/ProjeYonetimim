@@ -21,6 +21,7 @@ import {
   Edit,
   MoreVertical,
   X,
+  Printer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -326,7 +327,17 @@ export default function WorkSchedule() {
               <h1 className="text-4xl font-bold text-foreground">İş Programı</h1>
               <p className="text-sm text-muted-foreground mt-2">Görev yönetimi ve takip sistemi</p>
             </div>
-            <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="default"
+                onClick={() => window.print()}
+                data-testid="button-print"
+              >
+                <Printer className="mr-2 h-4 w-4" />
+                Yazdır
+              </Button>
+              <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
               <DialogTrigger asChild>
                 <Button
                   size="default"
@@ -613,6 +624,7 @@ export default function WorkSchedule() {
                 </Form>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
