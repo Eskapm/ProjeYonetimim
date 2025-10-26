@@ -35,7 +35,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Calendar as CalendarIcon, Loader2, Edit2, Trash2, FileText, TrendingUp, TrendingDown } from "lucide-react";
+import { Plus, Search, Calendar as CalendarIcon, Loader2, Edit2, Trash2, FileText, TrendingUp, TrendingDown, Eye } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { 
@@ -71,6 +71,7 @@ export default function Hakedis() {
   const [editingPayment, setEditingPayment] = useState<ProgressPayment | null>(null);
   const [deletePaymentId, setDeletePaymentId] = useState<string | null>(null);
   const [selectedTransactionIds, setSelectedTransactionIds] = useState<string[]>([]);
+  const [viewingPaymentDetail, setViewingPaymentDetail] = useState<ProgressPayment | null>(null);
   const { toast} = useToast();
 
   // Fetch progress payments
@@ -234,13 +235,17 @@ export default function Hakedis() {
       amount: "0",
       receivedAmount: "0",
       status: "Bekliyor",
+      transactionIds: [],
     });
+    setSelectedTransactionIds([]);
     setEditingPayment(null);
     setIsDialogOpen(true);
   };
 
   const handleEditPayment = (payment: ProgressPayment) => {
     setEditingPayment(payment);
+    const txIds = (payment.transactionIds as string[]) || [];
+    setSelectedTransactionIds(txIds);
     form.reset({
       projectId: payment.projectId,
       paymentNumber: payment.paymentNumber,
@@ -249,6 +254,12 @@ export default function Hakedis() {
       amount: payment.amount as string,
       receivedAmount: payment.receivedAmount as string,
       status: payment.status,
+      transactionIds: txIds,
+      contractorFeeRate: payment.contractorFeeRate as string,
+      grossAmount: payment.grossAmount as string,
+      advanceDeductionRate: payment.advanceDeductionRate as string,
+      advanceDeduction: payment.advanceDeduction as string,
+      netPayment: payment.netPayment as string,
     });
     setIsDialogOpen(true);
   };
@@ -264,10 +275,15 @@ export default function Hakedis() {
   };
 
   const onSubmit = (data: InsertProgressPayment) => {
+    const submitData = {
+      ...data,
+      transactionIds: selectedTransactionIds,
+    };
+    
     if (editingPayment) {
-      updatePaymentMutation.mutate({ id: editingPayment.id, data });
+      updatePaymentMutation.mutate({ id: editingPayment.id, data: submitData });
     } else {
-      createPaymentMutation.mutate(data);
+      createPaymentMutation.mutate(submitData);
     }
   };
 
@@ -469,6 +485,15 @@ export default function Hakedis() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setViewingPaymentDetail(payment)}
+                              data-testid={`button-view-${payment.id}`}
+                              title="Detayları görüntüle"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="icon"
@@ -814,6 +839,65 @@ export default function Hakedis() {
                   )}
                 />
               </div>
+
+              {/* Transaction Selection */}
+              {projectExpenseTransactions.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">Gider Kalemleri Seçimi</label>
+                    <Badge variant="secondary">
+                      {selectedTransactionIds.length} / {projectExpenseTransactions.length} seçildi
+                    </Badge>
+                  </div>
+                  <div className="border rounded-lg max-h-64 overflow-y-auto">
+                    <Table>
+                      <TableHeader className="sticky top-0 bg-background">
+                        <TableRow>
+                          <TableHead className="w-12"></TableHead>
+                          <TableHead>Tarih</TableHead>
+                          <TableHead>Açıklama</TableHead>
+                          <TableHead>İş Grubu</TableHead>
+                          <TableHead className="text-right">Tutar</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {projectExpenseTransactions.map((transaction) => (
+                          <TableRow key={transaction.id} className="hover-elevate">
+                            <TableCell>
+                              <Checkbox
+                                checked={selectedTransactionIds.includes(transaction.id)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setSelectedTransactionIds([...selectedTransactionIds, transaction.id]);
+                                  } else {
+                                    setSelectedTransactionIds(selectedTransactionIds.filter(id => id !== transaction.id));
+                                  }
+                                }}
+                                data-testid={`checkbox-transaction-${transaction.id}`}
+                              />
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {format(parseISO(transaction.date as string), "dd MMM yyyy", { locale: tr })}
+                            </TableCell>
+                            <TableCell className="text-sm">{transaction.description}</TableCell>
+                            <TableCell className="text-sm">
+                              <Badge variant="outline" className="text-xs">
+                                {transaction.isGrubu || "-"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-sm">
+                              {parseFloat(transaction.amount as string).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Hakediş kapsamına dahil edilecek gider kalemlerini seçin. Tutar otomatik hesaplanacaktır.
+                  </p>
+                </div>
+              )}
 
               {/* Description */}
               <FormField
