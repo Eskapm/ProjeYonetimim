@@ -1,16 +1,24 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertProjectSchema, insertCustomerSchema, insertSubcontractorSchema, insertTransactionSchema, insertSiteDiarySchema } from "@shared/schema";
 import { ZodError } from "zod";
 
+// Authentication middleware - Giriş yapmayan kullanıcıları engeller
+function requireAuth(req: Request, res: Response, next: NextFunction) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).send("Giriş yapmanız gerekiyor");
+  }
+  next();
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes: /api/register, /api/login, /api/logout, /api/user
   setupAuth(app);
 
   // Project routes
-  app.get("/api/projects", async (req, res) => {
+  app.get("/api/projects", requireAuth, async (req, res) => {
     try {
       const projects = await storage.getProjects();
       res.json(projects);
@@ -19,7 +27,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/projects/:id", async (req, res) => {
+  app.get("/api/projects/:id", requireAuth, async (req, res) => {
     try {
       const project = await storage.getProject(req.params.id);
       if (!project) {
@@ -31,7 +39,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/projects", async (req, res) => {
+  app.post("/api/projects", requireAuth, async (req, res) => {
     try {
       const validatedData = insertProjectSchema.parse(req.body);
       const project = await storage.createProject(validatedData);
@@ -44,7 +52,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/projects/:id", async (req, res) => {
+  app.patch("/api/projects/:id", requireAuth, async (req, res) => {
     try {
       const validatedData = insertProjectSchema.partial().parse(req.body);
       const project = await storage.updateProject(req.params.id, validatedData);
@@ -60,7 +68,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/projects/:id", async (req, res) => {
+  app.delete("/api/projects/:id", requireAuth, async (req, res) => {
     try {
       const success = await storage.deleteProject(req.params.id);
       if (!success) {
@@ -73,7 +81,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Customer routes
-  app.get("/api/customers", async (req, res) => {
+  app.get("/api/customers", requireAuth, async (req, res) => {
     try {
       const customers = await storage.getCustomers();
       res.json(customers);
@@ -82,7 +90,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/customers", async (req, res) => {
+  app.post("/api/customers", requireAuth, async (req, res) => {
     try {
       const validatedData = insertCustomerSchema.parse(req.body);
       const customer = await storage.createCustomer(validatedData);
@@ -95,7 +103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/customers/:id", async (req, res) => {
+  app.patch("/api/customers/:id", requireAuth, async (req, res) => {
     try {
       const validatedData = insertCustomerSchema.partial().parse(req.body);
       const customer = await storage.updateCustomer(req.params.id, validatedData);
@@ -111,7 +119,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/customers/:id", async (req, res) => {
+  app.delete("/api/customers/:id", requireAuth, async (req, res) => {
     try {
       const success = await storage.deleteCustomer(req.params.id);
       if (!success) {
@@ -124,7 +132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Subcontractor routes
-  app.get("/api/subcontractors", async (req, res) => {
+  app.get("/api/subcontractors", requireAuth, async (req, res) => {
     try {
       const subcontractors = await storage.getSubcontractors();
       res.json(subcontractors);
@@ -133,7 +141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/subcontractors", async (req, res) => {
+  app.post("/api/subcontractors", requireAuth, async (req, res) => {
     try {
       const validatedData = insertSubcontractorSchema.parse(req.body);
       const subcontractor = await storage.createSubcontractor(validatedData);
@@ -146,7 +154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/subcontractors/:id", async (req, res) => {
+  app.patch("/api/subcontractors/:id", requireAuth, async (req, res) => {
     try {
       const validatedData = insertSubcontractorSchema.partial().parse(req.body);
       const subcontractor = await storage.updateSubcontractor(req.params.id, validatedData);
@@ -162,7 +170,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/subcontractors/:id", async (req, res) => {
+  app.delete("/api/subcontractors/:id", requireAuth, async (req, res) => {
     try {
       const success = await storage.deleteSubcontractor(req.params.id);
       if (!success) {
@@ -175,7 +183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Transaction routes
-  app.get("/api/transactions", async (req, res) => {
+  app.get("/api/transactions", requireAuth, async (req, res) => {
     try {
       const transactions = await storage.getTransactions();
       res.json(transactions);
@@ -184,7 +192,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/transactions", async (req, res) => {
+  app.post("/api/transactions", requireAuth, async (req, res) => {
     try {
       const validatedData = insertTransactionSchema.parse(req.body);
       const transaction = await storage.createTransaction(validatedData);
@@ -197,7 +205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/transactions/:id", async (req, res) => {
+  app.patch("/api/transactions/:id", requireAuth, async (req, res) => {
     try {
       const validatedData = insertTransactionSchema.partial().parse(req.body);
       const transaction = await storage.updateTransaction(req.params.id, validatedData);
@@ -213,7 +221,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/transactions/:id", async (req, res) => {
+  app.delete("/api/transactions/:id", requireAuth, async (req, res) => {
     try {
       const success = await storage.deleteTransaction(req.params.id);
       if (!success) {
@@ -226,7 +234,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Site Diary routes
-  app.get("/api/site-diary", async (req, res) => {
+  app.get("/api/site-diary", requireAuth, async (req, res) => {
     try {
       const entries = await storage.getSiteDiaryEntries();
       res.json(entries);
@@ -235,7 +243,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/site-diary", async (req, res) => {
+  app.post("/api/site-diary", requireAuth, async (req, res) => {
     try {
       const validatedData = insertSiteDiarySchema.parse(req.body);
       const entry = await storage.createSiteDiaryEntry(validatedData);
@@ -248,7 +256,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/site-diary/:id", async (req, res) => {
+  app.patch("/api/site-diary/:id", requireAuth, async (req, res) => {
     try {
       const validatedData = insertSiteDiarySchema.partial().parse(req.body);
       const entry = await storage.updateSiteDiaryEntry(req.params.id, validatedData);
@@ -264,7 +272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/site-diary/:id", async (req, res) => {
+  app.delete("/api/site-diary/:id", requireAuth, async (req, res) => {
     try {
       const success = await storage.deleteSiteDiaryEntry(req.params.id);
       if (!success) {
