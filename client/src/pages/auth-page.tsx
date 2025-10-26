@@ -52,8 +52,8 @@ export default function AuthPage() {
       {/* Sol taraf - Form */}
       <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md space-y-6">
-          <div className="flex flex-col items-center gap-4 mb-8">
-            <img src={logoUrl} alt="ESKA Logo" className="h-72 w-auto object-contain" />
+          <div className="flex flex-col items-center gap-1 mb-8">
+            <img src={logoUrl} alt="ESKA Logo" className="h-[36rem] w-auto object-contain" />
             <div className="text-center">
               <p className="text-lg font-medium text-foreground">İnşaat Proje Yönetim Sistemi</p>
             </div>
