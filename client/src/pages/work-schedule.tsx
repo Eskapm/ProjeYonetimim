@@ -222,7 +222,7 @@ export default function WorkSchedule() {
       startDate: task.startDate || "",
       dueDate: task.dueDate || "",
       assignedTo: task.assignedTo || "",
-      checklist: task.checklist || [],
+      checklist: (task.checklist as any) || [],
     });
     setIsDialogOpen(true);
   };
@@ -378,6 +378,7 @@ export default function WorkSchedule() {
                                 placeholder="Görev detayları..."
                                 rows={3}
                                 {...field}
+                                value={field.value || ""}
                                 data-testid="input-task-description"
                               />
                             </FormControl>
@@ -422,6 +423,7 @@ export default function WorkSchedule() {
                               <Input
                                 placeholder="Ad Soyad"
                                 {...field}
+                                value={field.value || ""}
                                 data-testid="input-task-assigned"
                               />
                             </FormControl>
@@ -440,6 +442,7 @@ export default function WorkSchedule() {
                               <Input
                                 type="date"
                                 {...field}
+                                value={field.value || ""}
                                 data-testid="input-task-start-date"
                               />
                             </FormControl>
@@ -458,6 +461,7 @@ export default function WorkSchedule() {
                               <Input
                                 type="date"
                                 {...field}
+                                value={field.value || ""}
                                 data-testid="input-task-due-date"
                               />
                             </FormControl>
@@ -778,7 +782,7 @@ export default function WorkSchedule() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredAndSortedTasks.map((task) => {
                 const StatusIcon = statusIcons[task.status];
-                const checklistSummary = getChecklistSummary(task.checklist || []);
+                const checklistSummary = getChecklistSummary((task.checklist as any) || []);
                 return (
                   <Card key={task.id} className="hover-elevate" data-testid={`card-task-${task.id}`}>
                     <CardHeader className="pb-3">
