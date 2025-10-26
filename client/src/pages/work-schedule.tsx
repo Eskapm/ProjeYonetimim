@@ -72,21 +72,21 @@ const taskFormSchema = insertTaskSchema.extend({
 
 type TaskFormValues = z.infer<typeof taskFormSchema>;
 
-const statusColors = {
+const statusColors: Record<string, string> = {
   "Beklemede": "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
   "Devam Ediyor": "bg-blue-500/10 text-blue-700 dark:text-blue-400",
   "Tamamlandı": "bg-green-500/10 text-green-700 dark:text-green-400",
   "İptal": "bg-gray-500/10 text-gray-700 dark:text-gray-400",
 };
 
-const priorityColors = {
+const priorityColors: Record<string, string> = {
   "Düşük": "bg-slate-500/10 text-slate-700 dark:text-slate-400",
   "Orta": "bg-blue-500/10 text-blue-700 dark:text-blue-400",
   "Yüksek": "bg-orange-500/10 text-orange-700 dark:text-orange-400",
   "Acil": "bg-red-500/10 text-red-700 dark:text-red-400",
 };
 
-const statusIcons = {
+const statusIcons: Record<string, typeof Clock> = {
   "Beklemede": Clock,
   "Devam Ediyor": AlertCircle,
   "Tamamlandı": CheckCircle2,
@@ -277,8 +277,8 @@ export default function WorkSchedule() {
         case "dueDate":
           return new Date(a.dueDate || "").getTime() - new Date(b.dueDate || "").getTime();
         case "priority": {
-          const priorityOrder = { "Acil": 0, "Yüksek": 1, "Orta": 2, "Düşük": 3 };
-          return priorityOrder[a.priority || "Orta"] - priorityOrder[b.priority || "Orta"];
+          const priorityOrder: Record<string, number> = { "Acil": 0, "Yüksek": 1, "Orta": 2, "Düşük": 3 };
+          return (priorityOrder[a.priority || "Orta"] || 2) - (priorityOrder[b.priority || "Orta"] || 2);
         }
         case "progress":
           return (b.progress || 0) - (a.progress || 0);
