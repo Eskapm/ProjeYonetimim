@@ -479,6 +479,7 @@ export default function Invoices() {
                     <TableHead>Tür</TableHead>
                     <TableHead>Tarih</TableHead>
                     <TableHead>Müşteri/Taşeron</TableHead>
+                    <TableHead>Proje</TableHead>
                     <TableHead className="text-right">Tutar</TableHead>
                     <TableHead className="text-right">KDV</TableHead>
                     <TableHead className="text-right">Toplam</TableHead>
@@ -500,6 +501,9 @@ export default function Invoices() {
                       </TableCell>
                       <TableCell>
                         {invoice.type === "Satış" ? invoice.customerName : invoice.subcontractorName}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {invoice.projectName || "-"}
                       </TableCell>
                       <TableCell className="text-right font-mono">
                         {parseFloat(invoice.subtotal).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
