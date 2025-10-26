@@ -17,6 +17,10 @@ import Transactions from "@/pages/transactions";
 import SiteDiary from "@/pages/site-diary";
 import Subcontractors from "@/pages/subcontractors";
 import Customers from "@/pages/customers";
+import WorkSchedule from "@/pages/work-schedule";
+import Budget from "@/pages/budget";
+import Reports from "@/pages/reports";
+import Invoices from "@/pages/invoices";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
 import logoUrl from "@assets/Eska Logo.png";
@@ -77,8 +81,12 @@ function Router() {
       <ProtectedRoute path="/projeler/:id" component={ProjectDetail} />
       <ProtectedRoute path="/islemler" component={Transactions} />
       <ProtectedRoute path="/santiye-defteri" component={SiteDiary} />
+      <ProtectedRoute path="/faturalar" component={Invoices} />
+      <ProtectedRoute path="/is-programi" component={WorkSchedule} />
+      <ProtectedRoute path="/butce" component={Budget} />
       <ProtectedRoute path="/taseronlar" component={Subcontractors} />
       <ProtectedRoute path="/musteriler" component={Customers} />
+      <ProtectedRoute path="/raporlar" component={Reports} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
