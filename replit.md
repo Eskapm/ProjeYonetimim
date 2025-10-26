@@ -6,17 +6,38 @@ This is a construction project management system for Eska Yapı Mühendislik İn
 
 ## Recent Changes (October 26, 2025)
 
-**Reports Module Completed**:
-- Comprehensive financial analytics dashboard with real-time data
-- Date filtering system (Tüm Zamanlar, Bu Ay, Bu Yıl, Özel Tarih Aralığı)
-- Financial summary cards displaying total income, expenses, and net profit
-- Tax summary card showing KDV, corporate tax, net profit after tax, and total tax burden
-- Monthly income/expense trend chart (LineChart) with chronological ordering
-- Category analysis with pie charts for İş Grubu and Rayiç Grubu expense breakdowns
-- Project-wise financial analysis table with profit/loss indicators
+**Invoices Module Enhancement**:
+- Added project-based filtering with dedicated select dropdown
+- Invoice search now includes project names
+- Filter logic supports multi-criteria (type, status, project) simultaneously
+
+**Reports Module - Multi-Tab System**:
+- **Tab 1: Mali Raporlar (Financial Reports)**:
+  - Comprehensive financial analytics dashboard with real-time data
+  - Date filtering system (Tüm Zamanlar, Bu Ay, Bu Yıl, Özel Tarih Aralığı)
+  - Financial summary cards displaying total income, expenses, and net profit
+  - Tax summary card showing KDV, corporate tax, net profit after tax, and total tax burden
+  - Monthly income/expense trend chart (LineChart) with chronological ordering
+  - Category analysis with pie charts for İş Grubu and Rayiç Grubu expense breakdowns
+  - Project-wise financial analysis table with profit/loss indicators
+  
+- **Tab 2: İşleyiş Raporları (Operational Reports)**:
+  - Task status dashboard (Total, Completed, In Progress, Waiting)
+  - Task completion rate calculation
+  - Task status distribution pie chart
+  - Project-wise task completion analysis with progress bars
+  
+- **Tab 3: Proje Raporları (Project Reports)**:
+  - Project status distribution chart
+  - Project summary statistics (total, active, completed)
+  - Detailed project table with location, area, dates, and status
+
+**Technical Improvements**:
 - All date filters use inclusive end-of-day timestamps (23:59:59.999) for accurate reporting
 - Monthly trends sorted by YYYY-MM keys for proper chronological display
 - Tax calculations use per-transaction arrays for accurate KDV computation
+- useMemo optimization for all computed values
+- Shadcn Tabs component for clean navigation between report types
 - E2E tested and verified working correctly
 
 ## User Preferences
