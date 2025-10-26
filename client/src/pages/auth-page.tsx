@@ -53,7 +53,7 @@ export default function AuthPage() {
       <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md space-y-6">
           <div className="flex flex-col items-center mb-8">
-            <img src={logoUrl} alt="ESKA Logo" className="h-[36rem] w-auto object-contain" />
+            <img src={logoUrl} alt="ESKA Logo" className="h-[18rem] w-auto object-contain" />
             <p className="text-lg font-medium text-foreground mt-4">İnşaat Proje Yönetim Sistemi</p>
           </div>
 
