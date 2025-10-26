@@ -511,6 +511,27 @@ export default function Projects() {
                   )}
                 />
 
+                <FormField
+                  control={form.control}
+                  name="advancePayment"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Avans Ödemesi (TL)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          value={field.value ?? ""} 
+                          type="number" 
+                          step="0.01" 
+                          placeholder="0.00" 
+                          data-testid="input-advance-payment" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 {form.watch("contractType") === "Maliyet + Kar Marjı" && (
                   <FormField
                     control={form.control}
