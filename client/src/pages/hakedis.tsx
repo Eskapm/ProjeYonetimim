@@ -54,6 +54,7 @@ import { format, parseISO } from "date-fns";
 import { tr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import eskaLogo from "@assets/ESKA LOGO TASARIMI_1761521113587.png";
+import { PrintHeader } from "@/components/print-header";
 import {
   Table,
   TableBody,
@@ -1053,34 +1054,16 @@ export default function Hakedis() {
 
           {viewingPaymentDetail && (
             <div className="space-y-6">
-              {/* Print-only Header */}
-              <div className="hidden print:block">
-                <div className="flex items-start justify-between mb-6 pb-4 border-b-2 border-black">
-                  <div>
-                    <img 
-                      src={eskaLogo} 
-                      alt="Eska Yapı Logo" 
-                      className="h-16 w-auto object-contain mb-2"
-                    />
-                    <p className="text-xs text-gray-600">
-                      Tel: 0505 821 54 79 | E-mail: enginkayserili@gmail.com
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-semibold">Tarih: {format(new Date(), "dd/MM/yyyy")}</p>
-                    <p className="text-xs">Hakediş No: {viewingPaymentDetail.paymentNumber}</p>
-                  </div>
-                </div>
-                
-                <h2 className="text-center text-base font-bold mb-4 uppercase">
-                  HAKEDİŞ TUTANAĞI
-                </h2>
-                
-                <div className="mb-4 text-xs">
-                  <p><strong>Proje:</strong> {projects.find(p => p.id === viewingPaymentDetail?.projectId)?.name || "Bilinmiyor"}</p>
-                  <p><strong>Hakediş Tarihi:</strong> {format(parseISO(viewingPaymentDetail.date as string), "dd MMMM yyyy", { locale: tr })}</p>
-                </div>
-              </div>
+              <PrintHeader 
+                documentTitle="HAKEDİŞ TUTANAĞI"
+                documentNumber={viewingPaymentDetail.paymentNumber?.toString()}
+                additionalInfo={
+                  <>
+                    <p><strong>Proje:</strong> {projects.find(p => p.id === viewingPaymentDetail?.projectId)?.name || "Bilinmiyor"}</p>
+                    <p><strong>Hakediş Tarihi:</strong> {format(parseISO(viewingPaymentDetail.date as string), "dd MMMM yyyy", { locale: tr })}</p>
+                  </>
+                }
+              />
 
               {/* Summary Cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 print:grid-cols-4">

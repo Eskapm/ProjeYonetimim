@@ -33,6 +33,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Search, Calculator, Loader2 } from "lucide-react";
 import { calculateTaxSummary } from "@shared/taxCalculations";
+import { PrintHeader } from "@/components/print-header";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -243,6 +244,8 @@ export default function Transactions() {
 
   return (
     <div className="space-y-6">
+      <PrintHeader documentTitle="İŞLEMLER RAPORU" />
+      
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Gelir & Gider İşlemleri</h1>

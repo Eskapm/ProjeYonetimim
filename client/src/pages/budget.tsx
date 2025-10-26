@@ -14,6 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertBudgetItemSchema, budgetItemStatusEnum, isGrubuEnum, rayicGrubuEnum, type BudgetItem, type InsertBudgetItem, type Project } from "@shared/schema";
 import { Plus, Pencil, Trash2, TrendingUp, TrendingDown, DollarSign, Clock, Filter, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { PrintHeader } from "@/components/print-header";
 import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -247,6 +248,8 @@ export default function BudgetPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <PrintHeader documentTitle="BÜTÇE-KEŞİF RAPORU" />
+      
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Bütçe-Keşif</h1>
