@@ -1,88 +1,149 @@
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { StatsCard } from "@/components/stats-card";
 import { ProjectCard } from "@/components/project-card";
 import { TransactionTable } from "@/components/transaction-table";
 import { PrintButton } from "@/components/print-button";
-import { FolderKanban, Plus } from "lucide-react";
+import { FolderKanban, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { insertProjectSchema, type InsertProject, type Project, type Customer, type TransactionWithProject, projectStatusEnum } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
-  // TODO: Remove mock data - replace with real data from API
-  const mockProjects = [
-    {
-      id: "1",
-      name: "Ataşehir Konut Projesi",
-      location: "İstanbul, Ataşehir",
-      area: "2,500",
-      startDate: "01.01.2024",
-      endDate: "31.12.2024",
-      status: "Devam Ediyor",
-      costPerSqm: "₺4,250",
-    },
-    {
-      id: "2",
-      name: "Beykoz Villa İnşaatı",
-      location: "İstanbul, Beykoz",
-      area: "850",
-      startDate: "15.03.2024",
-      endDate: "15.09.2024",
-      status: "Planlama",
-      costPerSqm: "₺6,800",
-    },
-    {
-      id: "3",
-      name: "Maltepe Ofis Binası",
-      location: "İstanbul, Maltepe",
-      area: "3,200",
-      startDate: "01.06.2023",
-      endDate: "30.11.2023",
-      status: "Tamamlandı",
-      costPerSqm: "₺5,150",
-    },
-  ];
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { toast } = useToast();
 
-  const mockTransactions = [
-    {
-      id: "1",
-      projectId: "1",
-      date: "15.01.2024",
-      projectName: "Ataşehir Konut Projesi",
-      type: "Gider" as const,
-      amount: "125000",
-      isGrubu: "Kaba İmalat",
-      rayicGrubu: "Malzeme",
-      description: "Beton ve demir malzeme alımı",
-      invoiceNumber: null,
-      createdAt: new Date("2024-01-15"),
+  // Fetch projects from API
+  const { data: projects = [], isLoading: projectsLoading } = useQuery<Project[]>({
+    queryKey: ["/api/projects"],
+  });
+
+  // Fetch customers for the form
+  const { data: customers = [] } = useQuery<Customer[]>({
+    queryKey: ["/api/customers"],
+  });
+
+  // Fetch transactions
+  const { data: transactions = [] } = useQuery<TransactionWithProject[]>({
+    queryKey: ["/api/transactions"],
+  });
+
+  // Create project mutation
+  const createProjectMutation = useMutation({
+    mutationFn: async (data: InsertProject) => {
+      const response = await apiRequest("POST", "/api/projects", data);
+      return response.json();
     },
-    {
-      id: "2",
-      projectId: "2",
-      date: "18.01.2024",
-      projectName: "Beykoz Villa İnşaatı",
-      type: "Gelir" as const,
-      amount: "500000",
-      isGrubu: "Genel Giderler ve Endirekt Giderler",
-      rayicGrubu: "Paket",
-      description: "Müşteri ilk hakediş ödemesi",
-      invoiceNumber: null,
-      createdAt: new Date("2024-01-18"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      toast({
+        title: "Başarılı",
+        description: "Proje başarıyla oluşturuldu",
+      });
+      setIsDialogOpen(false);
+      form.reset();
     },
-    {
-      id: "3",
-      projectId: "1",
-      date: "22.01.2024",
-      projectName: "Ataşehir Konut Projesi",
-      type: "Gider" as const,
-      amount: "85000",
-      isGrubu: "Kaba İmalat",
-      rayicGrubu: "İşçilik",
-      description: "İşçi maaşları - Ocak ayı",
-      invoiceNumber: null,
-      createdAt: new Date("2024-01-22"),
+    onError: (error: Error) => {
+      toast({
+        title: "Hata",
+        description: error.message || "Proje oluşturulurken bir hata oluştu",
+        variant: "destructive",
+      });
     },
-  ];
+  });
+
+  // Form setup
+  const form = useForm<InsertProject>({
+    resolver: zodResolver(insertProjectSchema),
+    defaultValues: {
+      name: "",
+      location: "",
+      area: "",
+      startDate: "",
+      endDate: "",
+      status: "Planlama",
+      description: "",
+      notes: "",
+      customerId: "none",
+    },
+  });
+
+  const onSubmit = (data: InsertProject) => {
+    // Convert empty strings to null for optional fields
+    const cleanedData = {
+      ...data,
+      location: data.location || null,
+      area: data.area || null,
+      startDate: data.startDate || null,
+      endDate: data.endDate || null,
+      description: data.description || null,
+      notes: data.notes || null,
+      customerId: (data.customerId === "" || data.customerId === "none" || !data.customerId) ? null : data.customerId,
+    };
+
+    createProjectMutation.mutate(cleanedData);
+  };
+
+  const handleAddProject = () => {
+    form.reset({
+      name: "",
+      location: "",
+      area: "",
+      startDate: "",
+      endDate: "",
+      status: "Planlama",
+      description: "",
+      notes: "",
+      customerId: "none",
+    });
+    setIsDialogOpen(true);
+  };
+
+  // Calculate stats
+  const totalProjects = projects.length;
+  const activeProjects = projects.filter(p => p.status === "Devam Ediyor").length;
+  const completedProjects = projects.filter(p => p.status === "Tamamlandı").length;
+
+  // Get recent projects (last 6)
+  const recentProjects = [...projects]
+    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+    .slice(0, 6);
+
+  // Get recent transactions (last 10)
+  const recentTransactions = [...transactions]
+    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+    .slice(0, 10);
 
   return (
     <div className="space-y-8">
@@ -93,7 +154,7 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center gap-2">
           <PrintButton />
-          <Button data-testid="button-new-project">
+          <Button onClick={handleAddProject} data-testid="button-new-project">
             <Plus className="h-4 w-4 mr-2" />
             Yeni Proje
           </Button>
@@ -101,36 +162,59 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatsCard
-          title="Toplam Proje"
-          value="12"
-          icon={FolderKanban}
-          description="Aktif: 8, Tamamlanan: 4"
-        />
+        {projectsLoading ? (
+          <Skeleton className="h-32" />
+        ) : (
+          <StatsCard
+            title="Toplam Proje"
+            value={totalProjects.toString()}
+            icon={FolderKanban}
+            description={`Aktif: ${activeProjects}, Tamamlanan: ${completedProjects}`}
+          />
+        )}
       </div>
 
       <Tabs defaultValue="projects" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="projects" data-testid="tab-projects">Aktif Projeler</TabsTrigger>
+          <TabsTrigger value="projects" data-testid="tab-projects">Son Eklenen Projeler</TabsTrigger>
           <TabsTrigger value="transactions" data-testid="tab-transactions">Son İşlemler</TabsTrigger>
         </TabsList>
 
         <TabsContent value="projects" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Aktif Projeler</CardTitle>
+              <CardTitle>Son Eklenen Projeler</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {mockProjects.map((project) => (
-                  <ProjectCard
-                    key={project.id}
-                    {...project}
-                    onView={() => console.log('View project', project.id)}
-                    onEdit={() => console.log('Edit project', project.id)}
-                  />
-                ))}
-              </div>
+              {projectsLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-64" />
+                  ))}
+                </div>
+              ) : recentProjects.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  Henüz proje eklenmemiş
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {recentProjects.map((project) => (
+                    <ProjectCard
+                      key={project.id}
+                      id={project.id}
+                      name={project.name}
+                      location={project.location || "-"}
+                      area={project.area || "-"}
+                      startDate={project.startDate || "-"}
+                      endDate={project.endDate || "-"}
+                      status={project.status}
+                      costPerSqm="-"
+                      onView={() => window.location.href = `/projeler/${project.id}`}
+                      onEdit={() => window.location.href = `/projeler`}
+                    />
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -141,15 +225,245 @@ export default function Dashboard() {
               <CardTitle>Son İşlemler</CardTitle>
             </CardHeader>
             <CardContent>
-              <TransactionTable
-                transactions={mockTransactions}
-                onEdit={(id) => console.log('Edit transaction', id)}
-                onDelete={(id) => console.log('Delete transaction', id)}
-              />
+              {recentTransactions.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  Henüz işlem eklenmemiş
+                </div>
+              ) : (
+                <TransactionTable
+                  transactions={recentTransactions}
+                  onEdit={(id) => window.location.href = `/gelir-gider`}
+                  onDelete={(id) => console.log('Delete transaction', id)}
+                />
+              )}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Add Project Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Yeni Proje Ekle</DialogTitle>
+            <DialogDescription>
+              Yeni bir proje oluşturmak için aşağıdaki bilgileri doldurun
+            </DialogDescription>
+          </DialogHeader>
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Proje Adı *</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Proje adını girin"
+                        {...field}
+                        data-testid="input-project-name"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="customerId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Müşteri</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || undefined}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-customer">
+                          <SelectValue placeholder="Müşteri seçin" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">Müşteri Seçilmedi</SelectItem>
+                        {customers.map((customer) => (
+                          <SelectItem key={customer.id} value={customer.id}>
+                            {customer.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Konum</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Proje konumunu girin"
+                        {...field}
+                        value={field.value || ""}
+                        data-testid="input-location"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="area"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Alan (m²)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Proje alanını girin"
+                        {...field}
+                        value={field.value || ""}
+                        data-testid="input-area"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="startDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Başlangıç Tarihi</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          {...field}
+                          value={field.value || ""}
+                          data-testid="input-start-date"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="endDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bitiş Tarihi</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          {...field}
+                          value={field.value || ""}
+                          data-testid="input-end-date"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Durum *</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-status">
+                          <SelectValue placeholder="Durum seçin" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {projectStatusEnum.map((status) => (
+                          <SelectItem key={status} value={status}>
+                            {status}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Açıklama</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Proje açıklamasını girin"
+                        className="min-h-[100px]"
+                        {...field}
+                        value={field.value || ""}
+                        data-testid="input-description"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notlar</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="İç notlar (isteğe bağlı)"
+                        className="min-h-[80px]"
+                        {...field}
+                        value={field.value || ""}
+                        data-testid="input-notes"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                  data-testid="button-cancel"
+                >
+                  İptal
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createProjectMutation.isPending}
+                  data-testid="button-save-project"
+                >
+                  {createProjectMutation.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Kaydet
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

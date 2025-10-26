@@ -121,6 +121,11 @@ export const insertTransactionSchema = createInsertSchema(transactions).omit({
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Transaction = typeof transactions.$inferSelect;
 
+// Extended type for transactions with project information
+export interface TransactionWithProject extends Transaction {
+  projectName: string;
+}
+
 // Faturalar tablosu
 export const invoices = pgTable("invoices", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
