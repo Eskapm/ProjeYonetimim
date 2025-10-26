@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { insertProjectSchema, insertCustomerSchema, insertSubcontractorSchema, insertTransactionSchema, insertSiteDiarySchema } from "@shared/schema";
+import { insertProjectSchema, insertCustomerSchema, insertSubcontractorSchema, insertTransactionSchema, insertSiteDiarySchema, insertTimesheetSchema } from "@shared/schema";
 import { ZodError } from "zod";
 
 // Authentication middleware - Giriş yapmayan kullanıcıları engeller
@@ -281,6 +281,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.sendStatus(204);
     } catch (error) {
       res.status(500).send("Şantiye defteri silinirken hata oluştu");
+    }
+  });
+
+  // Timesheet (Puantaj) routes
+  app.get("/api/timesheets", requireAuth, async (req, res) => {
+    try {
+      const timesheets = await storage.getTimesheets();
+      res.json(timesheets);
+    } catch (error) {
+      res.status(500).send("Puantaj kayıtları yüklenirken hata oluştu");
+    }
+  });
+
+  app.post("/api/timesheets", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertTimesheetSchema.parse(req.body);
+      const timesheet = await storage.createTimesheet(validatedData);
+      res.status(201).json(timesheet);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).send(error.message || "Geçersiz puantaj verisi");
+      }
+      res.status(500).send("Puantaj kaydı oluşturulurken hata oluştu");
+    }
+  });
+
+  app.patch("/api/timesheets/:id", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertTimesheetSchema.partial().parse(req.body);
+      const timesheet = await storage.updateTimesheet(req.params.id, validatedData);
+      if (!timesheet) {
+        return res.status(404).send("Puantaj kaydı bulunamadı");
+      }
+      res.json(timesheet);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).send(error.message || "Geçersiz puantaj verisi");
+      }
+      res.status(500).send("Puantaj kaydı güncellenirken hata oluştu");
+    }
+  });
+
+  app.delete("/api/timesheets/:id", requireAuth, async (req, res) => {
+    try {
+      const success = await storage.deleteTimesheet(req.params.id);
+      if (!success) {
+        return res.status(404).send("Puantaj kaydı bulunamadı");
+      }
+      res.sendStatus(204);
+    } catch (error) {
+      res.status(500).send("Puantaj kaydı silinirken hata oluştu");
     }
   });
 
