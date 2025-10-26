@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { insertProjectSchema, insertCustomerSchema, insertSubcontractorSchema, insertTransactionSchema, insertSiteDiarySchema, insertTimesheetSchema, insertInvoiceSchema, insertProgressPaymentSchema, insertTaskSchema } from "@shared/schema";
+import { insertProjectSchema, insertCustomerSchema, insertSubcontractorSchema, insertTransactionSchema, insertSiteDiarySchema, insertTimesheetSchema, insertInvoiceSchema, insertProgressPaymentSchema, insertTaskSchema, insertBudgetItemSchema } from "@shared/schema";
 import { ZodError } from "zod";
 
 // Authentication middleware - Giriş yapmayan kullanıcıları engeller
@@ -491,6 +491,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.sendStatus(204);
     } catch (error) {
       res.status(500).send("Hakediş silinirken hata oluştu");
+    }
+  });
+
+  // Budget Item routes
+  app.get("/api/budget-items", requireAuth, async (req, res) => {
+    try {
+      const items = await storage.getBudgetItems();
+      res.json(items);
+    } catch (error) {
+      res.status(500).send("Bütçe kalemleri yüklenirken hata oluştu");
+    }
+  });
+
+  app.get("/api/budget-items/:id", requireAuth, async (req, res) => {
+    try {
+      const item = await storage.getBudgetItem(req.params.id);
+      if (!item) {
+        return res.status(404).send("Bütçe kalemi bulunamadı");
+      }
+      res.json(item);
+    } catch (error) {
+      res.status(500).send("Bütçe kalemi yüklenirken hata oluştu");
+    }
+  });
+
+  app.post("/api/budget-items", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertBudgetItemSchema.parse(req.body);
+      const item = await storage.createBudgetItem(validatedData);
+      res.status(201).json(item);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).send(error.message || "Geçersiz bütçe kalemi verisi");
+      }
+      res.status(500).send("Bütçe kalemi oluşturulurken hata oluştu");
+    }
+  });
+
+  app.patch("/api/budget-items/:id", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertBudgetItemSchema.partial().parse(req.body);
+      const item = await storage.updateBudgetItem(req.params.id, validatedData);
+      if (!item) {
+        return res.status(404).send("Bütçe kalemi bulunamadı");
+      }
+      res.json(item);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).send(error.message || "Geçersiz bütçe kalemi verisi");
+      }
+      res.status(500).send("Bütçe kalemi güncellenirken hata oluştu");
+    }
+  });
+
+  app.delete("/api/budget-items/:id", requireAuth, async (req, res) => {
+    try {
+      const success = await storage.deleteBudgetItem(req.params.id);
+      if (!success) {
+        return res.status(404).send("Bütçe kalemi bulunamadı");
+      }
+      res.sendStatus(204);
+    } catch (error) {
+      res.status(500).send("Bütçe kalemi silinirken hata oluştu");
     }
   });
 

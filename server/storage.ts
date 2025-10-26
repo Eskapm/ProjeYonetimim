@@ -21,6 +21,8 @@ import {
   type InsertProgressPayment,
   type Task,
   type InsertTask,
+  type BudgetItem,
+  type InsertBudgetItem,
   users,
   projects,
   customers,
@@ -31,6 +33,7 @@ import {
   invoices,
   progressPayments,
   tasks,
+  budgetItems,
 } from "@shared/schema";
 import session, { type Store } from "express-session";
 import createMemoryStore from "memorystore";
@@ -105,6 +108,13 @@ export interface IStorage {
   createTask(task: InsertTask): Promise<Task>;
   updateTask(id: string, task: Partial<InsertTask>): Promise<Task | undefined>;
   deleteTask(id: string): Promise<boolean>;
+
+  // Budget Item methods
+  getBudgetItems(): Promise<BudgetItem[]>;
+  getBudgetItem(id: string): Promise<BudgetItem | undefined>;
+  createBudgetItem(item: InsertBudgetItem): Promise<BudgetItem>;
+  updateBudgetItem(id: string, item: Partial<InsertBudgetItem>): Promise<BudgetItem | undefined>;
+  deleteBudgetItem(id: string): Promise<boolean>;
 
   sessionStore: Store;
 }
@@ -356,6 +366,31 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTask(id: string): Promise<boolean> {
     const result = await db.delete(tasks).where(eq(tasks.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Budget Item methods
+  async getBudgetItems(): Promise<BudgetItem[]> {
+    return await db.select().from(budgetItems);
+  }
+
+  async getBudgetItem(id: string): Promise<BudgetItem | undefined> {
+    const [item] = await db.select().from(budgetItems).where(eq(budgetItems.id, id)).limit(1);
+    return item;
+  }
+
+  async createBudgetItem(item: InsertBudgetItem): Promise<BudgetItem> {
+    const [newItem] = await db.insert(budgetItems).values(item).returning();
+    return newItem;
+  }
+
+  async updateBudgetItem(id: string, item: Partial<InsertBudgetItem>): Promise<BudgetItem | undefined> {
+    const [updated] = await db.update(budgetItems).set(item).where(eq(budgetItems.id, id)).returning();
+    return updated;
+  }
+
+  async deleteBudgetItem(id: string): Promise<boolean> {
+    const result = await db.delete(budgetItems).where(eq(budgetItems.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 }

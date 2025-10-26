@@ -43,6 +43,9 @@ export const contractTypeEnum = ["Anahtar Teslim", "Maliyet + Kar Marjı"] as co
 // Hakediş durumları
 export const progressPaymentStatusEnum = ["Bekliyor", "Kısmi Ödendi", "Ödendi"] as const;
 
+// Bütçe kalemi durumları
+export const budgetItemStatusEnum = ["Başlamadı", "Devam Ediyor", "Tamamlandı"] as const;
+
 // Projeler tablosu
 export const projects = pgTable("projects", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -203,11 +206,18 @@ export const budgetItems = pgTable("budget_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   projectId: varchar("project_id").notNull(),
   name: text("name").notNull(),
+  description: text("description"),
   quantity: decimal("quantity", { precision: 10, scale: 2 }).notNull(),
   unit: text("unit").notNull(),
   unitPrice: decimal("unit_price", { precision: 12, scale: 2 }).notNull(),
   isGrubu: text("is_grubu").notNull(),
   rayicGrubu: text("rayic_grubu").notNull(),
+  startDate: date("start_date"),
+  endDate: date("end_date"),
+  status: text("status").notNull().default("Başlamadı"),
+  progress: integer("progress").notNull().default(0), // 0-100 arası yüzde
+  actualQuantity: decimal("actual_quantity", { precision: 10, scale: 2 }),
+  actualUnitPrice: decimal("actual_unit_price", { precision: 12, scale: 2 }),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
