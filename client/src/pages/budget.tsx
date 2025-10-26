@@ -45,10 +45,7 @@ export default function BudgetPage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertBudgetItem) => {
-      return apiRequest("/api/budget-items", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("POST", "/api/budget-items", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/budget-items"] });
@@ -63,10 +60,7 @@ export default function BudgetPage() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<InsertBudgetItem> }) => {
-      return apiRequest(`/api/budget-items/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("PATCH", `/api/budget-items/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/budget-items"] });
@@ -81,7 +75,7 @@ export default function BudgetPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest(`/api/budget-items/${id}`, { method: "DELETE" });
+      return apiRequest("DELETE", `/api/budget-items/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/budget-items"] });
