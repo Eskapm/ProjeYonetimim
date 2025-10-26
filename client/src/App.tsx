@@ -16,6 +16,7 @@ import Projects from "@/pages/projects";
 import ProjectDetail from "@/pages/project-detail";
 import Transactions from "@/pages/transactions";
 import SiteDiary from "@/pages/site-diary";
+import Puantaj from "@/pages/puantaj";
 import Subcontractors from "@/pages/subcontractors";
 import Customers from "@/pages/customers";
 import WorkSchedule from "@/pages/work-schedule";
@@ -82,6 +83,7 @@ function Router() {
       <ProtectedRoute path="/projeler/:id" component={ProjectDetail} />
       <ProtectedRoute path="/islemler" component={Transactions} />
       <ProtectedRoute path="/santiye-defteri" component={SiteDiary} />
+      <ProtectedRoute path="/puantaj" component={Puantaj} />
       <ProtectedRoute path="/faturalar" component={Invoices} />
       <ProtectedRoute path="/is-programi" component={WorkSchedule} />
       <ProtectedRoute path="/butce" component={Budget} />
