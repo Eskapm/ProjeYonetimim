@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Building2, Lock, User } from "lucide-react";
-import logoUrl from "@assets/Eska Logo.png";
+import logoUrl from "@assets/ESKA LOGO TASARIMI2_1761496920659.png";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
@@ -53,10 +53,9 @@ export default function AuthPage() {
       <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md space-y-6">
           <div className="flex flex-col items-center gap-4 mb-8">
-            <img src={logoUrl} alt="Eska Yapı Logo" className="h-16" />
+            <img src={logoUrl} alt="ESKA Logo" className="h-72 w-auto object-contain" />
             <div className="text-center">
-              <h1 className="text-3xl font-bold">Eska Yapı</h1>
-              <p className="text-muted-foreground mt-2">İnşaat Proje Yönetim Sistemi</p>
+              <p className="text-lg font-medium text-foreground">İnşaat Proje Yönetim Sistemi</p>
             </div>
           </div>
 
