@@ -114,6 +114,26 @@ export default function Hakedis() {
     );
   }, [allTransactions, form.watch("projectId")]);
 
+  // Calculate remaining advance for selected project
+  const remainingAdvance = useMemo(() => {
+    const selectedProjectId = form.watch("projectId");
+    if (!selectedProjectId) return { total: 0, used: 0, remaining: 0 };
+    
+    const project = projects.find(p => p.id === selectedProjectId);
+    const totalAdvance = parseFloat(project?.advancePayment as string || "0");
+    
+    // Sum all advance deductions for this project (excluding current editing payment)
+    const usedAdvance = payments
+      .filter(p => p.projectId === selectedProjectId && p.id !== editingPayment?.id)
+      .reduce((sum, p) => sum + parseFloat(p.advanceDeduction as string || "0"), 0);
+    
+    return {
+      total: totalAdvance,
+      used: usedAdvance,
+      remaining: totalAdvance - usedAdvance
+    };
+  }, [form.watch("projectId"), projects, payments, editingPayment]);
+
   // Calculate total amount from selected transactions
   useEffect(() => {
     const total = selectedTransactionIds.reduce((sum, id) => {
@@ -123,6 +143,13 @@ export default function Hakedis() {
     
     form.setValue("amount", total.toFixed(2));
   }, [selectedTransactionIds, allTransactions, form]);
+
+  // Auto-set advance deduction rate to 0 if no remaining advance
+  useEffect(() => {
+    if (remainingAdvance.remaining <= 0) {
+      form.setValue("advanceDeductionRate", "0");
+    }
+  }, [remainingAdvance.remaining, form]);
 
   // Create payment mutation
   const createPaymentMutation = useMutation({
@@ -740,9 +767,37 @@ export default function Hakedis() {
                           placeholder="0.00"
                           {...field}
                           value={field.value || ""}
+                          disabled={remainingAdvance.remaining <= 0}
                           data-testid="input-advance-deduction-rate"
                         />
                       </FormControl>
+                      {remainingAdvance.remaining <= 0 && (
+                        <p className="text-xs text-destructive">
+                          Proje avansı tükenmiştir, kesinti yapılamaz
+                        </p>
+                      )}
+                      {remainingAdvance.total > 0 && (
+                        <div className="text-xs space-y-1 mt-2 p-3 bg-muted/30 rounded-lg">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Toplam Avans:</span>
+                            <span className="font-mono font-medium">
+                              {remainingAdvance.total.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Kullanılan:</span>
+                            <span className="font-mono text-destructive">
+                              -{remainingAdvance.used.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                            </span>
+                          </div>
+                          <div className="flex justify-between border-t pt-1">
+                            <span className="text-muted-foreground font-semibold">Kalan Avans:</span>
+                            <span className="font-mono font-bold text-green-600">
+                              {remainingAdvance.remaining.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                            </span>
+                          </div>
+                        </div>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
