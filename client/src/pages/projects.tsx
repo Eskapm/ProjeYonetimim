@@ -138,7 +138,7 @@ export default function Projects() {
       status: "Planlama",
       description: "",
       notes: "",
-      customerId: undefined,
+      customerId: "none",
     },
   });
 
