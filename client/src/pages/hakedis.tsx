@@ -53,7 +53,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { format, parseISO } from "date-fns";
 import { tr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import eskaLogo from "@assets/ESKA LOGO TASARIMI_1761521113587.png";
 import { PrintHeader } from "@/components/print-header";
 import {
   Table,
