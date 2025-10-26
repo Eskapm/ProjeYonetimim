@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Building2, Lock, User } from "lucide-react";
-import logoUrl from "@assets/ESKA LOGO TASARIMI2_1761496920659.png";
+import logoUrl from "@assets/ESKA LOGO TASARIMI_1761497797352.png";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();

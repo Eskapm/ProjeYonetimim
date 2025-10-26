@@ -22,7 +22,7 @@ import {
   SidebarMenuItem,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import logoUrl from "@assets/ESKA LOGO TASARIMI2_1761496920659.png";
+import logoUrl from "@assets/ESKA LOGO TASARIMI_1761497797352.png";
 
 const menuItems = [
   { title: "Ana Sayfa", url: "/", icon: Home },

@@ -24,7 +24,7 @@ import Reports from "@/pages/reports";
 import Invoices from "@/pages/invoices";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
-import logoUrl from "@assets/ESKA LOGO TASARIMI2_1761496920659.png";
+import logoUrl from "@assets/ESKA LOGO TASARIMI_1761497797352.png";
 
 function ThemeToggle() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
