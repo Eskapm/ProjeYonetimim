@@ -68,6 +68,7 @@ export default function Invoices() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedProject, setSelectedProject] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [deleteInvoiceId, setDeleteInvoiceId] = useState<string | null>(null);
@@ -302,10 +303,12 @@ export default function Invoices() {
       invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       invoice.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       invoice.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.subcontractorName?.toLowerCase().includes(searchTerm.toLowerCase());
+      invoice.subcontractorName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.projectName?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = selectedType === "all" || invoice.type === selectedType;
     const matchesStatus = selectedStatus === "all" || invoice.status === selectedStatus;
-    return matchesSearch && matchesType && matchesStatus;
+    const matchesProject = selectedProject === "all" || invoice.projectId === selectedProject;
+    return matchesSearch && matchesType && matchesStatus && matchesProject;
   });
 
   const isPending = createInvoiceMutation.isPending || updateInvoiceMutation.isPending;
@@ -351,7 +354,7 @@ export default function Invoices() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Fatura numarası veya açıklamada ara..."
+              placeholder="Fatura numarası, açıklama veya projede ara..."
               className="pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -380,6 +383,19 @@ export default function Invoices() {
               {invoiceStatusEnum.map((status) => (
                 <SelectItem key={status} value={status}>
                   {status}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedProject} onValueChange={setSelectedProject}>
+            <SelectTrigger className="w-full sm:w-[200px]" data-testid="select-project-filter">
+              <SelectValue placeholder="Proje" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tüm Projeler</SelectItem>
+              {projects.map((project) => (
+                <SelectItem key={project.id} value={project.id}>
+                  {project.name}
                 </SelectItem>
               ))}
             </SelectContent>
