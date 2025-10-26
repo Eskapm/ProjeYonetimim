@@ -164,6 +164,7 @@ export default function Projects() {
   };
 
   const handleAddProject = () => {
+    console.log("Yeni Proje Ekle butonuna tıklandı");
     setEditingProject(null);
     form.reset({
       name: "",
@@ -177,6 +178,7 @@ export default function Projects() {
       customerId: "",
     });
     setIsDialogOpen(true);
+    console.log("Dialog açıldı, isDialogOpen:", true);
   };
 
   const handleEditProject = (project: Project) => {
