@@ -13,12 +13,15 @@ import {
   type InsertTransaction,
   type SiteDiary,
   type InsertSiteDiary,
+  type Timesheet,
+  type InsertTimesheet,
   users,
   projects,
   customers,
   subcontractors,
   transactions,
   siteDiary,
+  timesheets,
 } from "@shared/schema";
 import session, { type Store } from "express-session";
 import createMemoryStore from "memorystore";
@@ -65,6 +68,13 @@ export interface IStorage {
   createSiteDiaryEntry(entry: InsertSiteDiary): Promise<SiteDiary>;
   updateSiteDiaryEntry(id: string, entry: Partial<InsertSiteDiary>): Promise<SiteDiary | undefined>;
   deleteSiteDiaryEntry(id: string): Promise<boolean>;
+
+  // Timesheet methods
+  getTimesheets(): Promise<Timesheet[]>;
+  getTimesheet(id: string): Promise<Timesheet | undefined>;
+  createTimesheet(timesheet: InsertTimesheet): Promise<Timesheet>;
+  updateTimesheet(id: string, timesheet: Partial<InsertTimesheet>): Promise<Timesheet | undefined>;
+  deleteTimesheet(id: string): Promise<boolean>;
 
   sessionStore: Store;
 }
@@ -216,6 +226,31 @@ export class DatabaseStorage implements IStorage {
 
   async deleteSiteDiaryEntry(id: string): Promise<boolean> {
     const result = await db.delete(siteDiary).where(eq(siteDiary.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Timesheet methods
+  async getTimesheets(): Promise<Timesheet[]> {
+    return await db.select().from(timesheets);
+  }
+
+  async getTimesheet(id: string): Promise<Timesheet | undefined> {
+    const [timesheet] = await db.select().from(timesheets).where(eq(timesheets.id, id)).limit(1);
+    return timesheet;
+  }
+
+  async createTimesheet(timesheet: InsertTimesheet): Promise<Timesheet> {
+    const [newTimesheet] = await db.insert(timesheets).values(timesheet).returning();
+    return newTimesheet;
+  }
+
+  async updateTimesheet(id: string, timesheet: Partial<InsertTimesheet>): Promise<Timesheet | undefined> {
+    const [updated] = await db.update(timesheets).set(timesheet).where(eq(timesheets.id, id)).returning();
+    return updated;
+  }
+
+  async deleteTimesheet(id: string): Promise<boolean> {
+    const result = await db.delete(timesheets).where(eq(timesheets.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 }
