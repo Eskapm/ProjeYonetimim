@@ -2,101 +2,7 @@
 
 ## Overview
 
-This is a construction project management system for Eska Yapı Mühendislik İnşaat Emlak Turizm ve Ticaret Limited Şirketi. The application is designed to manage construction projects, track financial transactions, maintain site diaries, manage subcontractors and customers, and calculate Turkish tax obligations. The interface is entirely in Turkish and follows Material Design principles adapted for enterprise construction management.
-
-## Recent Changes (October 26, 2025)
-
-**Hakediş Modülü Redesign - Transaction-Based System**:
-- **Schema Enhancement**: Added `transactionIds` JSONB field to progressPayments table for storing selected expense transaction IDs
-- **Form Redesign**: 
-  - Giderler (expense transactions) selection via checkbox table
-  - Auto-calculated total amount from selected transactions
-  - Real-time updates when transactions are selected/deselected
-  - Transaction list filtered by selected project (only expense type)
-  - Form displays: Date, Description, İş Grubu, Rayiç Grubu, Amount per transaction
-- **Detail View Dialog**: 
-  - Eye icon button in table for viewing hakediş details
-  - Shows summary cards: Toplam Tutar, Müteahhitlik Karı, Brüt Tutar, Net Ödeme
-  - Displays itemized list of all selected transactions with totals
-  - Shows full description and calculation breakdown
-- **Enhanced Table**: Added "Detayları Görüntüle" (View Details) button with Eye icon
-- **Form Logic**: 
-  - selectedTransactionIds state syncs with form
-  - useEffect hook auto-calculates amount from selected transactions
-  - Edit mode pre-populates selected transactions from stored IDs
-  - Submit includes transaction IDs array in payload
-
-**Bütçe-Keşif Print Feature**:
-- Added PrintButton component to page header
-- Applied `no-print` class to filters card and action buttons
-- Applied `no-print` class to "İşlemler" (operations) column header and cells
-- Print-friendly table layout with all budget items visible
-
-**Project Detail Page Bug Fix**:
-- Fixed mock data issue - now fetches real project from API using projectId parameter
-- Added proper loading and error states
-- All project fields now display actual data from database
-
-## Recent Changes (October 26, 2025) - Previous
-
-**İş Programı (Work Schedule) Module - Complete Implementation**:
-- **Database Schema**: Tasks table fully implemented with fields: title, description, projectId (nullable), startDate, dueDate, status (Beklemede/Devam Ediyor/Tamamlandı/İptal), priority (Düşük/Orta/Yüksek/Acil), progress (0-100%), assignedTo, checklist (JSONB array of {id, text, completed})
-- **Backend**: Complete CRUD operations in storage and routes layers (GET/POST/PATCH/DELETE /api/tasks)
-- **Frontend Features**:
-  - **Summary Dashboard**: 5 metric cards (Toplam/Beklemede/Devam Ediyor/Tamamlandı/İptal)
-  - **Advanced Filtering**: Multi-level filters (project, status, priority) + search query
-  - **Sorting Options**: By due date, priority, progress, or title
-  - **Task Cards**: Progress bars, priority badges, status icons, checklist summary, date display
-  - **Task Form (Dialog)**: Title, description, project selection, date pickers, status/priority selects, progress slider (0-100%), checklist management (add/remove/check items)
-  - **Responsive Grid**: 3-column on desktop, 2 on tablet, 1 on mobile
-- **Type Safety**: ChecklistItem interface with id/text/completed structure; all field names aligned between schema and frontend
-- **Architect Reviewed**: ✅ Schema consistency verified, field naming corrected (title/dueDate/assignedTo vs old name/endDate/responsible), status enum synchronized
-
-**Hakediş Module - Advanced Financial Calculations**:
-- **Database Schema**: Added `contractorFeeRate`, `grossAmount`, `advanceDeductionRate`, `advanceDeduction`, `netPayment` fields to progressPayments table
-- **Projects Table**: Added `advancePayment` field for tracking project advance payments
-- **Hakediş Form**: 
-  - Real-time auto-calculation for contractor fee, gross amount, advance deduction, and net payment
-  - Formula: grossAmount = amount + (amount × contractorFeeRate/100); advanceDeduction = grossAmount × (advanceDeductionRate/100); netPayment = grossAmount - advanceDeduction
-  - Uses React Hook Form watch/useEffect pattern with short-circuit logic to prevent infinite loops
-- **Hakediş Table**: Added columns for Müt. % (contractor fee), Brüt Tutar (gross), Avans Kesinti (deduction), Net Ödeme (net payment)
-- **Architect Reviewed**: ✅ Calculations verified correct, no performance issues
-
-**Reports Module - Multi-Level Filtering System**:
-- **Advanced Filters Panel**: 
-  - Shared filter state for Proje (project), İş Grubu (work group), and Rayiç Grubu (cost group)
-  - Filter dropdowns integrate with all report tabs
-  - Filters apply to: Mali Raporlar, Proje Raporları, Hakediş Raporları
-  
-- **Tab 1: Mali Raporlar (Financial Reports)**:
-  - Date filtering + Advanced multi-level filters (project, İş Grubu, Rayiç Grubu)
-  - Financial summary cards with filtered data
-  - Tax summary calculations
-  - Monthly income/expense trend chart (chronologically sorted)
-  - İş Grubu and Rayiç Grubu pie charts (automatically filtered)
-  - Project-wise financial analysis table
-  
-- **Tab 2: İşleyiş Raporları (Operational Reports)**:
-  - Task status dashboard
-  - Task completion analysis
-  - Project-wise task completion with progress bars
-  
-- **Tab 3: Proje Raporları (Project Reports)**:
-  - Project status distribution
-  - Detailed project table with filtering
-  
-- **Tab 4: Hakediş Raporları (Progress Payment Reports)**:
-  - **Enhanced Summary Cards**: 5 cards showing Toplam Hakediş, Brüt Tutar, Avans Kesintisi, Net Ödeme, Alınan Ödemeler
-  - Project filtering support (selectedProjectId filter)
-  - Calculations include contractor fees and advance deductions
-  - Payment status distribution chart
-  - Project-wise hakediş summary table
-
-**Technical Implementation**:
-- `filteredTransactions` useMemo applies date + project + İş Grubu + Rayiç Grubu filters
-- All computed values (financialSummary, workGroupData, costGroupData, projectFinancials) automatically react to filter changes
-- Hakediş summary cards use IIFE pattern for filtered payment calculations
-- Net payment calculation: (gross - advanceDeduction) or fallback to database value
+This project is a comprehensive construction project management system developed for Eska Yapı Mühendislik İnşaat Emlak Turizm ve Ticaret Limited Şirketi. Its primary purpose is to streamline the management of construction projects, encompassing financial tracking, site diary maintenance, subcontractor and customer relationship management, and Turkish tax calculations. The system features a fully Turkish interface designed with Material Design principles adapted for enterprise construction management, aiming to provide an efficient and professional tool for the construction industry.
 
 ## User Preferences
 
@@ -106,165 +12,74 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend Architecture
 
-**Framework**: React 18+ with TypeScript using Vite as the build tool
-
-**UI Component Library**: shadcn/ui components built on Radix UI primitives with custom styling
-
-**Design System**: 
-- Material Design principles adapted for enterprise construction management
-- Custom theme system supporting light/dark modes via Tailwind CSS
-- Typography: Inter or Roboto font family with comprehensive type scale
-- Color system: HSL-based with CSS variables for dynamic theming
-- Spacing: Tailwind units (2, 4, 6, 8, 12, 16, 24) for consistent layout
-
-**State Management**:
-- TanStack Query (React Query) for server state management and data fetching
-- React Context for authentication state (AuthContext)
-- Local component state for UI interactions
-
-**Routing**: Wouter for client-side routing with protected route implementation
-
-**Key Design Decisions**:
-- Information-dense layouts prioritizing efficiency over decoration
-- Professional corporate identity with scannable layouts for quick decision-making
-- All content in Turkish language
-- Monospaced fonts for financial figures to ensure alignment
-- Print-friendly layouts with dedicated print components
+**Framework**: React 18+ with TypeScript (Vite).
+**UI Component Library**: shadcn/ui built on Radix UI primitives with custom styling.
+**Design System**: Material Design adapted for construction management, custom theme (light/dark modes via Tailwind CSS, HSL-based color system), Inter/Roboto fonts, Turkish language interface, print-friendly layouts, and monospaced fonts for financial figures.
+**State Management**: TanStack Query for server state, React Context for authentication, local component state for UI.
+**Routing**: Wouter for client-side routing with protected routes.
 
 ### Backend Architecture
 
-**Runtime**: Node.js with Express.js server
-
-**Language**: TypeScript with ES modules
-
-**API Pattern**: RESTful API with `/api` prefix for all routes
-
-**Session Management**:
-- Express sessions with configurable store (currently MemoryStore for development)
-- Passport.js for authentication with LocalStrategy
-- Secure password hashing using scrypt with salt
-
-**Authentication Flow**:
-- Registration endpoint: `/api/register`
-- Login endpoint: `/api/login`
-- Logout endpoint: `/api/logout`
-- User session endpoint: `/api/user`
-- 401 responses handled gracefully in frontend
-
-**Storage Interface**:
-- Abstraction layer (IStorage interface) supports both in-memory and database storage
-- **Currently using DatabaseStorage with PostgreSQL/Neon** for persistent data
-- Drizzle ORM for type-safe database operations
-
-**Key Design Decisions**:
-- Storage abstraction pattern enables easy migration between storage implementations
-- Middleware pattern for request logging and JSON response capture
-- Session secret configuration with environment variable support
-- Credential-based authentication suitable for enterprise internal tools
-- Registration endpoint restricted to development environment only for security
+**Runtime**: Node.js with Express.js.
+**Language**: TypeScript with ES modules.
+**API Pattern**: RESTful API (`/api` prefix).
+**Session Management**: Express sessions (MemoryStore for dev, connect-pg-simple for prod), Passport.js with LocalStrategy, scrypt for password hashing.
+**Storage Interface**: Abstracted `IStorage` layer; currently uses DatabaseStorage with PostgreSQL/Neon via Drizzle ORM.
+**Key Design Decisions**: Storage abstraction, middleware for logging, environment variable-based session secrets, credential-based authentication, dev-only registration.
 
 ### Data Schema
 
-**Database ORM**: Drizzle ORM configured for PostgreSQL dialect
-
-**Core Entities**:
-- **Projects**: Construction projects with location, area, dates, status, customer relationship
-- **Transactions**: Financial income/expense tracking with project linkage and categorization
-- **Tasks**: Project tasks with status, dates, and responsible parties
-- **Subcontractors**: Vendor management with contact details and specialties
-- **Customers**: Client management with contact information
-- **Site Diary Entries**: Daily construction logs with weather, work done, materials, workers
-- **Budget Items**: Detailed cost estimation with quantity, unit pricing, and categorization
-- **Timesheets**: Worker hour tracking by work group
-- **Invoices**: Sales (Satış) and purchase (Alış) invoice management with automatic KDV calculation, payment tracking, customer/subcontractor linking, and optional project association
-
-**Categorization System**:
-- İş Grubu (Work Groups): Kaba İmalat, İnce İmalat, Mekanik Tesisat, Elektrik Tesisat, Çevre Düzenlemesi ve Altyapı, Genel Giderler ve Endirekt Giderler
-- Rayiç Grubu (Cost Groups): Malzeme, İşçilik, Makine Ekipman, Paket, Genel Giderler ve Endirekt Giderler
-
-**Key Design Decisions**:
-- Enum-based categorization for standardized work and cost classification
-- Decimal precision for financial amounts and measurements
-- UUID primary keys for distributed system compatibility
-- Schema validation with Drizzle-Zod integration
+**Database ORM**: Drizzle ORM for PostgreSQL.
+**Core Entities**: Projects, Transactions (income/expense), Tasks, Subcontractors, Customers, Site Diary Entries, Budget Items, Timesheets, Invoices (sales/purchase).
+**Categorization System**: İş Grubu (Work Groups) and Rayiç Grubu (Cost Groups) with predefined categories for standardization.
+**Key Design Decisions**: Enum-based categorization, decimal precision for financial data, UUID primary keys, Drizzle-Zod for schema validation.
 
 ### Business Logic Layer
 
-**Turkish Tax Calculations** (`shared/taxCalculations.ts`):
-- KDV (VAT) calculation at 20% standard rate
-- 2025 Income Tax with progressive brackets (15%, 20%, 27%, 35%, 40%)
-- Corporate Tax computation
-- Comprehensive tax summary with effective rate calculation
-- Supports both individual and company tax scenarios
-
-**Key Design Decisions**:
-- Tax logic isolated in shared module accessible to both frontend and backend
-- Year-specific tax brackets with detailed bracket breakdown
-- Calculations return both tax amount and effective rate for transparency
+**Turkish Tax Calculations**: Isolated module (`shared/taxCalculations.ts`) for KDV (VAT), progressive income tax, and corporate tax calculations. Supports year-specific tax brackets and provides comprehensive tax summaries.
 
 ### Development Environment
 
-**Build System**: Vite with React plugin and TypeScript support
+**Build System**: Vite (frontend) and esbuild (backend).
+**Code Quality**: TypeScript strict mode, path aliases, ESM.
+**Development Features**: Replit-specific plugins (error overlay, dev banner), HMR via Vite, request logging middleware.
 
-**Code Quality**:
-- TypeScript strict mode enabled
-- Path aliases for clean imports (`@/`, `@shared/`, `@assets/`)
-- ESM module system throughout
+### Feature Specifications
 
-**Development Features**:
-- Replit-specific plugins for runtime error overlay and development banner
-- Hot module replacement (HMR) via Vite
-- Request logging middleware for API debugging
-- Custom logger with formatted timestamps
-
-**Production Build**:
-- Vite bundles frontend to `dist/public`
-- esbuild bundles backend to `dist/index.js`
-- Separate build steps for client and server code
+*   **Hakediş Modülü (Progress Payment Module)**: Advanced features include an Avans Takip Sistemi (Advance Tracking System) for real-time advance calculation and deduction, and kurumsal yazdırma formatı (corporate printing format) for detailed progress payment reports. Redesigned with a transaction-based system allowing selection of expense transactions for payment calculation, with detailed view dialogs.
+*   **İş Programı (Work Schedule) Module**: Complete implementation with tasks table (title, description, project linkage, dates, status, priority, progress, assignedTo, checklist). Features a summary dashboard, advanced filtering, sorting, task cards with progress bars, and a comprehensive task form dialog.
+*   **Hakediş Module - Advanced Financial Calculations**: Integration of `contractorFeeRate`, `grossAmount`, `advanceDeductionRate`, `advanceDeduction`, and `netPayment` fields. Real-time auto-calculation of these values within the form.
+*   **Reports Module**: Multi-level filtering system for Financial, Operational, Project, and Progress Payment Reports. Includes financial summary cards, tax calculations, trend charts, and detailed tables.
+*   **Bütçe-Keşif (Budget-Exploration) Print Feature**: Print functionality for budget items with optimized table layouts.
+*   **Project Detail Page**: Fetches and displays real project data from the API.
 
 ## External Dependencies
 
 ### Database
 
 **Provider**: Neon (Serverless PostgreSQL)
-- Connection via `@neondatabase/serverless` with WebSocket support
-- Connection string from `DATABASE_URL` environment variable
-- Drizzle ORM for type-safe database operations
-- Migration support via drizzle-kit
+**Integration**: `@neondatabase/serverless`, Drizzle ORM, `DATABASE_URL` environment variable.
 
 ### UI Component Libraries
 
-**Core**: Radix UI primitives for accessible, unstyled components
-- Comprehensive set including dialogs, dropdowns, tooltips, tabs, forms, etc.
-- Full keyboard navigation and ARIA support
-
-**Styling**: Tailwind CSS with custom design tokens
-- CSS variables for theme customization
-- PostCSS for processing
-- Class variance authority (CVA) for component variants
+**Core**: Radix UI primitives.
+**Styling**: Tailwind CSS with custom design tokens, PostCSS, Class Variance Authority (CVA).
 
 ### Utility Libraries
 
-- **date-fns**: Date manipulation and formatting (Turkish locale support expected)
-- **wouter**: Lightweight routing library
-- **zod**: Schema validation
-- **nanoid**: Secure random ID generation
-- **cmdk**: Command palette component
+*   **date-fns**: Date manipulation and formatting (Turkish locale support).
+*   **wouter**: Lightweight routing.
+*   **zod**: Schema validation.
+*   **nanoid**: Secure random ID generation.
+*   **cmdk**: Command palette component.
 
 ### Session Storage
 
-- **connect-pg-simple**: PostgreSQL session store for production
-- **memorystore**: In-memory session store for development
+*   **connect-pg-simple**: PostgreSQL session store (production).
+*   **memorystore**: In-memory session store (development).
 
 ### Development Tools
 
-- **Replit plugins**: Development experience enhancements (cartographer, dev banner, error overlay)
-- **tsx**: TypeScript execution for development server
-- **esbuild**: Fast JavaScript bundler for production builds
-
-### Key Integration Decisions
-
-- WebSocket constructor override for Neon serverless compatibility
-- Session store abstraction allows switching between memory and PostgreSQL based on environment
-- Radix UI chosen for accessibility compliance and headless architecture
-- All external services configured via environment variables for 12-factor app compliance
+*   **Replit plugins**: For development experience enhancements.
+*   **tsx**: TypeScript execution for dev server.
+*   **esbuild**: Fast JavaScript bundler.

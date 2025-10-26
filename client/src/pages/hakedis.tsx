@@ -1051,8 +1051,34 @@ export default function Hakedis() {
 
           {viewingPaymentDetail && (
             <div className="space-y-6">
+              {/* Print-only Header */}
+              <div className="hidden print:block">
+                <div className="flex items-start justify-between mb-6 pb-4 border-b-2 border-black">
+                  <div>
+                    <h1 className="text-xl font-bold">Eska Yapı Mühendislik İnşaat</h1>
+                    <p className="text-xs mt-1">Emlak Turizm ve Ticaret Limited Şirketi</p>
+                    <p className="text-xs text-gray-600 mt-2">
+                      Tel: (0212) XXX XX XX | Email: info@eskayapi.com.tr
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-semibold">Tarih: {format(new Date(), "dd/MM/yyyy")}</p>
+                    <p className="text-xs">Hakediş No: {viewingPaymentDetail.paymentNumber}</p>
+                  </div>
+                </div>
+                
+                <h2 className="text-center text-lg font-bold mb-4 uppercase">
+                  HAKEDİŞ TUTANAĞI
+                </h2>
+                
+                <div className="mb-4 text-sm">
+                  <p><strong>Proje:</strong> {projects.find(p => p.id === viewingPaymentDetail?.projectId)?.name || "Bilinmiyor"}</p>
+                  <p><strong>Hakediş Tarihi:</strong> {format(parseISO(viewingPaymentDetail.date as string), "dd MMMM yyyy", { locale: tr })}</p>
+                </div>
+              </div>
+
               {/* Summary Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 print:grid-cols-4">
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm">Toplam Tutar</CardTitle>
@@ -1169,9 +1195,33 @@ export default function Hakedis() {
               {/* Description */}
               <div>
                 <h3 className="text-sm font-semibold mb-2">Açıklama</h3>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap bg-muted/30 p-3 rounded-lg">
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap bg-muted/30 p-3 rounded-lg print:bg-white print:border print:border-gray-300">
                   {viewingPaymentDetail.description}
                 </p>
+              </div>
+
+              {/* Print-only Signature Section */}
+              <div className="hidden print:block mt-12 pt-8 border-t">
+                <div className="grid grid-cols-2 gap-12">
+                  <div className="text-center">
+                    <div className="h-16"></div>
+                    <div className="border-t border-black pt-2">
+                      <p className="text-sm font-semibold">Müteahhit</p>
+                      <p className="text-xs">Eska Yapı Mühendislik İnşaat Ltd. Şti.</p>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="h-16"></div>
+                    <div className="border-t border-black pt-2">
+                      <p className="text-sm font-semibold">Onay</p>
+                      <p className="text-xs">Müşteri / Proje Sorumlusu</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-8 text-xs text-center text-gray-500">
+                  <p>Bu hakediş tutanağı {format(new Date(), "dd/MM/yyyy")} tarihinde {format(new Date(), "HH:mm")} saatinde düzenlenmiştir.</p>
+                </div>
               </div>
             </div>
           )}
