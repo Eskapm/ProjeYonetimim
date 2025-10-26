@@ -1057,8 +1057,8 @@ export default function Hakedis() {
                 }
               />
 
-              {/* Summary Cards - Hidden in print for clean look */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 print:hidden">
+              {/* Summary Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 print:grid-cols-4">
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm">Toplam Tutar</CardTitle>

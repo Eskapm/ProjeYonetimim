@@ -41,8 +41,8 @@ export function PrintHeader({ documentTitle, documentNumber, additionalInfo }: P
           </p>
         </div>
 
-        {/* Sağ Kolon - İletişim Bilgileri ve Belge Bilgisi */}
-        <div>
+        {/* Sağ Kolon - İletişim Bilgileri ve Belge Bilgisi - Sağa Yaslanmış */}
+        <div className="text-right">
           <h3 className="font-bold mb-2 text-sm">İletişim Bilgileri</h3>
           <p className="leading-tight mb-1">
             <strong>E-mail:</strong> enginkayserili@gmail.com
