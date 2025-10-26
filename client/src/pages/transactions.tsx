@@ -77,6 +77,7 @@ export default function Transactions() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
       toast({
         title: "Başarılı",
         description: "İşlem başarıyla oluşturuldu",
@@ -100,6 +101,7 @@ export default function Transactions() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
       toast({
         title: "Başarılı",
         description: "İşlem başarıyla güncellendi",
@@ -123,6 +125,7 @@ export default function Transactions() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
       toast({
         title: "Başarılı",
         description: "İşlem başarıyla silindi",
