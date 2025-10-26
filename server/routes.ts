@@ -37,7 +37,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const project = await storage.createProject(validatedData);
       res.status(201).json(project);
     } catch (error: any) {
-      res.status(400).send(error.message || "Geçersiz proje verisi");
+      if (error instanceof ZodError) {
+        return res.status(400).send(error.message || "Geçersiz proje verisi");
+      }
+      res.status(500).send("Proje oluşturulurken hata oluştu");
     }
   });
 
@@ -85,7 +88,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const customer = await storage.createCustomer(validatedData);
       res.status(201).json(customer);
     } catch (error: any) {
-      res.status(400).send(error.message || "Geçersiz müşteri verisi");
+      if (error instanceof ZodError) {
+        return res.status(400).send(error.message || "Geçersiz müşteri verisi");
+      }
+      res.status(500).send("Müşteri oluşturulurken hata oluştu");
     }
   });
 
@@ -133,7 +139,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const subcontractor = await storage.createSubcontractor(validatedData);
       res.status(201).json(subcontractor);
     } catch (error: any) {
-      res.status(400).send(error.message || "Geçersiz taşeron verisi");
+      if (error instanceof ZodError) {
+        return res.status(400).send(error.message || "Geçersiz taşeron verisi");
+      }
+      res.status(500).send("Taşeron oluşturulurken hata oluştu");
     }
   });
 
@@ -181,7 +190,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const transaction = await storage.createTransaction(validatedData);
       res.status(201).json(transaction);
     } catch (error: any) {
-      res.status(400).send(error.message || "Geçersiz işlem verisi");
+      if (error instanceof ZodError) {
+        return res.status(400).send(error.message || "Geçersiz işlem verisi");
+      }
+      res.status(500).send("İşlem oluşturulurken hata oluştu");
     }
   });
 
@@ -229,7 +241,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const entry = await storage.createSiteDiaryEntry(validatedData);
       res.status(201).json(entry);
     } catch (error: any) {
-      res.status(400).send(error.message || "Geçersiz şantiye defteri verisi");
+      if (error instanceof ZodError) {
+        return res.status(400).send(error.message || "Geçersiz şantiye defteri verisi");
+      }
+      res.status(500).send("Şantiye defteri oluşturulurken hata oluştu");
     }
   });
 
