@@ -26,7 +26,7 @@ export const rayicGrubuEnum = [
 export const projectStatusEnum = ["Planlama", "Devam Ediyor", "Tamamlandı", "Askıda"] as const;
 
 // Görev durumları
-export const taskStatusEnum = ["Bekliyor", "Devam Ediyor", "Tamamlandı", "İptal"] as const;
+export const taskStatusEnum = ["Beklemede", "Devam Ediyor", "Tamamlandı", "İptal"] as const;
 
 // İşlem tipleri
 export const transactionTypeEnum = ["Gelir", "Gider"] as const;
@@ -168,16 +168,16 @@ export type Invoice = typeof invoices.$inferSelect;
 // İş programı görevleri tablosu
 export const tasks = pgTable("tasks", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  projectId: varchar("project_id").notNull(),
-  name: text("name").notNull(),
-  startDate: date("start_date").notNull(),
-  endDate: date("end_date").notNull(),
-  status: text("status").notNull().default("Bekliyor"),
-  priority: text("priority").notNull().default("Orta"), // Düşük, Orta, Yüksek, Acil
+  projectId: varchar("project_id"), // Nullable - görev projeye bağlı olmayabilir
+  title: text("title").notNull(),
+  description: text("description"),
+  startDate: date("start_date"),
+  dueDate: date("due_date"),
+  status: text("status").notNull().default("Beklemede"), // Beklemede, Devam Ediyor, Tamamlandı, İptal
+  priority: text("priority").default("Orta"), // Düşük, Orta, Yüksek, Acil
   progress: integer("progress").notNull().default(0), // 0-100 arası ilerleme yüzdesi
-  responsible: text("responsible"),
-  notes: text("notes"),
-  checklist: jsonb("checklist").default(sql`'[]'::jsonb`), // Alt görevler [{text: string, completed: boolean}]
+  assignedTo: text("assigned_to"),
+  checklist: jsonb("checklist").default(sql`'[]'::jsonb`), // Alt görevler [{id: string, text: string, completed: boolean}]
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -193,6 +193,7 @@ export type Task = typeof tasks.$inferSelect;
 
 // Checklist item type
 export interface ChecklistItem {
+  id: string;
   text: string;
   completed: boolean;
 }
