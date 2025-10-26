@@ -6,39 +6,51 @@ This is a construction project management system for Eska Yapı Mühendislik İn
 
 ## Recent Changes (October 26, 2025)
 
-**Invoices Module Enhancement**:
-- Added project-based filtering with dedicated select dropdown
-- Invoice search now includes project names
-- Filter logic supports multi-criteria (type, status, project) simultaneously
+**Hakediş Module - Advanced Financial Calculations**:
+- **Database Schema**: Added `contractorFeeRate`, `grossAmount`, `advanceDeductionRate`, `advanceDeduction`, `netPayment` fields to progressPayments table
+- **Projects Table**: Added `advancePayment` field for tracking project advance payments
+- **Hakediş Form**: 
+  - Real-time auto-calculation for contractor fee, gross amount, advance deduction, and net payment
+  - Formula: grossAmount = amount + (amount × contractorFeeRate/100); advanceDeduction = grossAmount × (advanceDeductionRate/100); netPayment = grossAmount - advanceDeduction
+  - Uses React Hook Form watch/useEffect pattern with short-circuit logic to prevent infinite loops
+- **Hakediş Table**: Added columns for Müt. % (contractor fee), Brüt Tutar (gross), Avans Kesinti (deduction), Net Ödeme (net payment)
+- **Architect Reviewed**: ✅ Calculations verified correct, no performance issues
 
-**Reports Module - Multi-Tab System**:
+**Reports Module - Multi-Level Filtering System**:
+- **Advanced Filters Panel**: 
+  - Shared filter state for Proje (project), İş Grubu (work group), and Rayiç Grubu (cost group)
+  - Filter dropdowns integrate with all report tabs
+  - Filters apply to: Mali Raporlar, Proje Raporları, Hakediş Raporları
+  
 - **Tab 1: Mali Raporlar (Financial Reports)**:
-  - Comprehensive financial analytics dashboard with real-time data
-  - Date filtering system (Tüm Zamanlar, Bu Ay, Bu Yıl, Özel Tarih Aralığı)
-  - Financial summary cards displaying total income, expenses, and net profit
-  - Tax summary card showing KDV, corporate tax, net profit after tax, and total tax burden
-  - Monthly income/expense trend chart (LineChart) with chronological ordering
-  - Category analysis with pie charts for İş Grubu and Rayiç Grubu expense breakdowns
-  - Project-wise financial analysis table with profit/loss indicators
+  - Date filtering + Advanced multi-level filters (project, İş Grubu, Rayiç Grubu)
+  - Financial summary cards with filtered data
+  - Tax summary calculations
+  - Monthly income/expense trend chart (chronologically sorted)
+  - İş Grubu and Rayiç Grubu pie charts (automatically filtered)
+  - Project-wise financial analysis table
   
 - **Tab 2: İşleyiş Raporları (Operational Reports)**:
-  - Task status dashboard (Total, Completed, In Progress, Waiting)
-  - Task completion rate calculation
-  - Task status distribution pie chart
-  - Project-wise task completion analysis with progress bars
+  - Task status dashboard
+  - Task completion analysis
+  - Project-wise task completion with progress bars
   
 - **Tab 3: Proje Raporları (Project Reports)**:
-  - Project status distribution chart
-  - Project summary statistics (total, active, completed)
-  - Detailed project table with location, area, dates, and status
+  - Project status distribution
+  - Detailed project table with filtering
+  
+- **Tab 4: Hakediş Raporları (Progress Payment Reports)**:
+  - **Enhanced Summary Cards**: 5 cards showing Toplam Hakediş, Brüt Tutar, Avans Kesintisi, Net Ödeme, Alınan Ödemeler
+  - Project filtering support (selectedProjectId filter)
+  - Calculations include contractor fees and advance deductions
+  - Payment status distribution chart
+  - Project-wise hakediş summary table
 
-**Technical Improvements**:
-- All date filters use inclusive end-of-day timestamps (23:59:59.999) for accurate reporting
-- Monthly trends sorted by YYYY-MM keys for proper chronological display
-- Tax calculations use per-transaction arrays for accurate KDV computation
-- useMemo optimization for all computed values
-- Shadcn Tabs component for clean navigation between report types
-- E2E tested and verified working correctly
+**Technical Implementation**:
+- `filteredTransactions` useMemo applies date + project + İş Grubu + Rayiç Grubu filters
+- All computed values (financialSummary, workGroupData, costGroupData, projectFinancials) automatically react to filter changes
+- Hakediş summary cards use IIFE pattern for filtered payment calculations
+- Net payment calculation: (gross - advanceDeduction) or fallback to database value
 
 ## User Preferences
 

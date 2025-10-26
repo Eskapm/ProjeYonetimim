@@ -30,6 +30,11 @@ export default function Reports() {
   const [dateFilter, setDateFilter] = useState<DateFilter>("this-year");
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
+  
+  // Advanced multi-level filters
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("all");
+  const [selectedWorkGroup, setSelectedWorkGroup] = useState<string>("all");
+  const [selectedCostGroup, setSelectedCostGroup] = useState<string>("all");
 
   // Fetch data
   const { data: transactions = [], isLoading: transactionsLoading } = useQuery<TransactionWithProject[]>({
@@ -54,7 +59,7 @@ export default function Reports() {
 
   const isLoading = transactionsLoading || projectsLoading || invoicesLoading || tasksLoading || paymentsLoading;
 
-  // Filter transactions by date
+  // Filter transactions by date and advanced filters (project, work group, cost group)
   const filteredTransactions = useMemo(() => {
     const now = new Date();
     let startDate: Date | null = null;
@@ -78,18 +83,27 @@ export default function Reports() {
         break;
       case "all":
       default:
-        return transactions;
+        break;
     }
 
-    if (!startDate && !endDate) return transactions;
-
     return transactions.filter((t) => {
+      // Date filter
       const transactionDate = new Date(t.date);
       if (startDate && transactionDate < startDate) return false;
       if (endDate && transactionDate > endDate) return false;
+      
+      // Project filter
+      if (selectedProjectId !== "all" && t.projectId !== selectedProjectId) return false;
+      
+      // Work Group filter (İş Grubu)
+      if (selectedWorkGroup !== "all" && t.isGrubu !== selectedWorkGroup) return false;
+      
+      // Cost Group filter (Rayiç Grubu)
+      if (selectedCostGroup !== "all" && t.rayicGrubu !== selectedCostGroup) return false;
+      
       return true;
     });
-  }, [transactions, dateFilter, customStartDate, customEndDate]);
+  }, [transactions, dateFilter, customStartDate, customEndDate, selectedProjectId, selectedWorkGroup, selectedCostGroup]);
 
   // Calculate financial summary
   const financialSummary = useMemo(() => {
@@ -410,6 +424,72 @@ export default function Reports() {
                     </div>
                   </>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Advanced Multi-Level Filters */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <BarChart3 className="h-5 w-5" />
+                Gelişmiş Filtreler
+              </CardTitle>
+              <CardDescription>
+                Proje, iş grubu ve maliyet grubu bazlı detaylı raporlama
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label>Proje</Label>
+                  <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+                    <SelectTrigger data-testid="select-project-filter">
+                      <SelectValue placeholder="Tüm Projeler" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tüm Projeler</SelectItem>
+                      {projects.map((project) => (
+                        <SelectItem key={project.id} value={project.id}>
+                          {project.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>İş Grubu</Label>
+                  <Select value={selectedWorkGroup} onValueChange={setSelectedWorkGroup}>
+                    <SelectTrigger data-testid="select-work-group-filter">
+                      <SelectValue placeholder="Tüm İş Grupları" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tüm İş Grupları</SelectItem>
+                      <SelectItem value="Kaba İmalat">Kaba İmalat</SelectItem>
+                      <SelectItem value="İnce İmalat">İnce İmalat</SelectItem>
+                      <SelectItem value="Mekanik Tesisat">Mekanik Tesisat</SelectItem>
+                      <SelectItem value="Elektrik Tesisat">Elektrik Tesisat</SelectItem>
+                      <SelectItem value="Çevre Düzenlemesi ve Altyapı">Çevre Düzenlemesi ve Altyapı</SelectItem>
+                      <SelectItem value="Genel Giderler ve Endirekt Giderler">Genel Giderler</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Rayiç Grubu</Label>
+                  <Select value={selectedCostGroup} onValueChange={setSelectedCostGroup}>
+                    <SelectTrigger data-testid="select-cost-group-filter">
+                      <SelectValue placeholder="Tüm Maliyet Grupları" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tüm Maliyet Grupları</SelectItem>
+                      <SelectItem value="Malzeme">Malzeme</SelectItem>
+                      <SelectItem value="İşçilik">İşçilik</SelectItem>
+                      <SelectItem value="Makine Ekipman">Makine Ekipman</SelectItem>
+                      <SelectItem value="Paket">Paket</SelectItem>
+                      <SelectItem value="Genel Giderler ve Endirekt Giderler">Genel Giderler</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -929,30 +1009,73 @@ export default function Reports() {
             </div>
           ) : (
             <>
-              {/* Summary Statistics */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <StatsCard
-                  title="Toplam Hakediş"
-                  value={`${progressPayments.reduce((sum, p) => sum + parseFloat(p.amount as string), 0).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
-                  icon={DollarSign}
-                  trend="neutral"
-                  data-testid="card-total-hakedis"
-                />
-                <StatsCard
-                  title="Alınan Ödemeler"
-                  value={`${progressPayments.reduce((sum, p) => sum + parseFloat(p.receivedAmount as string), 0).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
-                  icon={CheckCircle2}
-                  trend="positive"
-                  data-testid="card-received-hakedis"
-                />
-                <StatsCard
-                  title="Bekleyen Ödemeler"
-                  value={`${progressPayments.reduce((sum, p) => sum + (parseFloat(p.amount as string) - parseFloat(p.receivedAmount as string)), 0).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
-                  icon={Clock}
-                  trend="negative"
-                  data-testid="card-pending-hakedis"
-                />
-              </div>
+              {/* Filtered Payments */}
+              {(() => {
+                const filteredPayments = selectedProjectId !== "all" 
+                  ? progressPayments.filter(p => p.projectId === selectedProjectId)
+                  : progressPayments;
+                
+                const totalAmount = filteredPayments.reduce((sum, p) => sum + parseFloat(p.amount as string), 0);
+                const totalGross = filteredPayments.reduce((sum, p) => {
+                  const amount = parseFloat(p.amount as string);
+                  const feeRate = parseFloat(p.contractorFeeRate as string) || 0;
+                  const gross = parseFloat(p.grossAmount as string) || (amount + (amount * feeRate / 100));
+                  return sum + gross;
+                }, 0);
+                const totalAdvanceDeduction = filteredPayments.reduce((sum, p) => sum + (parseFloat(p.advanceDeduction as string) || 0), 0);
+                const totalNetPayment = filteredPayments.reduce((sum, p) => {
+                  const gross = parseFloat(p.grossAmount as string) || 0;
+                  const deduction = parseFloat(p.advanceDeduction as string) || 0;
+                  const net = parseFloat(p.netPayment as string) || (gross - deduction);
+                  return sum + net;
+                }, 0);
+                const totalReceived = filteredPayments.reduce((sum, p) => sum + parseFloat(p.receivedAmount as string), 0);
+                
+                return (
+                  <>
+                    {/* Summary Statistics */}
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                      <StatsCard
+                        title="Toplam Hakediş"
+                        value={`${totalAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
+                        icon={Receipt}
+                        trend="neutral"
+                        data-testid="card-total-hakedis"
+                      />
+                      <StatsCard
+                        title="Brüt Tutar"
+                        value={`${totalGross.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
+                        icon={TrendingUp}
+                        trend="neutral"
+                        description="Müteahhitlik ücreti dahil"
+                        data-testid="card-gross-hakedis"
+                      />
+                      <StatsCard
+                        title="Avans Kesintisi"
+                        value={`${totalAdvanceDeduction.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
+                        icon={TrendingDown}
+                        trend="negative"
+                        data-testid="card-deduction-hakedis"
+                      />
+                      <StatsCard
+                        title="Net Ödeme"
+                        value={`${totalNetPayment.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
+                        icon={DollarSign}
+                        trend="positive"
+                        description="Ödenecek tutar"
+                        data-testid="card-net-hakedis"
+                      />
+                      <StatsCard
+                        title="Alınan Ödemeler"
+                        value={`${totalReceived.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
+                        icon={CheckCircle2}
+                        trend="positive"
+                        data-testid="card-received-hakedis"
+                      />
+                    </div>
+                  </>
+                );
+              })()}
 
               {/* Status Distribution Chart */}
               {progressPayments.length > 0 && (
