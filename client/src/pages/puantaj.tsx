@@ -42,7 +42,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { format } from "date-fns";
+import { format, parseISO, startOfDay, endOfDay } from "date-fns";
 import { tr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import {
@@ -57,6 +57,8 @@ import {
 export default function Puantaj() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProject, setSelectedProject] = useState("all");
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<Timesheet | null>(null);
   const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null);
@@ -221,7 +223,25 @@ export default function Puantaj() {
       entry.isGrubu.toLowerCase().includes(searchTerm.toLowerCase()) ||
       entry.projectName?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesProject = selectedProject === "all" || entry.projectId === selectedProject;
-    return matchesSearch && matchesProject;
+    
+    // Date filtering - normalize dates to avoid timezone issues
+    let matchesDate = true;
+    if (startDate || endDate) {
+      const entryDate = parseISO(entry.date);
+      if (startDate && endDate) {
+        const normalizedStart = startOfDay(startDate);
+        const normalizedEnd = endOfDay(endDate);
+        matchesDate = entryDate >= normalizedStart && entryDate <= normalizedEnd;
+      } else if (startDate) {
+        const normalizedStart = startOfDay(startDate);
+        matchesDate = entryDate >= normalizedStart;
+      } else if (endDate) {
+        const normalizedEnd = endOfDay(endDate);
+        matchesDate = entryDate <= normalizedEnd;
+      }
+    }
+    
+    return matchesSearch && matchesProject && matchesDate;
   });
 
   const isPending = createEntryMutation.isPending || updateEntryMutation.isPending;
@@ -246,30 +266,97 @@ export default function Puantaj() {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="İş grubunda ara..."
-            className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            data-testid="input-search-timesheet"
-          />
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="İş grubunda ara..."
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              data-testid="input-search-timesheet"
+            />
+          </div>
+          <Select value={selectedProject} onValueChange={setSelectedProject}>
+            <SelectTrigger className="w-full sm:w-[250px]" data-testid="select-project-filter">
+              <SelectValue placeholder="Proje seç" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tüm Projeler</SelectItem>
+              {projects.map((project) => (
+                <SelectItem key={project.id} value={project.id}>
+                  {project.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={selectedProject} onValueChange={setSelectedProject}>
-          <SelectTrigger className="w-full sm:w-[250px]" data-testid="select-project-filter">
-            <SelectValue placeholder="Proje seç" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tüm Projeler</SelectItem>
-            {projects.map((project) => (
-              <SelectItem key={project.id} value={project.id}>
-                {project.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full sm:w-[250px] justify-start text-left font-normal",
+                  !startDate && "text-muted-foreground"
+                )}
+                data-testid="button-start-date-filter"
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {startDate ? format(startDate, "PPP", { locale: tr }) : "Başlangıç tarihi"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={startDate}
+                onSelect={setStartDate}
+                locale={tr}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full sm:w-[250px] justify-start text-left font-normal",
+                  !endDate && "text-muted-foreground"
+                )}
+                data-testid="button-end-date-filter"
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {endDate ? format(endDate, "PPP", { locale: tr }) : "Bitiş tarihi"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={endDate}
+                onSelect={setEndDate}
+                locale={tr}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+
+          {(startDate || endDate) && (
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setStartDate(undefined);
+                setEndDate(undefined);
+              }}
+              data-testid="button-clear-date-filters"
+            >
+              Tarihleri Temizle
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Summary Cards */}
