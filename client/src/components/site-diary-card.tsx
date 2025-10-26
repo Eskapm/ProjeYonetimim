@@ -1,7 +1,8 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Cloud, Users, AlertCircle, Edit, Trash2 } from "lucide-react";
+import { Calendar, Cloud, Users, AlertCircle, Edit, Trash2, Sun, CloudRain, Snowflake, Wind } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 interface SiteDiaryEntry {
   id: string;
@@ -21,15 +22,17 @@ interface SiteDiaryCardProps {
   onDelete?: () => void;
 }
 
-const weatherIcons: Record<string, string> = {
-  "Güneşli": "☀️",
-  "Bulutlu": "☁️",
-  "Yağmurlu": "🌧️",
-  "Karlı": "❄️",
-  "Rüzgarlı": "💨",
+const weatherIcons: Record<string, LucideIcon> = {
+  "Güneşli": Sun,
+  "Bulutlu": Cloud,
+  "Yağmurlu": CloudRain,
+  "Karlı": Snowflake,
+  "Rüzgarlı": Wind,
 };
 
 export function SiteDiaryCard({ entry, onEdit, onDelete }: SiteDiaryCardProps) {
+  const WeatherIcon = entry.weather ? weatherIcons[entry.weather] || Cloud : Cloud;
+  
   return (
     <Card className="hover-elevate" data-testid={`card-diary-${entry.id}`}>
       <CardHeader>
@@ -45,7 +48,7 @@ export function SiteDiaryCard({ entry, onEdit, onDelete }: SiteDiaryCardProps) {
           </div>
           {entry.weather && (
             <Badge variant="secondary" className="gap-1">
-              <Cloud className="h-3 w-3" />
+              <WeatherIcon className="h-3 w-3" />
               {entry.weather}
             </Badge>
           )}
