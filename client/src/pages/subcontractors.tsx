@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ContactCard } from "@/components/contact-card";
+import { PrintButton } from "@/components/print-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search } from "lucide-react";
@@ -60,10 +61,13 @@ export default function Subcontractors() {
           <h1 className="text-3xl font-bold">Taşeronlar</h1>
           <p className="text-muted-foreground mt-1">Taşeron firma bilgilerini görüntüleyin ve yönetin</p>
         </div>
-        <Button data-testid="button-add-subcontractor">
-          <Plus className="h-4 w-4 mr-2" />
-          Yeni Taşeron Ekle
-        </Button>
+        <div className="flex items-center gap-2">
+          <PrintButton />
+          <Button data-testid="button-add-subcontractor">
+            <Plus className="h-4 w-4 mr-2" />
+            Yeni Taşeron Ekle
+          </Button>
+        </div>
       </div>
 
       <div className="relative">

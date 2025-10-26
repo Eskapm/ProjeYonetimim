@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useRoute } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PrintButton } from "@/components/print-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BudgetTable } from "@/components/budget-table";
@@ -125,10 +126,13 @@ export default function ProjectDetail() {
           </div>
           <p className="text-muted-foreground mt-1">Proje detayları ve ilerleme takibi</p>
         </div>
-        <Button data-testid="button-edit-project">
-          <Edit className="h-4 w-4 mr-2" />
-          Düzenle
-        </Button>
+        <div className="flex items-center gap-2">
+          <PrintButton />
+          <Button data-testid="button-edit-project">
+            <Edit className="h-4 w-4 mr-2" />
+            Düzenle
+          </Button>
+        </div>
       </div>
 
       <Card>

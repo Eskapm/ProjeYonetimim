@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { TransactionTable } from "@/components/transaction-table";
 import { TaxSummaryPanel } from "@/components/tax-summary-panel";
+import { PrintButton } from "@/components/print-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -120,10 +121,13 @@ export default function Transactions() {
             Tüm finansal işlemleri ve vergi hesaplamalarını görüntüleyin
           </p>
         </div>
-        <Button data-testid="button-add-transaction">
-          <Plus className="h-4 w-4 mr-2" />
-          Yeni İşlem Ekle
-        </Button>
+        <div className="flex items-center gap-2">
+          <PrintButton />
+          <Button data-testid="button-add-transaction">
+            <Plus className="h-4 w-4 mr-2" />
+            Yeni İşlem Ekle
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="transactions" className="space-y-6">

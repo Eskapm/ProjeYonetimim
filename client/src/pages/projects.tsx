@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ProjectCard } from "@/components/project-card";
+import { PrintButton } from "@/components/print-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -83,10 +84,13 @@ export default function Projects() {
           <h1 className="text-3xl font-bold">Projeler</h1>
           <p className="text-muted-foreground mt-1">Tüm projelerinizi görüntüleyin ve yönetin</p>
         </div>
-        <Button data-testid="button-add-project">
-          <Plus className="h-4 w-4 mr-2" />
-          Yeni Proje Ekle
-        </Button>
+        <div className="flex items-center gap-2">
+          <PrintButton />
+          <Button data-testid="button-add-project">
+            <Plus className="h-4 w-4 mr-2" />
+            Yeni Proje Ekle
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">

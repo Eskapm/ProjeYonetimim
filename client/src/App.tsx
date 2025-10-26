@@ -5,9 +5,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { ProtectedRoute } from "@/lib/protected-route";
 import Dashboard from "@/pages/dashboard";
 import Projects from "@/pages/projects";
 import ProjectDetail from "@/pages/project-detail";
@@ -15,6 +17,7 @@ import Transactions from "@/pages/transactions";
 import SiteDiary from "@/pages/site-diary";
 import Subcontractors from "@/pages/subcontractors";
 import Customers from "@/pages/customers";
+import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
 
 function ThemeToggle() {
@@ -50,46 +53,80 @@ function ThemeToggle() {
   );
 }
 
+function LogoutButton() {
+  const { logoutMutation } = useAuth();
+  
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={() => logoutMutation.mutate()}
+      data-testid="button-logout"
+    >
+      <LogOut className="h-5 w-5" />
+    </Button>
+  );
+}
+
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Dashboard} />
-      <Route path="/projeler" component={Projects} />
-      <Route path="/projeler/:id" component={ProjectDetail} />
-      <Route path="/islemler" component={Transactions} />
-      <Route path="/santiye-defteri" component={SiteDiary} />
-      <Route path="/taseronlar" component={Subcontractors} />
-      <Route path="/musteriler" component={Customers} />
+      <ProtectedRoute path="/" component={Dashboard} />
+      <ProtectedRoute path="/projeler" component={Projects} />
+      <ProtectedRoute path="/projeler/:id" component={ProjectDetail} />
+      <ProtectedRoute path="/islemler" component={Transactions} />
+      <ProtectedRoute path="/santiye-defteri" component={SiteDiary} />
+      <ProtectedRoute path="/taseronlar" component={Subcontractors} />
+      <ProtectedRoute path="/musteriler" component={Customers} />
+      <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-export default function App() {
+function AppContent() {
+  const { user } = useAuth();
   const style = {
     "--sidebar-width": "20rem",
     "--sidebar-width-icon": "4rem",
   };
 
+  // If not authenticated, show router (which will redirect to /auth)
+  if (!user) {
+    return <Router />;
+  }
+
+  // If authenticated, show the full app with sidebar
+  return (
+    <TooltipProvider>
+      <SidebarProvider style={style as React.CSSProperties}>
+        <div className="flex h-screen w-full">
+          <AppSidebar />
+          <div className="flex flex-col flex-1 overflow-hidden">
+            <header className="flex items-center justify-between p-4 border-b border-border">
+              <SidebarTrigger data-testid="button-sidebar-toggle" />
+              <div className="flex items-center gap-2">
+                <ThemeToggle />
+                <LogoutButton />
+              </div>
+            </header>
+            <main className="flex-1 overflow-auto p-6 bg-background">
+              <Router />
+            </main>
+          </div>
+        </div>
+      </SidebarProvider>
+      <Toaster />
+    </TooltipProvider>
+  );
+}
+
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <SidebarProvider style={style as React.CSSProperties}>
-          <div className="flex h-screen w-full">
-            <AppSidebar />
-            <div className="flex flex-col flex-1 overflow-hidden">
-              <header className="flex items-center justify-between p-4 border-b border-border">
-                <SidebarTrigger data-testid="button-sidebar-toggle" />
-                <ThemeToggle />
-              </header>
-              <main className="flex-1 overflow-auto p-6 bg-background">
-                <Router />
-              </main>
-            </div>
-          </div>
-        </SidebarProvider>
-        <Toaster />
-      </TooltipProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

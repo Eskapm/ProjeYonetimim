@@ -334,3 +334,82 @@
     inset: -1px;
   }
 }
+
+/* Print Styles */
+@media print {
+  /* Hide navigation, sidebar, and non-essential interactive elements */
+  header,
+  aside,
+  .sidebar,
+  [data-sidebar],
+  [data-testid*="sidebar"],
+  [data-testid="button-theme-toggle"],
+  [data-testid="button-logout"],
+  [data-testid="button-sidebar-toggle"],
+  [data-testid*="button-add"],
+  [data-testid*="button-new"],
+  [data-testid*="button-edit"],
+  [data-testid*="button-delete"],
+  [data-testid*="button-print"],
+  .no-print {
+    display: none !important;
+  }
+
+  /* Ensure main content takes full width */
+  main {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0.5cm !important;
+    margin: 0 !important;
+  }
+
+  /* Reset background colors for print while preserving some styling */
+  body {
+    background: white !important;
+  }
+
+  * {
+    color: black !important;
+  }
+
+  /* Preserve subtle backgrounds for cards and tables */
+  .card,
+  table thead {
+    background: #f5f5f5 !important;
+  }
+
+  /* Preserve borders and layout */
+  .card,
+  table,
+  .border {
+    border: 1px solid #ddd !important;
+  }
+
+  /* Page breaks */
+  .page-break {
+    page-break-after: always;
+  }
+
+  /* Optimize table printing */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  table th,
+  table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+  }
+
+  /* Keep headings together with content */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+
+  /* Avoid breaking inside cards and tables */
+  .card,
+  tr {
+    page-break-inside: avoid;
+  }
+}

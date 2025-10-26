@@ -1,6 +1,7 @@
 import { StatsCard } from "@/components/stats-card";
 import { ProjectCard } from "@/components/project-card";
 import { TransactionTable } from "@/components/transaction-table";
+import { PrintButton } from "@/components/print-button";
 import { FolderKanban, TrendingUp, TrendingDown, DollarSign, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -81,10 +82,13 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold">Ana Sayfa</h1>
           <p className="text-muted-foreground mt-1">Proje genel görünümü ve özet bilgiler</p>
         </div>
-        <Button data-testid="button-new-project">
-          <Plus className="h-4 w-4 mr-2" />
-          Yeni Proje
-        </Button>
+        <div className="flex items-center gap-2">
+          <PrintButton />
+          <Button data-testid="button-new-project">
+            <Plus className="h-4 w-4 mr-2" />
+            Yeni Proje
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
