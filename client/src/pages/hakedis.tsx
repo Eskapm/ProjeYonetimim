@@ -1029,10 +1029,24 @@ export default function Hakedis() {
       <Dialog open={viewingPaymentDetail !== null} onOpenChange={(open) => !open && setViewingPaymentDetail(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Hakediş Detayları - #{viewingPaymentDetail?.paymentNumber}</DialogTitle>
-            <DialogDescription>
-              {projects.find(p => p.id === viewingPaymentDetail?.projectId)?.name || "Proje"} - Hakediş kalem dökümü ve özeti
-            </DialogDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle>Hakediş Detayları - #{viewingPaymentDetail?.paymentNumber}</DialogTitle>
+                <DialogDescription>
+                  {projects.find(p => p.id === viewingPaymentDetail?.projectId)?.name || "Proje"} - Hakediş kalem dökümü ve özeti
+                </DialogDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.print()}
+                className="no-print"
+                data-testid="button-print-hakedis"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Yazdır
+              </Button>
+            </div>
           </DialogHeader>
 
           {viewingPaymentDetail && (
