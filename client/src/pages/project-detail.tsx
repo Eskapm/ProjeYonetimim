@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useRoute } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PrintButton } from "@/components/print-button";
@@ -11,23 +12,29 @@ import { TimesheetTable } from "@/components/timesheet-table";
 import { SiteDiaryCard } from "@/components/site-diary-card";
 import { Edit, MapPin, Calendar, Ruler, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
+import type { Project } from "@shared/schema";
 
 export default function ProjectDetail() {
   const [, params] = useRoute("/projeler/:id");
   const projectId = params?.id;
 
-  // TODO: Remove mock data - fetch from API using projectId
-  const mockProject = {
-    id: "1",
-    name: "Ataşehir Konut Projesi",
-    location: "İstanbul, Ataşehir",
-    area: "2,500",
-    startDate: "01.01.2024",
-    endDate: "31.12.2024",
-    status: "Devam Ediyor",
-    description: "2500 m² inşaat alanında 3 blok konut projesi",
-    notes: "Müşteri ile haftalık toplantılar yapılıyor",
-  };
+  // Fetch real project data
+  const { data: project, isLoading } = useQuery<Project>({
+    queryKey: ["/api/projects", projectId],
+    enabled: !!projectId,
+  });
+
+  if (!projectId) {
+    return <div>Proje ID bulunamadı</div>;
+  }
+
+  if (isLoading) {
+    return <div className="container mx-auto p-6">Yükleniyor...</div>;
+  }
+
+  if (!project) {
+    return <div className="container mx-auto p-6">Proje bulunamadı</div>;
+  }
 
   const mockBudgetItems = [
     {
@@ -119,9 +126,9 @@ export default function ProjectDetail() {
         </Link>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold">{mockProject.name}</h1>
-            <Badge className={statusColors[mockProject.status] || ""}>
-              {mockProject.status}
+            <h1 className="text-3xl font-bold">{project.name}</h1>
+            <Badge className={statusColors[project.status] || ""}>
+              {project.status}
             </Badge>
           </div>
           <p className="text-muted-foreground mt-1">Proje detayları ve ilerleme takibi</p>
@@ -141,46 +148,46 @@ export default function ProjectDetail() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockProject.location && (
+            {project.location && (
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <MapPin className="h-4 w-4" />
                   <span>Konum</span>
                 </div>
-                <p className="font-medium">{mockProject.location}</p>
+                <p className="font-medium">{project.location}</p>
               </div>
             )}
-            {mockProject.area && (
+            {project.area && (
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Ruler className="h-4 w-4" />
                   <span>Alan</span>
                 </div>
-                <p className="font-medium">{mockProject.area} m²</p>
+                <p className="font-medium">{project.area} m²</p>
               </div>
             )}
-            {(mockProject.startDate || mockProject.endDate) && (
+            {(project.startDate || project.endDate) && (
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
                   <span>Tarih Aralığı</span>
                 </div>
                 <p className="font-medium">
-                  {mockProject.startDate} - {mockProject.endDate}
+                  {project.startDate} - {project.endDate}
                 </p>
               </div>
             )}
           </div>
-          {mockProject.description && (
+          {project.description && (
             <div className="mt-6 space-y-1">
               <p className="text-sm text-muted-foreground">Açıklama</p>
-              <p className="font-medium">{mockProject.description}</p>
+              <p className="font-medium">{project.description}</p>
             </div>
           )}
-          {mockProject.notes && (
+          {project.notes && (
             <div className="mt-4 space-y-1">
               <p className="text-sm text-muted-foreground">Notlar</p>
-              <p className="text-sm">{mockProject.notes}</p>
+              <p className="text-sm">{project.notes}</p>
             </div>
           )}
         </CardContent>
