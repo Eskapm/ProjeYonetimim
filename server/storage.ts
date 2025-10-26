@@ -17,6 +17,8 @@ import {
   type InsertTimesheet,
   type Invoice,
   type InsertInvoice,
+  type ProgressPayment,
+  type InsertProgressPayment,
   users,
   projects,
   customers,
@@ -25,6 +27,7 @@ import {
   siteDiary,
   timesheets,
   invoices,
+  progressPayments,
 } from "@shared/schema";
 import session, { type Store } from "express-session";
 import createMemoryStore from "memorystore";
@@ -85,6 +88,13 @@ export interface IStorage {
   createInvoice(invoice: InsertInvoice): Promise<Invoice>;
   updateInvoice(id: string, invoice: Partial<InsertInvoice>): Promise<Invoice | undefined>;
   deleteInvoice(id: string): Promise<boolean>;
+
+  // Progress Payment methods
+  getProgressPayments(): Promise<ProgressPayment[]>;
+  getProgressPayment(id: string): Promise<ProgressPayment | undefined>;
+  createProgressPayment(payment: InsertProgressPayment): Promise<ProgressPayment>;
+  updateProgressPayment(id: string, payment: Partial<InsertProgressPayment>): Promise<ProgressPayment | undefined>;
+  deleteProgressPayment(id: string): Promise<boolean>;
 
   sessionStore: Store;
 }
@@ -286,6 +296,31 @@ export class DatabaseStorage implements IStorage {
 
   async deleteInvoice(id: string): Promise<boolean> {
     const result = await db.delete(invoices).where(eq(invoices.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Progress Payment methods
+  async getProgressPayments(): Promise<ProgressPayment[]> {
+    return await db.select().from(progressPayments);
+  }
+
+  async getProgressPayment(id: string): Promise<ProgressPayment | undefined> {
+    const [payment] = await db.select().from(progressPayments).where(eq(progressPayments.id, id)).limit(1);
+    return payment;
+  }
+
+  async createProgressPayment(payment: InsertProgressPayment): Promise<ProgressPayment> {
+    const [newPayment] = await db.insert(progressPayments).values(payment).returning();
+    return newPayment;
+  }
+
+  async updateProgressPayment(id: string, payment: Partial<InsertProgressPayment>): Promise<ProgressPayment | undefined> {
+    const [updated] = await db.update(progressPayments).set(payment).where(eq(progressPayments.id, id)).returning();
+    return updated;
+  }
+
+  async deleteProgressPayment(id: string): Promise<boolean> {
+    const result = await db.delete(progressPayments).where(eq(progressPayments.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 }

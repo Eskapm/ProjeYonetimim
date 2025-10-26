@@ -37,6 +37,12 @@ export const invoiceTypeEnum = ["Alış", "Satış"] as const;
 // Fatura durumları
 export const invoiceStatusEnum = ["Ödenmedi", "Kısmi Ödendi", "Ödendi"] as const;
 
+// Sözleşme tipleri
+export const contractTypeEnum = ["Anahtar Teslim", "Maliyet + Kar Marjı"] as const;
+
+// Hakediş durumları
+export const progressPaymentStatusEnum = ["Bekliyor", "Kısmi Ödendi", "Ödendi"] as const;
+
 // Projeler tablosu
 export const projects = pgTable("projects", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -49,6 +55,9 @@ export const projects = pgTable("projects", {
   description: text("description"),
   notes: text("notes"),
   customerId: varchar("customer_id"),
+  contractType: text("contract_type"),
+  contractAmount: decimal("contract_amount", { precision: 15, scale: 2 }),
+  profitMargin: decimal("profit_margin", { precision: 5, scale: 2 }),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -255,3 +264,27 @@ export const insertSiteDiarySchema = createInsertSchema(siteDiary).omit({
 
 export type InsertSiteDiary = z.infer<typeof insertSiteDiarySchema>;
 export type SiteDiary = typeof siteDiary.$inferSelect;
+
+// Hakediş (Progress Payments) tablosu
+export const progressPayments = pgTable("progress_payments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id").notNull(),
+  paymentNumber: integer("payment_number").notNull(),
+  date: date("date").notNull(),
+  description: text("description").notNull(),
+  workCompleted: text("work_completed"),
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  receivedAmount: decimal("received_amount", { precision: 15, scale: 2 }).default("0"),
+  status: text("status").notNull().default("Bekliyor"),
+  dueDate: date("due_date"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertProgressPaymentSchema = createInsertSchema(progressPayments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertProgressPayment = z.infer<typeof insertProgressPaymentSchema>;
+export type ProgressPayment = typeof progressPayments.$inferSelect;

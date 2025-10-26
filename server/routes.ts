@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { insertProjectSchema, insertCustomerSchema, insertSubcontractorSchema, insertTransactionSchema, insertSiteDiarySchema, insertTimesheetSchema, insertInvoiceSchema } from "@shared/schema";
+import { insertProjectSchema, insertCustomerSchema, insertSubcontractorSchema, insertTransactionSchema, insertSiteDiarySchema, insertTimesheetSchema, insertInvoiceSchema, insertProgressPaymentSchema } from "@shared/schema";
 import { ZodError } from "zod";
 
 // Authentication middleware - Giriş yapmayan kullanıcıları engeller
@@ -385,6 +385,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.sendStatus(204);
     } catch (error) {
       res.status(500).send("Fatura silinirken hata oluştu");
+    }
+  });
+
+  // Progress Payment routes (Hakediş)
+  app.get("/api/progress-payments", requireAuth, async (req, res) => {
+    try {
+      const payments = await storage.getProgressPayments();
+      res.json(payments);
+    } catch (error) {
+      res.status(500).send("Hakediş kayıtları yüklenirken hata oluştu");
+    }
+  });
+
+  app.post("/api/progress-payments", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertProgressPaymentSchema.parse(req.body);
+      const payment = await storage.createProgressPayment(validatedData);
+      res.status(201).json(payment);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        console.error("Progress payment validation error:", error.errors);
+        return res.status(400).send(error.message || "Geçersiz hakediş verisi");
+      }
+      console.error("Progress payment creation error:", error);
+      res.status(500).send("Hakediş oluşturulurken hata oluştu");
+    }
+  });
+
+  app.patch("/api/progress-payments/:id", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertProgressPaymentSchema.partial().parse(req.body);
+      const payment = await storage.updateProgressPayment(req.params.id, validatedData);
+      if (!payment) {
+        return res.status(404).send("Hakediş bulunamadı");
+      }
+      res.json(payment);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).send(error.message || "Geçersiz hakediş verisi");
+      }
+      res.status(500).send("Hakediş güncellenirken hata oluştu");
+    }
+  });
+
+  app.delete("/api/progress-payments/:id", requireAuth, async (req, res) => {
+    try {
+      const success = await storage.deleteProgressPayment(req.params.id);
+      if (!success) {
+        return res.status(404).send("Hakediş bulunamadı");
+      }
+      res.sendStatus(204);
+    } catch (error) {
+      res.status(500).send("Hakediş silinirken hata oluştu");
     }
   });
 
