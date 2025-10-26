@@ -1,7 +1,13 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Calendar, Ruler, Eye, Edit } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MapPin, Calendar, Ruler, Eye, Edit, MoreVertical, Trash } from "lucide-react";
 import { Link } from "wouter";
 
 interface ProjectCardProps {
@@ -15,6 +21,7 @@ interface ProjectCardProps {
   costPerSqm?: string;
   onView?: () => void;
   onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 const statusColors: Record<string, string> = {
@@ -35,13 +42,43 @@ export function ProjectCard({
   costPerSqm,
   onView,
   onEdit,
+  onDelete,
 }: ProjectCardProps) {
   return (
     <Card className="hover-elevate" data-testid={`card-project-${id}`}>
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-lg">{name}</CardTitle>
-          <Badge className={statusColors[status] || ""}>{status}</Badge>
+          <div className="flex items-center gap-2">
+            <Badge className={statusColors[status] || ""}>{status}</Badge>
+            {(onEdit || onDelete) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" data-testid={`button-menu-project-${id}`}>
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {onEdit && (
+                    <DropdownMenuItem onClick={onEdit} data-testid={`button-edit-project-${id}`}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Düzenle
+                    </DropdownMenuItem>
+                  )}
+                  {onDelete && (
+                    <DropdownMenuItem 
+                      onClick={onDelete} 
+                      className="text-destructive focus:text-destructive"
+                      data-testid={`button-delete-project-${id}`}
+                    >
+                      <Trash className="h-4 w-4 mr-2" />
+                      Sil
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -82,16 +119,6 @@ export function ProjectCard({
             Görüntüle
           </Button>
         </Link>
-        <Button 
-          variant="secondary" 
-          size="sm" 
-          className="flex-1"
-          onClick={onEdit}
-          data-testid={`button-edit-project-${id}`}
-        >
-          <Edit className="h-4 w-4 mr-2" />
-          Düzenle
-        </Button>
       </CardFooter>
     </Card>
   );

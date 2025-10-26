@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { SiteDiaryCard } from "@/components/site-diary-card";
 import { TimesheetTable } from "@/components/timesheet-table";
 import { PrintButton } from "@/components/print-button";
@@ -11,54 +12,226 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Search, Calendar } from "lucide-react";
+import { Plus, Search, Calendar as CalendarIcon, Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { insertSiteDiarySchema, type InsertSiteDiary, type SiteDiary, type Project } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+
+const weatherOptions = ["Güneşli", "Bulutlu", "Yağmurlu", "Karlı"] as const;
 
 export default function SiteDiary() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProject, setSelectedProject] = useState("all");
-  const [selectedDate, setSelectedDate] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<SiteDiary | null>(null);
+  const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  // TODO: Remove mock data - replace with real data from API
-  const mockProjects = [
-    { id: "1", name: "Ataşehir Konut Projesi" },
-    { id: "2", name: "Beykoz Villa İnşaatı" },
-    { id: "3", name: "Maltepe Ofis Binası" },
-  ];
+  // Fetch site diary entries
+  const { data: diaryEntries = [], isLoading: isLoadingDiary, error: diaryError } = useQuery<SiteDiary[]>({
+    queryKey: ["/api/site-diary"],
+  });
 
-  const mockDiaryEntries = [
-    {
-      id: "1",
-      date: "26.10.2024",
-      projectName: "Ataşehir Konut Projesi",
-      weather: "Bulutlu",
-      workDone: "Temel kazısı tamamlandı.\n2. kat kolon kalıpları yerleştirildi.\nBeton dökümü için hazırlık yapıldı.",
-      materialsUsed: "Beton C30: 45m³\nİnşaat Demiri: 2.5 ton\nKalıp malzemesi",
-      totalWorkers: 28,
-      issues: "Beton mikserinde küçük bir arıza oluştu, 2 saat gecikme yaşandı.",
-      notes: "Yarın hava durumu uygunsa beton dökümü yapılacak.",
-    },
-    {
-      id: "2",
-      date: "25.10.2024",
-      projectName: "Beykoz Villa İnşaatı",
-      weather: "Güneşli",
-      workDone: "İç sıva işleri devam ediyor.\nElektrik tesisatı %80 tamamlandı.",
-      materialsUsed: "Sıva malzemesi: 150 kg\nElektrik kablosu: 200m",
-      totalWorkers: 15,
-    },
-    {
-      id: "3",
-      date: "24.10.2024",
-      projectName: "Ataşehir Konut Projesi",
-      weather: "Yağmurlu",
-      workDone: "Hava koşulları nedeniyle sadece kapalı alan işleri yapıldı.\nİç kapı kasası montajı.",
-      totalWorkers: 8,
-      notes: "Yağmur nedeniyle dış işler ertelendi.",
-    },
-  ];
+  // Fetch projects for the dropdown
+  const { data: projects = [], isLoading: isLoadingProjects } = useQuery<Project[]>({
+    queryKey: ["/api/projects"],
+  });
 
+  // Create site diary entry mutation
+  const createEntryMutation = useMutation({
+    mutationFn: async (data: InsertSiteDiary) => {
+      const response = await apiRequest("POST", "/api/site-diary", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/site-diary"] });
+      toast({
+        title: "Başarılı",
+        description: "Şantiye defteri kaydı başarıyla oluşturuldu",
+      });
+      setIsDialogOpen(false);
+      form.reset();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Hata",
+        description: error.message || "Kayıt oluşturulurken bir hata oluştu",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update site diary entry mutation
+  const updateEntryMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<InsertSiteDiary> }) => {
+      const response = await apiRequest("PATCH", `/api/site-diary/${id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/site-diary"] });
+      toast({
+        title: "Başarılı",
+        description: "Şantiye defteri kaydı başarıyla güncellendi",
+      });
+      setIsDialogOpen(false);
+      setEditingEntry(null);
+      form.reset();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Hata",
+        description: error.message || "Kayıt güncellenirken bir hata oluştu",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete site diary entry mutation
+  const deleteEntryMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/site-diary/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/site-diary"] });
+      toast({
+        title: "Başarılı",
+        description: "Şantiye defteri kaydı başarıyla silindi",
+      });
+      setDeleteEntryId(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Hata",
+        description: error.message || "Kayıt silinirken bir hata oluştu",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Form setup
+  const form = useForm<InsertSiteDiary>({
+    resolver: zodResolver(insertSiteDiarySchema),
+    defaultValues: {
+      projectId: "",
+      date: "",
+      weather: "",
+      workDone: "",
+      materialsUsed: "",
+      totalWorkers: undefined,
+      issues: "",
+      notes: "",
+    },
+  });
+
+  const onSubmit = (data: InsertSiteDiary) => {
+    // Convert empty strings to null for optional fields
+    const cleanedData = {
+      ...data,
+      weather: data.weather || null,
+      materialsUsed: data.materialsUsed || null,
+      totalWorkers: data.totalWorkers || null,
+      issues: data.issues || null,
+      notes: data.notes || null,
+    };
+
+    if (editingEntry) {
+      updateEntryMutation.mutate({ id: editingEntry.id, data: cleanedData });
+    } else {
+      createEntryMutation.mutate(cleanedData);
+    }
+  };
+
+  const handleAddEntry = () => {
+    setEditingEntry(null);
+    form.reset({
+      projectId: "",
+      date: "",
+      weather: "",
+      workDone: "",
+      materialsUsed: "",
+      totalWorkers: undefined,
+      issues: "",
+      notes: "",
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleEditEntry = (entry: SiteDiary) => {
+    setEditingEntry(entry);
+    form.reset({
+      projectId: entry.projectId,
+      date: entry.date,
+      weather: entry.weather || "",
+      workDone: entry.workDone,
+      materialsUsed: entry.materialsUsed || "",
+      totalWorkers: entry.totalWorkers || undefined,
+      issues: entry.issues || "",
+      notes: entry.notes || "",
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleDeleteEntry = (id: string) => {
+    setDeleteEntryId(id);
+  };
+
+  const confirmDelete = () => {
+    if (deleteEntryId) {
+      deleteEntryMutation.mutate(deleteEntryId);
+    }
+  };
+
+  // Create a map of projects for easy lookup
+  const projectMap = new Map(projects.map(p => [p.id, p]));
+
+  // Enrich diary entries with project names
+  const enrichedEntries = diaryEntries.map(entry => ({
+    ...entry,
+    projectName: projectMap.get(entry.projectId)?.name || "Bilinmeyen Proje",
+  }));
+
+  // Filter diary entries
+  const filteredDiaryEntries = enrichedEntries.filter((entry) => {
+    const matchesSearch =
+      entry.workDone.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entry.projectName?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesProject = selectedProject === "all" || entry.projectId === selectedProject;
+    return matchesSearch && matchesProject;
+  });
+
+  // Mock timesheets - this would need to be connected to a real API later
   const mockTimesheets = [
     {
       id: "1",
@@ -69,47 +242,14 @@ export default function SiteDiary() {
       hours: 8,
       notes: "Temel kazısı",
     },
-    {
-      id: "2",
-      date: "26.10.2024",
-      projectName: "Ataşehir Konut Projesi",
-      isGrubu: "İnce İmalat",
-      workerCount: 8,
-      hours: 9,
-      notes: "Kalıp işleri",
-    },
-    {
-      id: "3",
-      date: "26.10.2024",
-      projectName: "Beykoz Villa İnşaatı",
-      isGrubu: "İnce İmalat",
-      workerCount: 10,
-      hours: 8,
-      notes: "Sıva işleri",
-    },
-    {
-      id: "4",
-      date: "26.10.2024",
-      projectName: "Beykoz Villa İnşaatı",
-      isGrubu: "Elektrik Tesisat",
-      workerCount: 5,
-      hours: 7,
-      notes: "Kablo döşeme",
-    },
   ];
 
-  const filteredDiaryEntries = mockDiaryEntries.filter((entry) => {
-    const matchesSearch =
-      entry.workDone.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      entry.projectName?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesProject = selectedProject === "all" || entry.projectName === selectedProject;
-    return matchesSearch && matchesProject;
-  });
-
   const filteredTimesheets = mockTimesheets.filter((entry) => {
-    const matchesProject = selectedProject === "all" || entry.projectName === selectedProject;
+    const matchesProject = selectedProject === "all" || entry.projectName === projectMap.get(selectedProject)?.name;
     return matchesProject;
   });
+
+  const isPending = createEntryMutation.isPending || updateEntryMutation.isPending;
 
   return (
     <div className="space-y-6">
@@ -120,7 +260,7 @@ export default function SiteDiary() {
         </div>
         <div className="flex items-center gap-2">
           <PrintButton />
-          <Button data-testid="button-add-diary-entry">
+          <Button onClick={handleAddEntry} data-testid="button-add-diary-entry">
             <Plus className="h-4 w-4 mr-2" />
             Yeni Kayıt Ekle
           </Button>
@@ -144,8 +284,8 @@ export default function SiteDiary() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tüm Projeler</SelectItem>
-            {mockProjects.map((project) => (
-              <SelectItem key={project.id} value={project.name}>
+            {projects.map((project) => (
+              <SelectItem key={project.id} value={project.id}>
                 {project.name}
               </SelectItem>
             ))}
@@ -164,10 +304,30 @@ export default function SiteDiary() {
         </TabsList>
 
         <TabsContent value="diary" className="space-y-6">
-          {filteredDiaryEntries.length === 0 ? (
+          {isLoadingDiary ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {[1, 2, 3, 4].map((i) => (
+                <Card key={i}>
+                  <CardHeader>
+                    <Skeleton className="h-6 w-32" />
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-16 w-full" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : diaryError ? (
+            <Card>
+              <CardContent className="py-12 text-center text-destructive">
+                Veriler yüklenirken bir hata oluştu
+              </CardContent>
+            </Card>
+          ) : filteredDiaryEntries.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center text-muted-foreground">
-                Kayıt bulunamadı
+                {diaryEntries.length === 0 ? "Henüz kayıt eklenmemiş" : "Kayıt bulunamadı"}
               </CardContent>
             </Card>
           ) : (
@@ -175,9 +335,19 @@ export default function SiteDiary() {
               {filteredDiaryEntries.map((entry) => (
                 <SiteDiaryCard
                   key={entry.id}
-                  entry={entry}
-                  onEdit={() => console.log('Edit diary', entry.id)}
-                  onDelete={() => console.log('Delete diary', entry.id)}
+                  entry={{
+                    id: entry.id,
+                    date: entry.date,
+                    projectName: entry.projectName,
+                    weather: entry.weather ?? undefined,
+                    workDone: entry.workDone,
+                    materialsUsed: entry.materialsUsed ?? undefined,
+                    totalWorkers: entry.totalWorkers ?? undefined,
+                    issues: entry.issues ?? undefined,
+                    notes: entry.notes ?? undefined,
+                  }}
+                  onEdit={() => handleEditEntry(entry)}
+                  onDelete={() => handleDeleteEntry(entry.id)}
                 />
               ))}
             </div>
@@ -199,6 +369,274 @@ export default function SiteDiary() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Form Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingEntry ? "Şantiye Defteri Kaydını Düzenle" : "Yeni Şantiye Defteri Kaydı"}
+            </DialogTitle>
+            <DialogDescription>
+              Şantiye defteri bilgilerini girin. * işaretli alanlar zorunludur.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Project Select */}
+                <FormField
+                  control={form.control}
+                  name="projectId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Proje *</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        disabled={isLoadingProjects}
+                      >
+                        <FormControl>
+                          <SelectTrigger data-testid="select-project">
+                            <SelectValue placeholder="Proje seçin" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {projects.map((project) => (
+                            <SelectItem key={project.id} value={project.id}>
+                              {project.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Date Picker */}
+                <FormField
+                  control={form.control}
+                  name="date"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Tarih *</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                              data-testid="button-date-picker"
+                            >
+                              {field.value ? (
+                                format(new Date(field.value), "PPP", { locale: tr })
+                              ) : (
+                                <span>Tarih seçin</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value ? new Date(field.value) : undefined}
+                            onSelect={(date) => {
+                              if (date) {
+                                field.onChange(format(date, "yyyy-MM-dd"));
+                              }
+                            }}
+                            locale={tr}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Weather Select */}
+                <FormField
+                  control={form.control}
+                  name="weather"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Hava Durumu</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || undefined}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-weather">
+                            <SelectValue placeholder="Hava durumu seçin" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {weatherOptions.map((weather) => (
+                            <SelectItem key={weather} value={weather}>
+                              {weather}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Total Workers */}
+                <FormField
+                  control={form.control}
+                  name="totalWorkers"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Toplam İşçi Sayısı</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          {...field}
+                          value={field.value ?? ""}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            field.onChange(value === "" ? undefined : parseInt(value));
+                          }}
+                          data-testid="input-total-workers"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Work Done */}
+              <FormField
+                control={form.control}
+                name="workDone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Yapılan İşler *</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Bugün yapılan işleri detaylı olarak yazın..."
+                        className="min-h-24"
+                        {...field}
+                        data-testid="textarea-work-done"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Materials Used */}
+              <FormField
+                control={form.control}
+                name="materialsUsed"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Kullanılan Malzemeler</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Kullanılan malzemeleri listeleyin..."
+                        className="min-h-20"
+                        {...field}
+                        value={field.value || ""}
+                        data-testid="textarea-materials"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Issues */}
+              <FormField
+                control={form.control}
+                name="issues"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Sorunlar</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Karşılaşılan sorunları yazın..."
+                        className="min-h-20"
+                        {...field}
+                        value={field.value || ""}
+                        data-testid="textarea-issues"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Notes */}
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notlar</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Ek notlar..."
+                        className="min-h-20"
+                        {...field}
+                        value={field.value || ""}
+                        data-testid="textarea-notes"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                  disabled={isPending}
+                  data-testid="button-cancel"
+                >
+                  İptal
+                </Button>
+                <Button type="submit" disabled={isPending} data-testid="button-submit">
+                  {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {editingEntry ? "Güncelle" : "Kaydet"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteEntryId} onOpenChange={() => setDeleteEntryId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Emin misiniz?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bu şantiye defteri kaydını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">İptal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
+              Sil
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

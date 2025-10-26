@@ -10,39 +10,58 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
 
-interface Transaction {
+interface TransactionWithProject {
   id: string;
   date: string;
+  projectId: string;
   projectName: string;
-  type: "Gelir" | "Gider";
-  amount: number;
+  type: string;
+  amount: string;
   isGrubu: string;
   rayicGrubu: string;
-  description?: string;
+  description: string | null;
+  invoiceNumber: string | null;
+  createdAt: Date | null;
 }
 
 interface TransactionTableProps {
-  transactions: Transaction[];
-  onEdit?: (id: string) => void;
+  transactions: TransactionWithProject[];
+  onEdit?: (transaction: TransactionWithProject) => void;
   onDelete?: (id: string) => void;
 }
 
 export function TransactionTable({ transactions, onEdit, onDelete }: TransactionTableProps) {
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | string) => {
+    const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
     return new Intl.NumberFormat('tr-TR', {
       style: 'currency',
       currency: 'TRY',
       minimumFractionDigits: 2,
-    }).format(amount);
+    }).format(numericAmount);
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('tr-TR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
   };
 
   const totalIncome = transactions
     .filter(t => t.type === "Gelir")
-    .reduce((sum, t) => sum + t.amount, 0);
+    .reduce((sum, t) => {
+      const amount = typeof t.amount === 'string' ? parseFloat(t.amount) : t.amount;
+      return sum + amount;
+    }, 0);
 
   const totalExpense = transactions
     .filter(t => t.type === "Gider")
-    .reduce((sum, t) => sum + t.amount, 0);
+    .reduce((sum, t) => {
+      const amount = typeof t.amount === 'string' ? parseFloat(t.amount) : t.amount;
+      return sum + amount;
+    }, 0);
 
   return (
     <div className="space-y-4">
@@ -70,7 +89,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
             ) : (
               transactions.map((transaction) => (
                 <TableRow key={transaction.id} data-testid={`row-transaction-${transaction.id}`}>
-                  <TableCell className="font-medium">{transaction.date}</TableCell>
+                  <TableCell className="font-medium">{formatDate(transaction.date)}</TableCell>
                   <TableCell>{transaction.projectName}</TableCell>
                   <TableCell>
                     <Badge
@@ -86,7 +105,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                   <TableCell className="text-sm">{transaction.isGrubu}</TableCell>
                   <TableCell className="text-sm">{transaction.rayicGrubu}</TableCell>
                   <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
-                    {transaction.description}
+                    {transaction.description || '-'}
                   </TableCell>
                   <TableCell className="text-right font-mono font-semibold">
                     {formatCurrency(transaction.amount)}
@@ -96,7 +115,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => onEdit?.(transaction.id)}
+                        onClick={() => onEdit?.(transaction)}
                         data-testid={`button-edit-transaction-${transaction.id}`}
                       >
                         <Edit className="h-4 w-4" />
