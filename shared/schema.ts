@@ -296,6 +296,7 @@ export const progressPayments = pgTable("progress_payments", {
   date: date("date").notNull(),
   description: text("description").notNull(),
   workCompleted: text("work_completed"),
+  transactionIds: jsonb("transaction_ids").default(sql`'[]'::jsonb`), // Seçilen gider transaction ID'leri
   amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
   contractorFeeRate: decimal("contractor_fee_rate", { precision: 5, scale: 2 }).default("0"),
   grossAmount: decimal("gross_amount", { precision: 15, scale: 2 }),

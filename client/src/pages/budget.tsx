@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { PrintButton } from "@/components/print-button";
 
 const formSchema = insertBudgetItemSchema.extend({
   startDate: z.string().optional(),
@@ -251,14 +252,19 @@ export default function BudgetPage() {
           <h1 className="text-3xl font-bold">Bütçe-Keşif</h1>
           <p className="text-muted-foreground">Proje bütçelerini yönetin ve gerçekleşen maliyetleri takip edin</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-add-budget-item">
-              <Plus className="mr-2 h-4 w-4" />
-              Yeni Kalem
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <div className="flex gap-2">
+          <PrintButton 
+            title="Bütçe-Keşif Raporu"
+            className="no-print"
+          />
+          <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+            <DialogTrigger asChild>
+              <Button data-testid="button-add-budget-item" className="no-print">
+                <Plus className="mr-2 h-4 w-4" />
+                Yeni Kalem
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingItem ? "Bütçe Kalemini Düzenle" : "Yeni Bütçe Kalemi"}</DialogTitle>
             </DialogHeader>
@@ -538,6 +544,7 @@ export default function BudgetPage() {
             </Form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Özet Kartlar */}
@@ -596,7 +603,7 @@ export default function BudgetPage() {
       </div>
 
       {/* Filtreler */}
-      <Card>
+      <Card className="no-print">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Filter className="h-4 w-4" />
@@ -711,7 +718,7 @@ export default function BudgetPage() {
                     <th className="text-right p-2">Gerçekleşen</th>
                     <th className="text-center p-2">İlerleme</th>
                     <th className="text-center p-2">Durum</th>
-                    <th className="text-center p-2">İşlemler</th>
+                    <th className="text-center p-2 no-print">İşlemler</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -753,7 +760,7 @@ export default function BudgetPage() {
                         <td className="p-2 text-center">
                           {getStatusBadge(item.status)}
                         </td>
-                        <td className="p-2">
+                        <td className="p-2 no-print">
                           <div className="flex items-center justify-center gap-1">
                             <Button
                               size="icon"
