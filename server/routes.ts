@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { insertProjectSchema, insertCustomerSchema, insertSubcontractorSchema, insertTransactionSchema, insertSiteDiarySchema, insertTimesheetSchema, insertInvoiceSchema, insertProgressPaymentSchema } from "@shared/schema";
+import { insertProjectSchema, insertCustomerSchema, insertSubcontractorSchema, insertTransactionSchema, insertSiteDiarySchema, insertTimesheetSchema, insertInvoiceSchema, insertProgressPaymentSchema, insertTaskSchema } from "@shared/schema";
 import { ZodError } from "zod";
 
 // Authentication middleware - Giriş yapmayan kullanıcıları engeller
@@ -385,6 +385,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.sendStatus(204);
     } catch (error) {
       res.status(500).send("Fatura silinirken hata oluştu");
+    }
+  });
+
+  // Task routes (İş Programı Görevleri)
+  app.get("/api/tasks", requireAuth, async (req, res) => {
+    try {
+      const tasks = await storage.getTasks();
+      res.json(tasks);
+    } catch (error) {
+      res.status(500).send("Görevler yüklenirken hata oluştu");
+    }
+  });
+
+  app.post("/api/tasks", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertTaskSchema.parse(req.body);
+      const task = await storage.createTask(validatedData);
+      res.status(201).json(task);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        console.error("Task validation error:", error.errors);
+        return res.status(400).send(error.message || "Geçersiz görev verisi");
+      }
+      console.error("Task creation error:", error);
+      res.status(500).send("Görev oluşturulurken hata oluştu");
+    }
+  });
+
+  app.patch("/api/tasks/:id", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertTaskSchema.partial().parse(req.body);
+      const task = await storage.updateTask(req.params.id, validatedData);
+      if (!task) {
+        return res.status(404).send("Görev bulunamadı");
+      }
+      res.json(task);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).send(error.message || "Geçersiz görev verisi");
+      }
+      res.status(500).send("Görev güncellenirken hata oluştu");
+    }
+  });
+
+  app.delete("/api/tasks/:id", requireAuth, async (req, res) => {
+    try {
+      const success = await storage.deleteTask(req.params.id);
+      if (!success) {
+        return res.status(404).send("Görev bulunamadı");
+      }
+      res.sendStatus(204);
+    } catch (error) {
+      res.status(500).send("Görev silinirken hata oluştu");
     }
   });
 

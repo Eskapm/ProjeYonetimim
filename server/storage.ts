@@ -19,6 +19,8 @@ import {
   type InsertInvoice,
   type ProgressPayment,
   type InsertProgressPayment,
+  type Task,
+  type InsertTask,
   users,
   projects,
   customers,
@@ -28,6 +30,7 @@ import {
   timesheets,
   invoices,
   progressPayments,
+  tasks,
 } from "@shared/schema";
 import session, { type Store } from "express-session";
 import createMemoryStore from "memorystore";
@@ -95,6 +98,13 @@ export interface IStorage {
   createProgressPayment(payment: InsertProgressPayment): Promise<ProgressPayment>;
   updateProgressPayment(id: string, payment: Partial<InsertProgressPayment>): Promise<ProgressPayment | undefined>;
   deleteProgressPayment(id: string): Promise<boolean>;
+
+  // Task methods
+  getTasks(): Promise<Task[]>;
+  getTask(id: string): Promise<Task | undefined>;
+  createTask(task: InsertTask): Promise<Task>;
+  updateTask(id: string, task: Partial<InsertTask>): Promise<Task | undefined>;
+  deleteTask(id: string): Promise<boolean>;
 
   sessionStore: Store;
 }
@@ -321,6 +331,31 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProgressPayment(id: string): Promise<boolean> {
     const result = await db.delete(progressPayments).where(eq(progressPayments.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Task methods
+  async getTasks(): Promise<Task[]> {
+    return await db.select().from(tasks);
+  }
+
+  async getTask(id: string): Promise<Task | undefined> {
+    const [task] = await db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
+    return task;
+  }
+
+  async createTask(task: InsertTask): Promise<Task> {
+    const [newTask] = await db.insert(tasks).values(task).returning();
+    return newTask;
+  }
+
+  async updateTask(id: string, task: Partial<InsertTask>): Promise<Task | undefined> {
+    const [updated] = await db.update(tasks).set(task).where(eq(tasks.id, id)).returning();
+    return updated;
+  }
+
+  async deleteTask(id: string): Promise<boolean> {
+    const result = await db.delete(tasks).where(eq(tasks.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 }

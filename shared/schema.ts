@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, decimal, date, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, decimal, date, timestamp, integer, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -173,10 +173,15 @@ export const tasks = pgTable("tasks", {
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
   status: text("status").notNull().default("Bekliyor"),
+  priority: text("priority").notNull().default("Orta"), // Düşük, Orta, Yüksek, Acil
+  progress: integer("progress").notNull().default(0), // 0-100 arası ilerleme yüzdesi
   responsible: text("responsible"),
   notes: text("notes"),
+  checklist: jsonb("checklist").default(sql`'[]'::jsonb`), // Alt görevler [{text: string, completed: boolean}]
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const taskPriorityEnum = ["Düşük", "Orta", "Yüksek", "Acil"] as const;
 
 export const insertTaskSchema = createInsertSchema(tasks).omit({
   id: true,
@@ -185,6 +190,12 @@ export const insertTaskSchema = createInsertSchema(tasks).omit({
 
 export type InsertTask = z.infer<typeof insertTaskSchema>;
 export type Task = typeof tasks.$inferSelect;
+
+// Checklist item type
+export interface ChecklistItem {
+  text: string;
+  completed: boolean;
+}
 
 // Bütçe kalemleri tablosu
 export const budgetItems = pgTable("budget_items", {
