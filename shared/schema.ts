@@ -189,3 +189,45 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+// Puantaj (Günlük işçi çalışma kayıtları) tablosu
+export const timesheets = pgTable("timesheets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id").notNull(),
+  date: date("date").notNull(),
+  isGrubu: text("is_grubu").notNull(),
+  workerCount: integer("worker_count").notNull(),
+  hours: decimal("hours", { precision: 5, scale: 2 }).notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertTimesheetSchema = createInsertSchema(timesheets).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertTimesheet = z.infer<typeof insertTimesheetSchema>;
+export type Timesheet = typeof timesheets.$inferSelect;
+
+// Şantiye Defteri (Günlük şantiye raporları) tablosu
+export const siteDiary = pgTable("site_diary", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id").notNull(),
+  date: date("date").notNull(),
+  weather: text("weather"),
+  workDone: text("work_done").notNull(),
+  materialsUsed: text("materials_used"),
+  totalWorkers: integer("total_workers"),
+  issues: text("issues"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertSiteDiarySchema = createInsertSchema(siteDiary).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertSiteDiary = z.infer<typeof insertSiteDiarySchema>;
+export type SiteDiary = typeof siteDiary.$inferSelect;
