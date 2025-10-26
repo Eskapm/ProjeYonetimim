@@ -1,7 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -42,7 +43,8 @@ import {
   progressPaymentStatusEnum,
   type InsertProgressPayment, 
   type ProgressPayment, 
-  type Project
+  type Project,
+  type Transaction
 } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -68,7 +70,8 @@ export default function Hakedis() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<ProgressPayment | null>(null);
   const [deletePaymentId, setDeletePaymentId] = useState<string | null>(null);
-  const { toast } = useToast();
+  const [selectedTransactionIds, setSelectedTransactionIds] = useState<string[]>([]);
+  const { toast} = useToast();
 
   // Fetch progress payments
   const { data: payments = [], isLoading: isLoadingPayments, error: paymentsError } = useQuery<ProgressPayment[]>({
@@ -78,6 +81,11 @@ export default function Hakedis() {
   // Fetch projects
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
+  });
+
+  // Fetch transactions
+  const { data: allTransactions = [] } = useQuery<Transaction[]>({
+    queryKey: ["/api/transactions"],
   });
 
   // Create form
@@ -91,8 +99,29 @@ export default function Hakedis() {
       amount: "0",
       receivedAmount: "0",
       status: "Bekliyor",
+      transactionIds: [],
     },
   });
+
+  // Filter expense transactions for selected project
+  const projectExpenseTransactions = useMemo(() => {
+    const projectId = form.watch("projectId");
+    if (!projectId) return [];
+    
+    return allTransactions.filter(
+      (t) => t.projectId === projectId && t.type === "Gider"
+    );
+  }, [allTransactions, form.watch("projectId")]);
+
+  // Calculate total amount from selected transactions
+  useEffect(() => {
+    const total = selectedTransactionIds.reduce((sum, id) => {
+      const transaction = allTransactions.find((t) => t.id === id);
+      return sum + (transaction ? parseFloat(transaction.amount as string) : 0);
+    }, 0);
+    
+    form.setValue("amount", total.toFixed(2));
+  }, [selectedTransactionIds, allTransactions, form]);
 
   // Create payment mutation
   const createPaymentMutation = useMutation({
@@ -594,7 +623,7 @@ export default function Hakedis() {
                   )}
                 />
 
-                {/* Amount */}
+                {/* Amount - Auto-calculated from selected transactions */}
                 <FormField
                   control={form.control}
                   name="amount"
@@ -603,13 +632,16 @@ export default function Hakedis() {
                       <FormLabel>Hakediş Tutarı (TL) *</FormLabel>
                       <FormControl>
                         <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          {...field}
+                          type="text"
+                          value={parseFloat(field.value || "0").toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          readOnly
+                          className="bg-muted font-mono font-semibold"
                           data-testid="input-amount"
                         />
                       </FormControl>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Seçilen gider kalemlerinin toplamı
+                      </p>
                       <FormMessage />
                     </FormItem>
                   )}
