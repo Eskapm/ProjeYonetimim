@@ -6,6 +6,19 @@ This is a construction project management system for Eska Yapı Mühendislik İn
 
 ## Recent Changes (October 26, 2025)
 
+**İş Programı (Work Schedule) Module - Complete Implementation**:
+- **Database Schema**: Tasks table fully implemented with fields: title, description, projectId (nullable), startDate, dueDate, status (Beklemede/Devam Ediyor/Tamamlandı/İptal), priority (Düşük/Orta/Yüksek/Acil), progress (0-100%), assignedTo, checklist (JSONB array of {id, text, completed})
+- **Backend**: Complete CRUD operations in storage and routes layers (GET/POST/PATCH/DELETE /api/tasks)
+- **Frontend Features**:
+  - **Summary Dashboard**: 5 metric cards (Toplam/Beklemede/Devam Ediyor/Tamamlandı/İptal)
+  - **Advanced Filtering**: Multi-level filters (project, status, priority) + search query
+  - **Sorting Options**: By due date, priority, progress, or title
+  - **Task Cards**: Progress bars, priority badges, status icons, checklist summary, date display
+  - **Task Form (Dialog)**: Title, description, project selection, date pickers, status/priority selects, progress slider (0-100%), checklist management (add/remove/check items)
+  - **Responsive Grid**: 3-column on desktop, 2 on tablet, 1 on mobile
+- **Type Safety**: ChecklistItem interface with id/text/completed structure; all field names aligned between schema and frontend
+- **Architect Reviewed**: ✅ Schema consistency verified, field naming corrected (title/dueDate/assignedTo vs old name/endDate/responsible), status enum synchronized
+
 **Hakediş Module - Advanced Financial Calculations**:
 - **Database Schema**: Added `contractorFeeRate`, `grossAmount`, `advanceDeductionRate`, `advanceDeduction`, `netPayment` fields to progressPayments table
 - **Projects Table**: Added `advancePayment` field for tracking project advance payments
