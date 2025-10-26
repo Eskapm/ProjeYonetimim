@@ -10,6 +10,9 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import Dashboard from "@/pages/dashboard";
 import Projects from "@/pages/projects";
+import ProjectDetail from "@/pages/project-detail";
+import Transactions from "@/pages/transactions";
+import SiteDiary from "@/pages/site-diary";
 import Subcontractors from "@/pages/subcontractors";
 import Customers from "@/pages/customers";
 import NotFound from "@/pages/not-found";
@@ -52,6 +55,9 @@ function Router() {
     <Switch>
       <Route path="/" component={Dashboard} />
       <Route path="/projeler" component={Projects} />
+      <Route path="/projeler/:id" component={ProjectDetail} />
+      <Route path="/islemler" component={Transactions} />
+      <Route path="/santiye-defteri" component={SiteDiary} />
       <Route path="/taseronlar" component={Subcontractors} />
       <Route path="/musteriler" component={Customers} />
       <Route component={NotFound} />

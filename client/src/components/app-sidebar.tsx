@@ -7,7 +7,8 @@ import {
   UserCircle, 
   BarChart3,
   CalendarDays,
-  Calculator
+  Calculator,
+  BookOpen
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
@@ -27,6 +28,7 @@ const menuItems = [
   { title: "Ana Sayfa", url: "/", icon: Home },
   { title: "Projeler", url: "/projeler", icon: FolderKanban },
   { title: "Gelir/Gider", url: "/islemler", icon: ArrowLeftRight },
+  { title: "Şantiye Defteri", url: "/santiye-defteri", icon: BookOpen },
   { title: "Faturalar", url: "/faturalar", icon: FileText },
   { title: "İş Programı", url: "/is-programi", icon: CalendarDays },
   { title: "Bütçe & Keşif", url: "/butce", icon: Calculator },

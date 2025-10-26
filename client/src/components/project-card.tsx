@@ -2,6 +2,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Calendar, Ruler, Eye, Edit } from "lucide-react";
+import { Link } from "wouter";
 
 interface ProjectCardProps {
   id: string;
@@ -70,16 +71,17 @@ export function ProjectCard({
         )}
       </CardContent>
       <CardFooter className="flex gap-2">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="flex-1"
-          onClick={onView}
-          data-testid={`button-view-project-${id}`}
-        >
-          <Eye className="h-4 w-4 mr-2" />
-          Görüntüle
-        </Button>
+        <Link href={`/projeler/${id}`} className="flex-1">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full"
+            data-testid={`button-view-project-${id}`}
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            Görüntüle
+          </Button>
+        </Link>
         <Button 
           variant="secondary" 
           size="sm" 
