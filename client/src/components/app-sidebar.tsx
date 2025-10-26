@@ -9,7 +9,8 @@ import {
   CalendarDays,
   Calculator,
   BookOpen,
-  ClipboardList
+  ClipboardList,
+  Receipt
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
@@ -32,6 +33,7 @@ const menuItems = [
   { title: "Şantiye Defteri", url: "/santiye-defteri", icon: BookOpen },
   { title: "Puantaj", url: "/puantaj", icon: ClipboardList },
   { title: "Faturalar", url: "/faturalar", icon: FileText },
+  { title: "Hakediş", url: "/hakedis", icon: Receipt },
   { title: "İş Programı", url: "/is-programi", icon: CalendarDays },
   { title: "Bütçe & Keşif", url: "/butce", icon: Calculator },
   { title: "Taşeronlar", url: "/taseronlar", icon: Users },

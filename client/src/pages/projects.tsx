@@ -31,7 +31,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Search, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertProjectSchema, type InsertProject, type Project, type Customer, projectStatusEnum } from "@shared/schema";
+import { insertProjectSchema, type InsertProject, type Project, type Customer, projectStatusEnum, contractTypeEnum } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -463,6 +463,76 @@ export default function Projects() {
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="contractType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sözleşme Türü</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || "none"}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-contract-type">
+                            <SelectValue placeholder="Sözleşme türü seçin" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">Sözleşme yok</SelectItem>
+                          {contractTypeEnum.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="contractAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sözleşme Tutarı (TL)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          value={field.value ?? ""} 
+                          type="number" 
+                          step="0.01" 
+                          placeholder="0.00" 
+                          data-testid="input-contract-amount" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {form.watch("contractType") === "Maliyet + Kar Marjı" && (
+                  <FormField
+                    control={form.control}
+                    name="profitMargin"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Kar Marjı (%)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            value={field.value ?? ""} 
+                            type="number" 
+                            step="0.01" 
+                            placeholder="15" 
+                            data-testid="input-profit-margin" 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <FormField
                   control={form.control}

@@ -23,6 +23,7 @@ import WorkSchedule from "@/pages/work-schedule";
 import Budget from "@/pages/budget";
 import Reports from "@/pages/reports";
 import Invoices from "@/pages/invoices";
+import Hakedis from "@/pages/hakedis";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
 import logoUrl from "@assets/ESKA LOGO TASARIMI_1761497797352.png";
@@ -85,6 +86,7 @@ function Router() {
       <ProtectedRoute path="/santiye-defteri" component={SiteDiary} />
       <ProtectedRoute path="/puantaj" component={Puantaj} />
       <ProtectedRoute path="/faturalar" component={Invoices} />
+      <ProtectedRoute path="/hakedis" component={Hakedis} />
       <ProtectedRoute path="/is-programi" component={WorkSchedule} />
       <ProtectedRoute path="/butce" component={Budget} />
       <ProtectedRoute path="/taseronlar" component={Subcontractors} />
