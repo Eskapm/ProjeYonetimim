@@ -152,8 +152,8 @@ export default function Projects() {
       endDate: data.endDate || null,
       description: data.description || null,
       notes: data.notes || null,
-      // Explicitly convert empty string or undefined to null
-      customerId: (data.customerId === "" || !data.customerId) ? null : data.customerId,
+      // Explicitly convert empty string, "none", or undefined to null
+      customerId: (data.customerId === "" || data.customerId === "none" || !data.customerId) ? null : data.customerId,
     };
 
     if (editingProject) {
@@ -175,10 +175,9 @@ export default function Projects() {
       status: "Planlama",
       description: "",
       notes: "",
-      customerId: "",
+      customerId: "none",
     });
     setIsDialogOpen(true);
-    console.log("Dialog açıldı, isDialogOpen:", true);
   };
 
   const handleEditProject = (project: Project) => {
@@ -192,7 +191,7 @@ export default function Projects() {
       status: project.status,
       description: project.description ?? "",
       notes: project.notes ?? "",
-      customerId: project.customerId ?? "",
+      customerId: project.customerId ?? "none",
     });
     setIsDialogOpen(true);
   };
@@ -444,14 +443,14 @@ export default function Projects() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Müşteri</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <Select onValueChange={field.onChange} value={field.value || "none"}>
                         <FormControl>
                           <SelectTrigger data-testid="select-project-customer">
                             <SelectValue placeholder="Müşteri seçin" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">Müşteri yok</SelectItem>
+                          <SelectItem value="none">Müşteri yok</SelectItem>
                           {customers.map((customer) => (
                             <SelectItem key={customer.id} value={customer.id}>
                               {customer.name}
