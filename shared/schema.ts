@@ -190,6 +190,9 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
+// Public user type (without password) - safe to send to client
+export type PublicUser = Omit<User, "password">;
+
 // Puantaj (Günlük işçi çalışma kayıtları) tablosu
 export const timesheets = pgTable("timesheets", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
