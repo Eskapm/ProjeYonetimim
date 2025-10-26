@@ -233,10 +233,12 @@ export default function WorkSchedule() {
     }
   };
 
-  const handleDialogClose = () => {
-    setIsDialogOpen(false);
-    setEditingTask(null);
-    form.reset();
+  const handleDialogChange = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (!open) {
+      setEditingTask(null);
+      form.reset();
+    }
   };
 
   const addChecklistItem = () => {
@@ -324,7 +326,7 @@ export default function WorkSchedule() {
               <h1 className="text-4xl font-bold text-foreground">İş Programı</h1>
               <p className="text-sm text-muted-foreground mt-2">Görev yönetimi ve takip sistemi</p>
             </div>
-            <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+            <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
               <DialogTrigger asChild>
                 <Button
                   size="default"
