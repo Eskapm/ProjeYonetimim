@@ -6,6 +6,39 @@ This is a construction project management system for Eska Yapı Mühendislik İn
 
 ## Recent Changes (October 26, 2025)
 
+**Hakediş Modülü Redesign - Transaction-Based System**:
+- **Schema Enhancement**: Added `transactionIds` JSONB field to progressPayments table for storing selected expense transaction IDs
+- **Form Redesign**: 
+  - Giderler (expense transactions) selection via checkbox table
+  - Auto-calculated total amount from selected transactions
+  - Real-time updates when transactions are selected/deselected
+  - Transaction list filtered by selected project (only expense type)
+  - Form displays: Date, Description, İş Grubu, Rayiç Grubu, Amount per transaction
+- **Detail View Dialog**: 
+  - Eye icon button in table for viewing hakediş details
+  - Shows summary cards: Toplam Tutar, Müteahhitlik Karı, Brüt Tutar, Net Ödeme
+  - Displays itemized list of all selected transactions with totals
+  - Shows full description and calculation breakdown
+- **Enhanced Table**: Added "Detayları Görüntüle" (View Details) button with Eye icon
+- **Form Logic**: 
+  - selectedTransactionIds state syncs with form
+  - useEffect hook auto-calculates amount from selected transactions
+  - Edit mode pre-populates selected transactions from stored IDs
+  - Submit includes transaction IDs array in payload
+
+**Bütçe-Keşif Print Feature**:
+- Added PrintButton component to page header
+- Applied `no-print` class to filters card and action buttons
+- Applied `no-print` class to "İşlemler" (operations) column header and cells
+- Print-friendly table layout with all budget items visible
+
+**Project Detail Page Bug Fix**:
+- Fixed mock data issue - now fetches real project from API using projectId parameter
+- Added proper loading and error states
+- All project fields now display actual data from database
+
+## Recent Changes (October 26, 2025) - Previous
+
 **İş Programı (Work Schedule) Module - Complete Implementation**:
 - **Database Schema**: Tasks table fully implemented with fields: title, description, projectId (nullable), startDate, dueDate, status (Beklemede/Devam Ediyor/Tamamlandı/İptal), priority (Düşük/Orta/Yüksek/Acil), progress (0-100%), assignedTo, checklist (JSONB array of {id, text, completed})
 - **Backend**: Complete CRUD operations in storage and routes layers (GET/POST/PATCH/DELETE /api/tasks)

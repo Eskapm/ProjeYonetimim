@@ -969,6 +969,145 @@ export default function Hakedis() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Payment Detail Dialog */}
+      <Dialog open={viewingPaymentDetail !== null} onOpenChange={(open) => !open && setViewingPaymentDetail(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Hakediş Detayları - #{viewingPaymentDetail?.paymentNumber}</DialogTitle>
+            <DialogDescription>
+              {projects.find(p => p.id === viewingPaymentDetail?.projectId)?.name || "Proje"} - Hakediş kalem dökümü ve özeti
+            </DialogDescription>
+          </DialogHeader>
+
+          {viewingPaymentDetail && (
+            <div className="space-y-6">
+              {/* Summary Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Toplam Tutar</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-lg font-bold font-mono">
+                      {parseFloat(viewingPaymentDetail.amount as string).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Müteahhitlik Karı</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-lg font-bold font-mono text-blue-600">
+                      +{((parseFloat(viewingPaymentDetail.grossAmount as string || "0") - parseFloat(viewingPaymentDetail.amount as string))).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      %{parseFloat(viewingPaymentDetail.contractorFeeRate as string || "0").toFixed(2)}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Brüt Tutar</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-lg font-bold font-mono text-primary">
+                      {parseFloat(viewingPaymentDetail.grossAmount as string || "0").toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Net Ödeme</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-lg font-bold font-mono text-green-600">
+                      {parseFloat(viewingPaymentDetail.netPayment as string || "0").toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Avans kesintisi: {parseFloat(viewingPaymentDetail.advanceDeduction as string || "0").toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Transaction Items */}
+              <div>
+                <h3 className="text-sm font-semibold mb-3">Hakediş Kapsamındaki Gider Kalemleri</h3>
+                {(() => {
+                  const txIds = (viewingPaymentDetail.transactionIds as string[]) || [];
+                  const transactions = allTransactions.filter(t => txIds.includes(t.id));
+                  
+                  if (transactions.length === 0) {
+                    return (
+                      <p className="text-sm text-muted-foreground py-8 text-center">
+                        Bu hakediş için seçilmiş gider kalemi bulunmuyor
+                      </p>
+                    );
+                  }
+
+                  return (
+                    <div className="border rounded-lg">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Tarih</TableHead>
+                            <TableHead>Açıklama</TableHead>
+                            <TableHead>İş Grubu</TableHead>
+                            <TableHead>Rayiç Grubu</TableHead>
+                            <TableHead className="text-right">Tutar</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {transactions.map((transaction) => (
+                            <TableRow key={transaction.id}>
+                              <TableCell className="text-sm">
+                                {format(parseISO(transaction.date as string), "dd MMM yyyy", { locale: tr })}
+                              </TableCell>
+                              <TableCell className="text-sm">{transaction.description}</TableCell>
+                              <TableCell className="text-sm">
+                                <Badge variant="outline" className="text-xs">
+                                  {transaction.isGrubu || "-"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-sm">
+                                <Badge variant="outline" className="text-xs">
+                                  {transaction.rayicGrubu || "-"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right font-mono text-sm">
+                                {parseFloat(transaction.amount as string).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                          <TableRow className="font-semibold bg-muted/50">
+                            <TableCell colSpan={4} className="text-right">Toplam</TableCell>
+                            <TableCell className="text-right font-mono">
+                              {transactions.reduce((sum, t) => sum + parseFloat(t.amount as string), 0).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                            </TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Description */}
+              <div>
+                <h3 className="text-sm font-semibold mb-2">Açıklama</h3>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap bg-muted/30 p-3 rounded-lg">
+                  {viewingPaymentDetail.description}
+                </p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
