@@ -1030,14 +1030,7 @@ export default function Hakedis() {
       <Dialog open={viewingPaymentDetail !== null} onOpenChange={(open) => !open && setViewingPaymentDetail(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex-1">
-                <img 
-                  src={eskaLogo} 
-                  alt="Eska Yapı Logo" 
-                  className="h-20 w-auto object-contain"
-                />
-              </div>
+            <div className="flex items-center justify-end gap-4">
               <Button
                 variant="outline"
                 size="sm"
@@ -1064,8 +1057,8 @@ export default function Hakedis() {
                 }
               />
 
-              {/* Summary Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 print:grid-cols-4">
+              {/* Summary Cards - Hidden in print for clean look */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 print:hidden">
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm">Toplam Tutar</CardTitle>
