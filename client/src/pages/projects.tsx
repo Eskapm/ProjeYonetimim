@@ -31,7 +31,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Search, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertProjectSchema, type InsertProject, type Project, projectStatusEnum } from "@shared/schema";
+import { insertProjectSchema, type InsertProject, type Project, type Customer, projectStatusEnum } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -51,7 +51,7 @@ export default function Projects() {
   });
 
   // Fetch customers for the form
-  const { data: customers = [] } = useQuery<any[]>({
+  const { data: customers = [] } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
   });
 

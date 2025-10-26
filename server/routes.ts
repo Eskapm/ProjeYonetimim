@@ -42,12 +42,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/projects/:id", async (req, res) => {
     try {
-      const project = await storage.updateProject(req.params.id, req.body);
+      const validatedData = insertProjectSchema.partial().parse(req.body);
+      const project = await storage.updateProject(req.params.id, validatedData);
       if (!project) {
         return res.status(404).send("Proje bulunamadı");
       }
       res.json(project);
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).send(error.message || "Geçersiz proje verisi");
+      }
       res.status(500).send("Proje güncellenirken hata oluştu");
     }
   });
@@ -86,12 +90,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/customers/:id", async (req, res) => {
     try {
-      const customer = await storage.updateCustomer(req.params.id, req.body);
+      const validatedData = insertCustomerSchema.partial().parse(req.body);
+      const customer = await storage.updateCustomer(req.params.id, validatedData);
       if (!customer) {
         return res.status(404).send("Müşteri bulunamadı");
       }
       res.json(customer);
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).send(error.message || "Geçersiz müşteri verisi");
+      }
       res.status(500).send("Müşteri güncellenirken hata oluştu");
     }
   });
@@ -130,12 +138,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/subcontractors/:id", async (req, res) => {
     try {
-      const subcontractor = await storage.updateSubcontractor(req.params.id, req.body);
+      const validatedData = insertSubcontractorSchema.partial().parse(req.body);
+      const subcontractor = await storage.updateSubcontractor(req.params.id, validatedData);
       if (!subcontractor) {
         return res.status(404).send("Taşeron bulunamadı");
       }
       res.json(subcontractor);
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).send(error.message || "Geçersiz taşeron verisi");
+      }
       res.status(500).send("Taşeron güncellenirken hata oluştu");
     }
   });
@@ -174,12 +186,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/transactions/:id", async (req, res) => {
     try {
-      const transaction = await storage.updateTransaction(req.params.id, req.body);
+      const validatedData = insertTransactionSchema.partial().parse(req.body);
+      const transaction = await storage.updateTransaction(req.params.id, validatedData);
       if (!transaction) {
         return res.status(404).send("İşlem bulunamadı");
       }
       res.json(transaction);
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).send(error.message || "Geçersiz işlem verisi");
+      }
       res.status(500).send("İşlem güncellenirken hata oluştu");
     }
   });
@@ -218,12 +234,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/site-diary/:id", async (req, res) => {
     try {
-      const entry = await storage.updateSiteDiaryEntry(req.params.id, req.body);
+      const validatedData = insertSiteDiarySchema.partial().parse(req.body);
+      const entry = await storage.updateSiteDiaryEntry(req.params.id, validatedData);
       if (!entry) {
         return res.status(404).send("Şantiye defteri kaydı bulunamadı");
       }
       res.json(entry);
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).send(error.message || "Geçersiz şantiye defteri verisi");
+      }
       res.status(500).send("Şantiye defteri güncellenirken hata oluştu");
     }
   });
