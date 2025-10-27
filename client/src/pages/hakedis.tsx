@@ -573,6 +573,32 @@ export default function Hakedis() {
                   })}
                 </TableBody>
               </Table>
+              
+              {/* Özet Bilgiler - Sadece yazdırmada görünür */}
+              {filteredPayments.length > 0 && (
+                <div className="mt-8 pt-6 border-t-2 border-border print-only">
+                  <div className="grid grid-cols-3 gap-6 max-w-3xl ml-auto">
+                    <div className="text-right">
+                      <div className="text-sm text-muted-foreground mb-1">Toplam Hakediş</div>
+                      <div className="text-2xl font-bold">
+                        {summary.totalAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-muted-foreground mb-1">Tahsil Edilen</div>
+                      <div className="text-2xl font-bold text-green-600">
+                        {summary.totalReceived.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-muted-foreground mb-1">Bekleyen Ödeme</div>
+                      <div className="text-2xl font-bold text-orange-600">
+                        {summary.pendingAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>

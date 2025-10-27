@@ -20,6 +20,15 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { PrintButton } from "@/components/print-button";
 import { ExportToExcel } from "@/components/export-to-excel";
+import { cn } from "@/lib/utils";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const formSchema = insertBudgetItemSchema.extend({
   startDate: z.string().optional(),
@@ -730,23 +739,23 @@ export default function BudgetPage() {
             <div className="text-center py-8 text-muted-foreground">Henüz bütçe kalemi eklenmemiş</div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-2">Kalem</th>
-                    <th className="text-left p-2">Proje</th>
-                    <th className="text-left p-2">İş Grubu</th>
-                    <th className="text-left p-2">Rayiç</th>
-                    <th className="text-right p-2">Miktar</th>
-                    <th className="text-right p-2">B.Fiyat</th>
-                    <th className="text-right p-2">Bütçe</th>
-                    <th className="text-right p-2">Gerçekleşen</th>
-                    <th className="text-center p-2">İlerleme</th>
-                    <th className="text-center p-2">Durum</th>
-                    <th className="text-center p-2 no-print">İşlemler</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Kalem</TableHead>
+                    <TableHead>Proje</TableHead>
+                    <TableHead>İş Grubu</TableHead>
+                    <TableHead>Rayiç</TableHead>
+                    <TableHead className="text-right">Miktar</TableHead>
+                    <TableHead className="text-right">B.Fiyat</TableHead>
+                    <TableHead className="text-right">Bütçe</TableHead>
+                    <TableHead className="text-right">Gerçekleşen</TableHead>
+                    <TableHead className="text-center">İlerleme</TableHead>
+                    <TableHead className="text-center">Durum</TableHead>
+                    <TableHead className="text-center no-print">İşlemler</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {filteredItems.map((item) => {
                     const budgetTotal = parseFloat(item.quantity) * parseFloat(item.unitPrice);
                     const actualTotal = item.actualQuantity && item.actualUnitPrice
@@ -754,38 +763,40 @@ export default function BudgetPage() {
                       : 0;
 
                     return (
-                      <tr key={item.id} className="border-b hover-elevate" data-testid={`row-item-${item.id}`}>
-                        <td className="p-2">
+                      <TableRow key={item.id} data-testid={`row-item-${item.id}`}>
+                        <TableCell>
                           <div className="font-medium">{item.name}</div>
                           {item.description && (
                             <div className="text-xs text-muted-foreground">{item.description}</div>
                           )}
-                        </td>
-                        <td className="p-2 text-sm">{getProjectName(item.projectId)}</td>
-                        <td className="p-2 text-sm">{item.isGrubu}</td>
-                        <td className="p-2 text-sm">{item.rayicGrubu}</td>
-                        <td className="p-2 text-right font-mono">
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{getProjectName(item.projectId)}</Badge>
+                        </TableCell>
+                        <TableCell>{item.isGrubu}</TableCell>
+                        <TableCell>{item.rayicGrubu}</TableCell>
+                        <TableCell className="text-right font-mono">
                           {parseFloat(item.quantity).toLocaleString('tr-TR')} {item.unit}
-                        </td>
-                        <td className="p-2 text-right font-mono">
+                        </TableCell>
+                        <TableCell className="text-right font-mono">
                           {formatCurrency(parseFloat(item.unitPrice))}
-                        </td>
-                        <td className="p-2 text-right font-mono font-medium">
+                        </TableCell>
+                        <TableCell className="text-right font-mono font-semibold">
                           {formatCurrency(budgetTotal)}
-                        </td>
-                        <td className="p-2 text-right font-mono">
+                        </TableCell>
+                        <TableCell className="text-right font-mono">
                           {actualTotal > 0 ? formatCurrency(actualTotal) : "-"}
-                        </td>
-                        <td className="p-2">
+                        </TableCell>
+                        <TableCell>
                           <div className="flex items-center gap-2">
                             <Progress value={item.progress} className="flex-1" />
                             <span className="text-xs font-medium w-10 text-right">{item.progress}%</span>
                           </div>
-                        </td>
-                        <td className="p-2 text-center">
+                        </TableCell>
+                        <TableCell className="text-center">
                           {getStatusBadge(item.status)}
-                        </td>
-                        <td className="p-2 no-print">
+                        </TableCell>
+                        <TableCell className="text-center no-print">
                           <div className="flex items-center justify-center gap-1">
                             <Button
                               size="icon"
@@ -804,12 +815,41 @@ export default function BudgetPage() {
                               <Trash2 className="h-4 w-4 text-red-500" />
                             </Button>
                           </div>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     );
                   })}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
+              
+              {/* Özet Bilgiler - Sadece yazdırmada görünür */}
+              {filteredItems.length > 0 && (
+                <div className="mt-8 pt-6 border-t-2 border-border print-only">
+                  <div className="grid grid-cols-3 gap-6 max-w-3xl ml-auto">
+                    <div className="text-right">
+                      <div className="text-sm text-muted-foreground mb-1">Toplam Bütçe</div>
+                      <div className="text-2xl font-bold">
+                        {summary.totalBudget.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-muted-foreground mb-1">Gerçekleşen Tutar</div>
+                      <div className="text-2xl font-bold text-blue-600">
+                        {summary.totalActual.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-muted-foreground mb-1">Fark</div>
+                      <div className={cn(
+                        "text-2xl font-bold",
+                        summary.variance >= 0 ? "text-green-600" : "text-red-600"
+                      )}>
+                        {summary.variance >= 0 ? "+" : ""}{summary.variance.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>

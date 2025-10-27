@@ -263,6 +263,11 @@
   .no-default-hover-elevate {}
 
   .no-default-active-elevate {}
+  
+  /* Hide print-only elements in normal view */
+  .print-only {
+    display: none;
+  }
 
 
   /**
@@ -366,6 +371,11 @@
   [class*="filter"],
   [class*="search"] {
     display: none !important;
+  }
+  
+  /* Show print-only elements */
+  .print-only {
+    display: block !important;
   }
   
   /* Remove any margins, shadows, and backgrounds for clean professional look */
