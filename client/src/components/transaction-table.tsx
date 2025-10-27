@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import {
   Table,
   TableBody,
@@ -81,57 +82,64 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                 </TableCell>
               </TableRow>
             ) : (
-              transactions.map((transaction) => (
-                <TableRow key={transaction.id} data-testid={`row-transaction-${transaction.id}`}>
-                  <TableCell className="font-medium whitespace-nowrap">{formatDate(transaction.date)}</TableCell>
-                  <TableCell>{transaction.projectName}</TableCell>
-                  <TableCell>
-                    <Badge
-                      className={
-                        transaction.type === "Gelir"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                          : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                      }
-                    >
-                      {transaction.type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm">{transaction.isGrubu}</TableCell>
-                  <TableCell className="text-sm">{transaction.rayicGrubu}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
-                    {transaction.description || '-'}
-                  </TableCell>
-                  <TableCell className="text-center" data-testid={`text-progress-payment-status-${transaction.id}`}>
-                    {transaction.progressPaymentId ? (
-                      <Check className="h-5 w-5 text-green-600 dark:text-green-400 mx-auto" />
-                    ) : (
-                      <X className="h-5 w-5 text-muted-foreground mx-auto" />
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right font-mono font-semibold">
-                    {formatCurrency(transaction.amount)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onEdit?.(transaction)}
-                        data-testid={`button-edit-transaction-${transaction.id}`}
+              transactions.map((transaction, index) => (
+                <Fragment key={transaction.id}>
+                  {index === 9 && (
+                    <TableRow className="page-break-spacer print-only">
+                      <TableCell colSpan={9} className="h-0 p-0 border-none"></TableCell>
+                    </TableRow>
+                  )}
+                  <TableRow data-testid={`row-transaction-${transaction.id}`}>
+                    <TableCell className="font-medium whitespace-nowrap">{formatDate(transaction.date)}</TableCell>
+                    <TableCell>{transaction.projectName}</TableCell>
+                    <TableCell>
+                      <Badge
+                        className={
+                          transaction.type === "Gelir"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                            : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                        }
                       >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onDelete?.(transaction.id)}
-                        data-testid={`button-delete-transaction-${transaction.id}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                        {transaction.type}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm">{transaction.isGrubu}</TableCell>
+                    <TableCell className="text-sm">{transaction.rayicGrubu}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                      {transaction.description || '-'}
+                    </TableCell>
+                    <TableCell className="text-center" data-testid={`text-progress-payment-status-${transaction.id}`}>
+                      {transaction.progressPaymentId ? (
+                        <Check className="h-5 w-5 text-green-600 dark:text-green-400 mx-auto" />
+                      ) : (
+                        <X className="h-5 w-5 text-muted-foreground mx-auto" />
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right font-mono font-semibold">
+                      {formatCurrency(transaction.amount)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onEdit?.(transaction)}
+                          data-testid={`button-edit-transaction-${transaction.id}`}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onDelete?.(transaction.id)}
+                          data-testid={`button-delete-transaction-${transaction.id}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                </Fragment>
               ))
             )}
           </TableBody>
