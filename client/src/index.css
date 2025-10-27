@@ -710,36 +710,47 @@
     height: 3cm !important;
   }
 
-  /* Hakediş Date Info - Full Width Horizontal Display */
+  /* Hakediş Date Info - FULL WIDTH HORIZONTAL - PRINT MODE ONLY */
+  .print-header-wrapper .hakedis-date-info-wrapper,
   .hakedis-date-info-wrapper {
     width: 100% !important;
     max-width: 100% !important;
     display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   
+  .print-header-wrapper .hakedis-date-row,
   .hakedis-date-row {
     width: 100% !important;
     max-width: 100% !important;
+    min-width: 100% !important;
     display: block !important;
     white-space: normal !important;
     word-wrap: break-word !important;
     overflow-wrap: break-word !important;
-    padding: 8px 12px !important;
-    margin-bottom: 6px !important;
-    border-bottom: 1px solid #333 !important;
-    min-height: 28px !important;
-    line-height: 1.6 !important;
-    font-size: 11px !important;
+    word-break: normal !important;
+    padding: 10px 0 !important;
+    margin: 0 0 8px 0 !important;
+    border-bottom: 2px solid #000 !important;
+    min-height: 32px !important;
+    line-height: 1.8 !important;
+    font-size: 12px !important;
+    text-align: left !important;
+    box-sizing: border-box !important;
   }
   
+  .print-header-wrapper .hakedis-date-row strong,
   .hakedis-date-row strong {
     display: inline !important;
     white-space: nowrap !important;
-    margin-right: 10px !important;
-    font-weight: 600 !important;
+    margin-right: 12px !important;
+    font-weight: 700 !important;
   }
   
+  .print-header-wrapper .hakedis-date-row:last-child,
   .hakedis-date-row:last-child {
     margin-bottom: 0 !important;
+    border-bottom: 1px solid #000 !important;
   }
 }
