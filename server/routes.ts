@@ -642,10 +642,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const page = await browser.newPage();
       
-      // Set content with proper encoding
+      // Emulate print media for proper print CSS
+      await page.emulateMediaType('print');
+      
+      // Set content with proper encoding - use domcontentloaded to avoid waiting for external resources
       await page.setContent(html, {
-        waitUntil: 'networkidle0'
+        waitUntil: 'domcontentloaded',
+        timeout: 30000
       });
+      
+      // Wait a bit for CSS to apply
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Generate PDF with professional settings
       const pdfBuffer = await page.pdf({
@@ -668,10 +675,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       await browser.close();
       
-      // Send PDF as response
+      // Send PDF as response - use end() to send binary data correctly
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-      res.send(pdfBuffer);
+      res.setHeader('Content-Length', pdfBuffer.length.toString());
+      res.end(pdfBuffer, 'binary');
       
     } catch (error: any) {
       console.error('PDF generation error:', error);
