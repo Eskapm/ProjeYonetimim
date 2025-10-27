@@ -617,11 +617,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const puppeteer = await import("puppeteer");
+      const { execSync } = await import("child_process");
       
-      // Launch browser
+      // Find Chromium path dynamically in Nix environment
+      let chromiumPath: string;
+      try {
+        chromiumPath = execSync('which chromium').toString().trim();
+      } catch (error) {
+        // Fallback: try common paths or let Puppeteer use its bundled Chromium
+        chromiumPath = '/usr/bin/chromium';
+      }
+      
+      // Launch browser with system Chromium (Nix environment)
       const browser = await puppeteer.default.launch({
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+        executablePath: chromiumPath,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu'
+        ]
       });
       
       const page = await browser.newPage();
