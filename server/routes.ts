@@ -497,7 +497,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Budget Item routes
   app.get("/api/budget-items", requireAuth, async (req, res) => {
     try {
-      const items = await storage.getBudgetItems();
+      const projectId = req.query.projectId as string | undefined;
+      const items = await storage.getBudgetItems(projectId);
       res.json(items);
     } catch (error) {
       res.status(500).send("Bütçe kalemleri yüklenirken hata oluştu");

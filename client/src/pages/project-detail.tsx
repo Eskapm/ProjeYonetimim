@@ -75,13 +75,17 @@ export default function ProjectDetail() {
   });
 
   // Fetch budget items for this project
-  const { data: allBudgetItems = [], isLoading: budgetItemsLoading } = useQuery<BudgetItem[]>({
-    queryKey: ["/api/budget-items"],
+  const { data: budgetItems = [], isLoading: budgetItemsLoading } = useQuery<BudgetItem[]>({
+    queryKey: ["/api/budget-items", { projectId }],
+    queryFn: async () => {
+      const response = await fetch(`/api/budget-items?projectId=${projectId}`);
+      if (!response.ok) {
+        throw new Error('Bütçe kalemleri yüklenirken hata oluştu');
+      }
+      return response.json();
+    },
     enabled: !!projectId,
   });
-
-  // Filter budget items by this project
-  const budgetItems = allBudgetItems.filter(item => item.projectId === projectId);
 
   // Project form setup
   const form = useForm<InsertProject>({

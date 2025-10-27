@@ -110,7 +110,7 @@ export interface IStorage {
   deleteTask(id: string): Promise<boolean>;
 
   // Budget Item methods
-  getBudgetItems(): Promise<BudgetItem[]>;
+  getBudgetItems(projectId?: string): Promise<BudgetItem[]>;
   getBudgetItem(id: string): Promise<BudgetItem | undefined>;
   createBudgetItem(item: InsertBudgetItem): Promise<BudgetItem>;
   updateBudgetItem(id: string, item: Partial<InsertBudgetItem>): Promise<BudgetItem | undefined>;
@@ -370,7 +370,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Budget Item methods
-  async getBudgetItems(): Promise<BudgetItem[]> {
+  async getBudgetItems(projectId?: string): Promise<BudgetItem[]> {
+    if (projectId) {
+      return await db.select().from(budgetItems).where(eq(budgetItems.projectId, projectId));
+    }
     return await db.select().from(budgetItems);
   }
 
