@@ -39,9 +39,19 @@ import {
 } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertProjectSchema, type InsertProject, type Project, type Customer, projectStatusEnum, contractTypeEnum } from "@shared/schema";
+import { insertProjectSchema, type InsertProject, type Project, type Customer, type BudgetItem, type InsertBudgetItem, projectStatusEnum, contractTypeEnum, insertBudgetItemSchema, budgetItemStatusEnum, isGrubuEnum, rayicGrubuEnum } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Slider } from "@/components/ui/slider";
+import { z } from "zod";
+
+const budgetFormSchema = insertBudgetItemSchema.extend({
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+});
+
+type BudgetFormValues = z.infer<typeof budgetFormSchema>;
 
 export default function ProjectDetail() {
   const [, params] = useRoute("/projeler/:id");
@@ -49,6 +59,9 @@ export default function ProjectDetail() {
   const projectId = params?.id;
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isBudgetDialogOpen, setIsBudgetDialogOpen] = useState(false);
+  const [editingBudgetItem, setEditingBudgetItem] = useState<BudgetItem | null>(null);
+  const [deleteBudgetItemId, setDeleteBudgetItemId] = useState<string | null>(null);
 
   // Fetch real project data
   const { data: project, isLoading } = useQuery<Project>({
@@ -61,7 +74,16 @@ export default function ProjectDetail() {
     queryKey: ["/api/customers"],
   });
 
-  // Form setup
+  // Fetch budget items for this project
+  const { data: allBudgetItems = [], isLoading: budgetItemsLoading } = useQuery<BudgetItem[]>({
+    queryKey: ["/api/budget-items"],
+    enabled: !!projectId,
+  });
+
+  // Filter budget items by this project
+  const budgetItems = allBudgetItems.filter(item => item.projectId === projectId);
+
+  // Project form setup
   const form = useForm<InsertProject>({
     resolver: zodResolver(insertProjectSchema),
     defaultValues: {
@@ -76,6 +98,27 @@ export default function ProjectDetail() {
       customerId: undefined,
       description: "",
       notes: "",
+    },
+  });
+
+  // Budget item form setup
+  const budgetForm = useForm<BudgetFormValues>({
+    resolver: zodResolver(budgetFormSchema),
+    defaultValues: {
+      projectId: projectId || "",
+      name: "",
+      description: "",
+      quantity: "",
+      unit: "",
+      unitPrice: "",
+      isGrubu: "",
+      rayicGrubu: "",
+      status: "Başlamadı",
+      progress: 0,
+      startDate: "",
+      endDate: "",
+      actualQuantity: "",
+      actualUnitPrice: "",
     },
   });
 
@@ -104,6 +147,36 @@ export default function ProjectDetail() {
     },
   });
 
+  // Budget item mutations
+  const updateBudgetItemMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<InsertBudgetItem> }) => {
+      return apiRequest("PATCH", `/api/budget-items/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/budget-items"] });
+      setIsBudgetDialogOpen(false);
+      setEditingBudgetItem(null);
+      toast({ title: "Başarılı", description: "Bütçe kalemi güncellendi" });
+    },
+    onError: () => {
+      toast({ title: "Hata", description: "Bütçe kalemi güncellenemedi", variant: "destructive" });
+    },
+  });
+
+  const deleteBudgetItemMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest("DELETE", `/api/budget-items/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/budget-items"] });
+      setDeleteBudgetItemId(null);
+      toast({ title: "Başarılı", description: "Bütçe kalemi silindi" });
+    },
+    onError: () => {
+      toast({ title: "Hata", description: "Bütçe kalemi silinemedi", variant: "destructive" });
+    },
+  });
+
   const handleEdit = () => {
     // Open edit dialog and populate form with current project data
     if (project) {
@@ -126,6 +199,54 @@ export default function ProjectDetail() {
 
   const onSubmit = (data: InsertProject) => {
     updateProjectMutation.mutate(data);
+  };
+
+  const handleEditBudgetItem = (id: string) => {
+    const item = budgetItems.find(item => item.id === id);
+    if (!item) return;
+    
+    setEditingBudgetItem(item);
+    budgetForm.reset({
+      projectId: item.projectId,
+      name: item.name,
+      description: item.description || "",
+      quantity: item.quantity,
+      unit: item.unit,
+      unitPrice: item.unitPrice,
+      isGrubu: item.isGrubu,
+      rayicGrubu: item.rayicGrubu,
+      status: item.status,
+      progress: item.progress,
+      startDate: item.startDate || "",
+      endDate: item.endDate || "",
+      actualQuantity: item.actualQuantity || "",
+      actualUnitPrice: item.actualUnitPrice || "",
+    });
+    setIsBudgetDialogOpen(true);
+  };
+
+  const handleDeleteBudgetItem = (id: string) => {
+    setDeleteBudgetItemId(id);
+  };
+
+  const confirmDeleteBudgetItem = () => {
+    if (deleteBudgetItemId) {
+      deleteBudgetItemMutation.mutate(deleteBudgetItemId);
+    }
+  };
+
+  const onBudgetSubmit = (data: BudgetFormValues) => {
+    const submitData = {
+      ...data,
+      startDate: data.startDate || undefined,
+      endDate: data.endDate || undefined,
+      actualQuantity: data.actualQuantity || undefined,
+      actualUnitPrice: data.actualUnitPrice || undefined,
+    };
+
+    if (editingBudgetItem) {
+      updateBudgetItemMutation.mutate({ id: editingBudgetItem.id, data: submitData });
+    }
   };
 
   const handleAddBudgetItem = () => {
@@ -159,27 +280,6 @@ export default function ProjectDetail() {
   if (!project) {
     return <div className="container mx-auto p-6">Proje bulunamadı</div>;
   }
-
-  const mockBudgetItems = [
-    {
-      id: "1",
-      name: "Beton C30",
-      quantity: 250,
-      unit: "m³",
-      unitPrice: 850,
-      isGrubu: "Kaba İmalat",
-      rayicGrubu: "Malzeme",
-    },
-    {
-      id: "2",
-      name: "İnşaat Demiri",
-      quantity: 15000,
-      unit: "kg",
-      unitPrice: 18.5,
-      isGrubu: "Kaba İmalat",
-      rayicGrubu: "Malzeme",
-    },
-  ];
 
   const mockTasks = [
     {
@@ -345,11 +445,23 @@ export default function ProjectDetail() {
               </div>
             </CardHeader>
             <CardContent>
-              <BudgetTable
-                items={mockBudgetItems}
-                onEdit={handleEdit}
-                onDelete={(id) => toast({ title: "Bilgi", description: "Bütçe kalemi silme işlemi için Bütçe sayfasını kullanın." })}
-              />
+              {budgetItemsLoading ? (
+                <div className="text-center py-8">Yükleniyor...</div>
+              ) : (
+                <BudgetTable
+                  items={budgetItems.map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    quantity: parseFloat(item.quantity),
+                    unit: item.unit,
+                    unitPrice: parseFloat(item.unitPrice),
+                    isGrubu: item.isGrubu,
+                    rayicGrubu: item.rayicGrubu,
+                  }))}
+                  onEdit={handleEditBudgetItem}
+                  onDelete={handleDeleteBudgetItem}
+                />
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -715,6 +827,312 @@ export default function ProjectDetail() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Budget Item Edit Dialog */}
+      <Dialog open={isBudgetDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          setIsBudgetDialogOpen(false);
+          setEditingBudgetItem(null);
+          budgetForm.reset();
+        }
+      }}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Bütçe Kalemini Düzenle</DialogTitle>
+          </DialogHeader>
+          <Form {...budgetForm}>
+            <form onSubmit={budgetForm.handleSubmit(onBudgetSubmit)} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={budgetForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem className="col-span-2">
+                      <FormLabel>Kalem Adı *</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Örn: Beton dökümü" data-testid="input-budget-name" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={budgetForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Açıklama</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} value={field.value || ""} placeholder="Detaylı açıklama" rows={2} data-testid="input-budget-description" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={budgetForm.control}
+                  name="isGrubu"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>İş Grubu *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-budget-is-grubu">
+                            <SelectValue placeholder="İş grubu seçin" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {isGrubuEnum.map((grup) => (
+                            <SelectItem key={grup} value={grup}>
+                              {grup}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={budgetForm.control}
+                  name="rayicGrubu"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Rayiç Grubu *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-budget-rayic-grubu">
+                            <SelectValue placeholder="Rayiç grubu seçin" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {rayicGrubuEnum.map((grup) => (
+                            <SelectItem key={grup} value={grup}>
+                              {grup}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <FormField
+                  control={budgetForm.control}
+                  name="quantity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Miktar *</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" step="0.01" placeholder="100" data-testid="input-budget-quantity" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={budgetForm.control}
+                  name="unit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Birim *</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="m³, ton, adet" data-testid="input-budget-unit" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={budgetForm.control}
+                  name="unitPrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Birim Fiyat *</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" step="0.01" placeholder="1500" data-testid="input-budget-unit-price" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={budgetForm.control}
+                  name="startDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Başlangıç Tarihi</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="date" data-testid="input-budget-start-date" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={budgetForm.control}
+                  name="endDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bitiş Tarihi</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="date" data-testid="input-budget-end-date" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={budgetForm.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Durum</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-budget-status">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {budgetItemStatusEnum.map((status) => (
+                            <SelectItem key={status} value={status}>
+                              {status}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={budgetForm.control}
+                  name="progress"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>İlerleme: {field.value || 0}%</FormLabel>
+                      <FormControl>
+                        <Slider
+                          min={0}
+                          max={100}
+                          step={5}
+                          value={[field.value || 0]}
+                          onValueChange={(vals) => field.onChange(vals[0])}
+                          data-testid="slider-budget-progress"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="border-t pt-4">
+                <h3 className="font-medium mb-3">Gerçekleşen Değerler</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={budgetForm.control}
+                    name="actualQuantity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Gerçekleşen Miktar</FormLabel>
+                        <FormControl>
+                          <Input {...field} value={field.value || ""} type="number" step="0.01" placeholder="85" data-testid="input-budget-actual-quantity" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={budgetForm.control}
+                    name="actualUnitPrice"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Gerçekleşen Birim Fiyat</FormLabel>
+                        <FormControl>
+                          <Input {...field} value={field.value || ""} type="number" step="0.01" placeholder="1650" data-testid="input-budget-actual-unit-price" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsBudgetDialogOpen(false);
+                    setEditingBudgetItem(null);
+                    budgetForm.reset();
+                  }}
+                  data-testid="button-cancel-budget"
+                >
+                  İptal
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={updateBudgetItemMutation.isPending}
+                  data-testid="button-save-budget"
+                >
+                  {updateBudgetItemMutation.isPending && (
+                    <span className="mr-2">⏳</span>
+                  )}
+                  Güncelle
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Budget Item Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteBudgetItemId} onOpenChange={(open) => !open && setDeleteBudgetItemId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Bütçe Kalemini Sil</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bu bütçe kalemini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete-budget">İptal</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteBudgetItem}
+              disabled={deleteBudgetItemMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete-budget"
+            >
+              {deleteBudgetItemMutation.isPending && (
+                <span className="mr-2">⏳</span>
+              )}
+              Sil
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
