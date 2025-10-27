@@ -9,6 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2, Check, X } from "lucide-react";
+import { formatCurrency } from "@/lib/format";
 
 interface TransactionWithProject {
   id: string;
@@ -32,15 +33,6 @@ interface TransactionTableProps {
 }
 
 export function TransactionTable({ transactions, onEdit, onDelete }: TransactionTableProps) {
-  const formatCurrency = (amount: number | string) => {
-    const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
-    return new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency: 'TRY',
-      minimumFractionDigits: 2,
-    }).format(numericAmount);
-  };
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('tr-TR', {

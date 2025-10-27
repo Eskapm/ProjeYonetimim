@@ -378,7 +378,7 @@ export default function Reports() {
         {/* Financial Reports Tab */}
         <TabsContent value="financial" className="space-y-6">
           {/* Date Filter */}
-          <Card>
+          <Card className="no-print">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Calendar className="h-5 w-5" />
@@ -429,7 +429,7 @@ export default function Reports() {
           </Card>
 
           {/* Advanced Multi-Level Filters */}
-          <Card>
+          <Card className="no-print">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <BarChart3 className="h-5 w-5" />

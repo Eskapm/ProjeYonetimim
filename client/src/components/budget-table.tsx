@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
+import { formatCurrency } from "@/lib/format";
 
 interface BudgetItem {
   id: string;
@@ -28,14 +29,6 @@ interface BudgetTableProps {
 }
 
 export function BudgetTable({ items, onEdit, onDelete }: BudgetTableProps) {
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency: 'TRY',
-      minimumFractionDigits: 2,
-    }).format(amount);
-  };
-
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat('tr-TR', {
       minimumFractionDigits: 2,
