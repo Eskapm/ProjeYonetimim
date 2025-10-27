@@ -106,15 +106,14 @@ export default function Hakedis() {
     },
   });
 
-  // Filter expense transactions for selected project
+  // Filter all transactions (income and expense) for selected project
   // Sadece hakedişe dahil edilmemiş veya şu an düzenlenen hakedişe ait transaction'ları göster
-  const projectExpenseTransactions = useMemo(() => {
+  const projectTransactions = useMemo(() => {
     const projectId = form.watch("projectId");
     if (!projectId) return [];
     
     return allTransactions.filter(
       (t) => t.projectId === projectId && 
-             t.type === "Gider" && 
              (!t.progressPaymentId || t.progressPaymentId === editingPayment?.id)
     );
   }, [allTransactions, form.watch("projectId"), editingPayment?.id]);
@@ -253,9 +252,15 @@ export default function Hakedis() {
   const summary = useMemo(() => {
     const totalAmount = filteredPayments.reduce((sum, p) => sum + parseFloat(p.amount as string), 0);
     const totalReceived = filteredPayments.reduce((sum, p) => sum + parseFloat(p.receivedAmount as string), 0);
+    // Bekleyen ödeme = Net Ödeme - Tahsil Edilen (Tüm bekleyen statüdeki kayıtlar için)
+    // Fallback to amount if netPayment is not available (legacy records)
     const pendingAmount = filteredPayments
       .filter(p => p.status === "Bekliyor")
-      .reduce((sum, p) => sum + (parseFloat(p.amount as string) - parseFloat(p.receivedAmount as string)), 0);
+      .reduce((sum, p) => {
+        const netPayment = parseFloat(p.netPayment as string || p.amount as string || "0");
+        const received = parseFloat(p.receivedAmount as string || "0");
+        return sum + (netPayment - received);
+      }, 0);
 
     return { totalAmount, totalReceived, pendingAmount };
   }, [filteredPayments]);
@@ -485,8 +490,9 @@ export default function Hakedis() {
                     <TableHead className="text-right">Avans Kesinti</TableHead>
                     <TableHead className="text-right">Net Ödeme</TableHead>
                     <TableHead className="text-right">Tahsil</TableHead>
+                    <TableHead className="text-right">Bakiye</TableHead>
                     <TableHead>Durum</TableHead>
-                    <TableHead className="text-right">İşlemler</TableHead>
+                    <TableHead className="text-right no-print">İşlemler</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -496,8 +502,10 @@ export default function Hakedis() {
                     const contractorFeeRate = parseFloat(payment.contractorFeeRate as string) || 0;
                     const grossAmount = parseFloat(payment.grossAmount as string) || (amount + (amount * contractorFeeRate / 100));
                     const advanceDeduction = parseFloat(payment.advanceDeduction as string) || 0;
-                    const netPayment = parseFloat(payment.netPayment as string) || (grossAmount - advanceDeduction);
-                    const receivedAmount = parseFloat(payment.receivedAmount as string);
+                    // Fallback to grossAmount - advanceDeduction if netPayment is not set (legacy records)
+                    const netPayment = parseFloat(payment.netPayment as string || "0") || (grossAmount - advanceDeduction);
+                    const receivedAmount = parseFloat(payment.receivedAmount as string || "0");
+                    const balance = netPayment - receivedAmount;
                     
                     return (
                       <TableRow key={payment.id} data-testid={`row-payment-${payment.id}`}>
@@ -507,26 +515,31 @@ export default function Hakedis() {
                             {project?.name || "Bilinmiyor"}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="text-sm">
                           {format(parseISO(payment.date as string), "dd MMM yyyy", { locale: tr })}
                         </TableCell>
-                        <TableCell className="text-right font-mono">
+                        <TableCell className="text-right font-mono text-sm whitespace-nowrap">
                           {amount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
                         </TableCell>
                         <TableCell className="text-right font-mono text-sm text-muted-foreground">
                           {contractorFeeRate > 0 ? `%${contractorFeeRate.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}` : "-"}
                         </TableCell>
-                        <TableCell className="text-right font-mono font-semibold">
+                        <TableCell className="text-right font-mono font-semibold text-sm whitespace-nowrap">
                           {grossAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
                         </TableCell>
-                        <TableCell className="text-right font-mono text-destructive">
+                        <TableCell className="text-right font-mono text-destructive text-sm whitespace-nowrap">
                           {advanceDeduction > 0 ? `-${advanceDeduction.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL` : "-"}
                         </TableCell>
-                        <TableCell className="text-right font-mono font-semibold text-primary">
+                        <TableCell className="text-right font-mono font-semibold text-primary text-sm whitespace-nowrap">
                           {netPayment.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
                         </TableCell>
-                        <TableCell className="text-right font-mono">
+                        <TableCell className="text-right font-mono text-sm whitespace-nowrap">
                           {receivedAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                        </TableCell>
+                        <TableCell className="text-right font-mono font-semibold text-sm whitespace-nowrap">
+                          <span className={balance > 0 ? "text-orange-600" : balance < 0 ? "text-green-600" : ""}>
+                            {balance.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
+                          </span>
                         </TableCell>
                         <TableCell>
                           <Badge 
@@ -539,7 +552,7 @@ export default function Hakedis() {
                             {payment.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right no-print">
                           <div className="flex items-center justify-end gap-2">
                             <Button
                               variant="ghost"
@@ -951,12 +964,12 @@ export default function Hakedis() {
               </div>
 
               {/* Transaction Selection */}
-              {projectExpenseTransactions.length > 0 && (
+              {projectTransactions.length > 0 && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium">Gider Kalemleri Seçimi</label>
+                    <label className="text-sm font-medium">Gelir & Gider Kalemleri Seçimi</label>
                     <Badge variant="secondary">
-                      {selectedTransactionIds.length} / {projectExpenseTransactions.length} seçildi
+                      {selectedTransactionIds.length} / {projectTransactions.length} seçildi
                     </Badge>
                   </div>
                   <div className="border rounded-lg max-h-64 overflow-y-auto">
@@ -965,13 +978,14 @@ export default function Hakedis() {
                         <TableRow>
                           <TableHead className="w-12"></TableHead>
                           <TableHead>Tarih</TableHead>
+                          <TableHead>Tip</TableHead>
                           <TableHead>Açıklama</TableHead>
                           <TableHead>İş Grubu</TableHead>
                           <TableHead className="text-right">Tutar</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {projectExpenseTransactions.map((transaction) => (
+                        {projectTransactions.map((transaction) => (
                           <TableRow key={transaction.id} className="hover-elevate">
                             <TableCell>
                               <Checkbox
@@ -989,6 +1003,11 @@ export default function Hakedis() {
                             <TableCell className="text-sm">
                               {format(parseISO(transaction.date as string), "dd MMM yyyy", { locale: tr })}
                             </TableCell>
+                            <TableCell className="text-sm">
+                              <Badge variant={transaction.type === "Gelir" ? "default" : "secondary"} className="text-xs">
+                                {transaction.type}
+                              </Badge>
+                            </TableCell>
                             <TableCell className="text-sm">{transaction.description}</TableCell>
                             <TableCell className="text-sm">
                               <Badge variant="outline" className="text-xs">
@@ -1004,7 +1023,7 @@ export default function Hakedis() {
                     </Table>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Hakediş kapsamına dahil edilecek gider kalemlerini seçin. Tutar otomatik hesaplanacaktır.
+                    Hakediş kapsamına dahil edilecek gelir ve gider kalemlerini seçin. Tutar otomatik hesaplanacaktır.
                   </p>
                 </div>
               )}
@@ -1166,7 +1185,7 @@ export default function Hakedis() {
 
               {/* Transaction Items */}
               <div>
-                <h3 className="text-sm font-semibold mb-3">Hakediş Kapsamındaki Gider Kalemleri</h3>
+                <h3 className="text-sm font-semibold mb-3">Hakediş Kapsamındaki İşlem Kalemleri</h3>
                 {(() => {
                   const txIds = (viewingPaymentDetail.transactionIds as string[]) || [];
                   const transactions = allTransactions.filter(t => txIds.includes(t.id));
@@ -1174,7 +1193,7 @@ export default function Hakedis() {
                   if (transactions.length === 0) {
                     return (
                       <p className="text-sm text-muted-foreground py-8 text-center">
-                        Bu hakediş için seçilmiş gider kalemi bulunmuyor
+                        Bu hakediş için seçilmiş işlem kalemi bulunmuyor
                       </p>
                     );
                   }
@@ -1185,6 +1204,7 @@ export default function Hakedis() {
                         <TableHeader>
                           <TableRow>
                             <TableHead>Tarih</TableHead>
+                            <TableHead>Tip</TableHead>
                             <TableHead>Açıklama</TableHead>
                             <TableHead>İş Grubu</TableHead>
                             <TableHead>Rayiç Grubu</TableHead>
@@ -1197,7 +1217,12 @@ export default function Hakedis() {
                               <TableCell className="text-sm">
                                 {format(parseISO(transaction.date as string), "dd MMM yyyy", { locale: tr })}
                               </TableCell>
-                              <TableCell className="text-sm">{transaction.description}</TableCell>
+                              <TableCell className="text-sm">
+                                <Badge variant={transaction.type === "Gelir" ? "default" : "secondary"} className="text-xs">
+                                  {transaction.type}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-sm break-words">{transaction.description}</TableCell>
                               <TableCell className="text-sm">
                                 <Badge variant="outline" className="text-xs">
                                   {transaction.isGrubu || "-"}
@@ -1208,14 +1233,14 @@ export default function Hakedis() {
                                   {transaction.rayicGrubu || "-"}
                                 </Badge>
                               </TableCell>
-                              <TableCell className="text-right font-mono text-sm">
+                              <TableCell className="text-right font-mono text-sm whitespace-nowrap">
                                 {parseFloat(transaction.amount as string).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
                               </TableCell>
                             </TableRow>
                           ))}
                           <TableRow className="font-semibold bg-muted/50">
-                            <TableCell colSpan={4} className="text-right">Toplam</TableCell>
-                            <TableCell className="text-right font-mono">
+                            <TableCell colSpan={5} className="text-right">Toplam</TableCell>
+                            <TableCell className="text-right font-mono whitespace-nowrap">
                               {transactions.reduce((sum, t) => sum + parseFloat(t.amount as string), 0).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
                             </TableCell>
                           </TableRow>
@@ -1229,7 +1254,7 @@ export default function Hakedis() {
               {/* Description */}
               <div>
                 <h3 className="text-sm font-semibold mb-2">Açıklama</h3>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap bg-muted/30 p-3 rounded-lg print:bg-white print:border print:border-gray-300">
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words bg-muted/30 p-3 rounded-lg print:bg-white print:border print:border-gray-300">
                   {viewingPaymentDetail.description}
                 </p>
               </div>

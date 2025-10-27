@@ -497,10 +497,20 @@
   table td {
     border: 1px solid #ddd !important;
     padding: 6px 8px !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
     font-size: 11px !important;
+  }
+  
+  /* Allow text wrapping in print mode for long descriptions */
+  table td {
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+  }
+  
+  /* Keep number columns nowrap for better readability */
+  table td.text-right,
+  table th.text-right {
+    white-space: nowrap !important;
   }
 
   /* Page breaks */
