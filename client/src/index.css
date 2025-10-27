@@ -697,17 +697,17 @@
     size: A4 landscape;
   } */
 
-  /* Custom page break spacer for transaction table (9th row break with 1cm top margin on page 2) */
+  /* Custom page break spacer for transaction table (9th row break with 3cm top margin on page 2) */
   .page-break-spacer {
     page-break-before: always !important;
-    height: 1cm !important;
+    height: 3cm !important;
     display: table-row !important;
   }
   
   .page-break-spacer td {
     border: none !important;
     padding: 0 !important;
-    height: 1cm !important;
+    height: 3cm !important;
   }
 
   /* Print header additional info - full width date display */
