@@ -710,19 +710,32 @@
     height: 3cm !important;
   }
 
-  /* Print header additional info - full width date display */
-  .print-header-wrapper > div:last-child {
+  /* Print header additional info - full width date display - HORIZONTAL LAYOUT */
+  .print-header-wrapper .mb-4.text-xs {
     width: 100% !important;
+    max-width: 100% !important;
   }
   
-  .print-header-wrapper > div:last-child p {
+  .print-header-wrapper .mb-4.text-xs p {
     width: 100% !important;
+    max-width: 100% !important;
     display: block !important;
-    padding: 4px 0 !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    padding: 6px 8px !important;
     border-bottom: 1px solid #ddd !important;
+    min-height: 24px !important;
+    line-height: 1.5 !important;
   }
   
-  .print-header-wrapper > div:last-child p:last-child {
+  .print-header-wrapper .mb-4.text-xs p strong {
+    display: inline !important;
+    white-space: nowrap !important;
+    margin-right: 8px !important;
+  }
+  
+  .print-header-wrapper .mb-4.text-xs p:last-child {
     border-bottom: none !important;
   }
 }
