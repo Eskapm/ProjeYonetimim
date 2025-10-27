@@ -62,6 +62,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { PrintButton } from "@/components/print-button";
+import { ExportToExcel } from "@/components/export-to-excel";
+import { PrintHeader } from "@/components/print-header";
 
 const taskFormSchema = insertTaskSchema.extend({
   checklist: z.array(z.object({
@@ -320,6 +323,7 @@ export default function WorkSchedule() {
 
   return (
     <div className="min-h-screen bg-background">
+      <PrintHeader documentTitle="İŞ PROGRAMI" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col gap-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -328,15 +332,26 @@ export default function WorkSchedule() {
               <p className="text-sm text-muted-foreground mt-2">Görev yönetimi ve takip sistemi</p>
             </div>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="default"
-                onClick={() => window.print()}
-                data-testid="button-print"
-              >
-                <Printer className="mr-2 h-4 w-4" />
-                Yazdır
-              </Button>
+              <ExportToExcel
+                data={filteredTasks.map(task => ({
+                  "Görev": task.title,
+                  "Proje": getProjectName(task.projectId),
+                  "Durum": task.status,
+                  "Öncelik": task.priority,
+                  "İlerleme %": task.progress,
+                  "Atanan": task.assignedTo || "-",
+                  "Başlangıç": task.startDate || "-",
+                  "Bitiş": task.dueDate || "-",
+                  "Açıklama": task.description || "-",
+                }))}
+                fileName="is-programi"
+                sheetName="Görevler"
+                className="no-print"
+              />
+              <PrintButton
+                title="İş Programı"
+                className="no-print"
+              />
               <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
               <DialogTrigger asChild>
                 <Button

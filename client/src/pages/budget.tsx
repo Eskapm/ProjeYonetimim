@@ -19,6 +19,7 @@ import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { PrintButton } from "@/components/print-button";
+import { ExportToExcel } from "@/components/export-to-excel";
 
 const formSchema = insertBudgetItemSchema.extend({
   startDate: z.string().optional(),
@@ -256,6 +257,27 @@ export default function BudgetPage() {
           <p className="text-muted-foreground">Proje bütçelerini yönetin ve gerçekleşen maliyetleri takip edin</p>
         </div>
         <div className="flex gap-2">
+          <ExportToExcel
+            data={filteredItems.map(item => ({
+              "Kalem Adı": item.name,
+              "Proje": getProjectName(item.projectId),
+              "Miktar": parseFloat(item.quantity),
+              "Birim": item.unit,
+              "Birim Fiyat": parseFloat(item.unitPrice),
+              "Bütçe Tutarı": parseFloat(item.quantity) * parseFloat(item.unitPrice),
+              "Gerçekleşen Miktar": item.actualQuantity ? parseFloat(item.actualQuantity) : 0,
+              "Gerçekleşen Birim Fiyat": item.actualUnitPrice ? parseFloat(item.actualUnitPrice) : 0,
+              "Gerçekleşen Tutar": (item.actualQuantity && item.actualUnitPrice) ? parseFloat(item.actualQuantity) * parseFloat(item.actualUnitPrice) : 0,
+              "Fark": (parseFloat(item.quantity) * parseFloat(item.unitPrice)) - ((item.actualQuantity && item.actualUnitPrice) ? parseFloat(item.actualQuantity) * parseFloat(item.actualUnitPrice) : 0),
+              "İş Grubu": item.isGrubu,
+              "Rayiç Grubu": item.rayicGrubu,
+              "Durum": item.status,
+              "İlerleme %": item.progress,
+            }))}
+            fileName="butce-kesifleri"
+            sheetName="Bütçe Kalemleri"
+            className="no-print"
+          />
           <PrintButton 
             title="Bütçe-Keşif Raporu"
             className="no-print"
