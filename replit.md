@@ -52,6 +52,11 @@ Preferred communication style: Simple, everyday language.
 *   **Reports Module**: Multi-level filtering system for Financial, Operational, Project, and Progress Payment Reports. Includes financial summary cards, tax calculations, trend charts, and detailed tables.
 *   **Bütçe-Keşif (Budget-Exploration) Print Feature**: Print functionality for budget items with optimized table layouts.
 *   **Project Detail Page**: Fetches and displays real project data from the API.
+*   **Transactions Module - Advanced Filtering**: İş Grubu and Rayiç Grubu dual-filter system with real-time filtering of transactions, summaries, and Excel exports.
+*   **Excel Export Functionality**: Comprehensive Excel export across all major modules (Transactions, Invoices, Projects, Hakediş) using xlsx library. Exports filtered data with Turkish locale formatting and appropriate column schemas.
+*   **Invoices Module - Partial Payment Tracking**: Added "Ödenen" (Paid Amount) and "Kalan" (Remaining Amount) columns to invoice table, displaying partial payment status with color-coded formatting.
+*   **Print Optimization**: Global print CSS with overflow-hidden, fixed table layouts, and 95% zoom to ensure all tables fit on A4 pages without scrollbars.
+*   **Project Edit Flow**: Query parameter-based navigation from project detail page to projects page with auto-opening edit dialog.
 
 ## External Dependencies
 
@@ -72,6 +77,7 @@ Preferred communication style: Simple, everyday language.
 *   **zod**: Schema validation.
 *   **nanoid**: Secure random ID generation.
 *   **cmdk**: Command palette component.
+*   **xlsx**: Excel file generation for data export functionality.
 
 ### Session Storage
 

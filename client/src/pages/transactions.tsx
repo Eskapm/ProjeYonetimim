@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { TransactionTable } from "@/components/transaction-table";
 import { TaxSummaryPanel } from "@/components/tax-summary-panel";
 import { PrintButton } from "@/components/print-button";
+import { ExportToExcel } from "@/components/export-to-excel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -58,6 +59,8 @@ export default function Transactions() {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [selectedProject, setSelectedProject] = useState("all");
+  const [isGrubuFilter, setIsGrubuFilter] = useState("all");
+  const [rayicGrubuFilter, setRayicGrubuFilter] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deleteTransactionId, setDeleteTransactionId] = useState<string | null>(null);
@@ -227,7 +230,9 @@ export default function Transactions() {
     const matchesType = typeFilter === "all" || transaction.type === typeFilter;
     const matchesProject =
       selectedProject === "all" || transaction.projectId === selectedProject;
-    return matchesSearch && matchesType && matchesProject;
+    const matchesIsGrubu = isGrubuFilter === "all" || transaction.isGrubu === isGrubuFilter;
+    const matchesRayicGrubu = rayicGrubuFilter === "all" || transaction.rayicGrubu === rayicGrubuFilter;
+    return matchesSearch && matchesType && matchesProject && matchesIsGrubu && matchesRayicGrubu;
   });
 
   const incomes = transactionsWithProjects
@@ -242,6 +247,18 @@ export default function Transactions() {
 
   const isLoading = isLoadingTransactions || isLoadingProjects;
 
+  // Prepare data for Excel export
+  const excelData = filteredTransactions.map((transaction) => ({
+    "Tarih": transaction.date,
+    "Proje": transaction.projectName,
+    "Tür": transaction.type,
+    "Tutar": parseFloat(transaction.amount).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+    "İş Grubu": transaction.isGrubu || "-",
+    "Rayiç Grubu": transaction.rayicGrubu || "-",
+    "Açıklama": transaction.description || "-",
+    "Fatura No": transaction.invoiceNumber || "-",
+  }));
+
   return (
     <div className="space-y-6">
       <PrintHeader documentTitle="İŞLEMLER RAPORU" />
@@ -254,6 +271,11 @@ export default function Transactions() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <ExportToExcel 
+            data={excelData} 
+            filename="islemler" 
+            sheetName="İşlemler" 
+          />
           <PrintButton />
           <Button onClick={handleAddTransaction} data-testid="button-add-transaction">
             <Plus className="h-4 w-4 mr-2" />
@@ -274,40 +296,70 @@ export default function Transactions() {
         </TabsList>
 
         <TabsContent value="transactions" className="space-y-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="İşlem açıklaması veya proje adı ile ara..."
-                className="pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                data-testid="input-search-transactions"
-              />
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="İşlem açıklaması veya proje adı ile ara..."
+                  className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  data-testid="input-search-transactions"
+                />
+              </div>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-full sm:w-[150px]" data-testid="select-type-filter">
+                  <SelectValue placeholder="Tür" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tümü</SelectItem>
+                  <SelectItem value="Gelir">Gelir</SelectItem>
+                  <SelectItem value="Gider">Gider</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={selectedProject} onValueChange={setSelectedProject}>
+                <SelectTrigger className="w-full sm:w-[250px]" data-testid="select-project-filter-transactions">
+                  <SelectValue placeholder="Proje seç" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tüm Projeler</SelectItem>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full sm:w-[150px]" data-testid="select-type-filter">
-                <SelectValue placeholder="Tür" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tümü</SelectItem>
-                <SelectItem value="Gelir">Gelir</SelectItem>
-                <SelectItem value="Gider">Gider</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={selectedProject} onValueChange={setSelectedProject}>
-              <SelectTrigger className="w-full sm:w-[250px]" data-testid="select-project-filter-transactions">
-                <SelectValue placeholder="Proje seç" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tüm Projeler</SelectItem>
-                {projects.map((project) => (
-                  <SelectItem key={project.id} value={project.id}>
-                    {project.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Select value={isGrubuFilter} onValueChange={setIsGrubuFilter}>
+                <SelectTrigger className="w-full sm:w-[280px]" data-testid="select-is-grubu-filter">
+                  <SelectValue placeholder="İş Grubu" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tüm İş Grupları</SelectItem>
+                  {isGrubuEnum.map((grup) => (
+                    <SelectItem key={grup} value={grup}>
+                      {grup}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={rayicGrubuFilter} onValueChange={setRayicGrubuFilter}>
+                <SelectTrigger className="w-full sm:w-[280px]" data-testid="select-rayic-grubu-filter">
+                  <SelectValue placeholder="Rayiç Grubu" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tüm Rayiç Grupları</SelectItem>
+                  {rayicGrubuEnum.map((grup) => (
+                    <SelectItem key={grup} value={grup}>
+                      {grup}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {transactionsError && (
@@ -340,11 +392,11 @@ export default function Transactions() {
               <CardContent>
                 <div className="text-center py-12">
                   <p className="text-muted-foreground text-lg">
-                    {searchTerm || typeFilter !== "all" || selectedProject !== "all"
+                    {searchTerm || typeFilter !== "all" || selectedProject !== "all" || isGrubuFilter !== "all" || rayicGrubuFilter !== "all"
                       ? "İşlem bulunamadı"
                       : "Henüz işlem eklenmemiş"}
                   </p>
-                  {!searchTerm && typeFilter === "all" && selectedProject === "all" && (
+                  {!searchTerm && typeFilter === "all" && selectedProject === "all" && isGrubuFilter === "all" && rayicGrubuFilter === "all" && (
                     <Button onClick={handleAddTransaction} className="mt-4" data-testid="button-add-first-transaction">
                       <Plus className="h-4 w-4 mr-2" />
                       İlk İşlemi Ekle

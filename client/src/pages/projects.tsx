@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { ProjectCard } from "@/components/project-card";
 import { PrintButton } from "@/components/print-button";
+import { ExportToExcel } from "@/components/export-to-excel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -43,6 +45,7 @@ export default function Projects() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deleteProjectId, setDeleteProjectId] = useState<string | null>(null);
+  const [location, setLocation] = useLocation();
   const { toast } = useToast();
 
   // Fetch projects
@@ -223,6 +226,21 @@ export default function Projects() {
     };
   };
 
+  // Handle query parameter for editing
+  useEffect(() => {
+    const params = new URLSearchParams(location.split('?')[1] || '');
+    const editId = params.get('edit');
+    
+    if (editId && projects.length > 0) {
+      const project = projects.find(p => p.id === editId);
+      if (project) {
+        handleEditProject(project);
+        // Clear query params
+        setLocation('/projeler');
+      }
+    }
+  }, [location, projects]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -231,6 +249,20 @@ export default function Projects() {
           <p className="text-muted-foreground mt-1">Tüm projelerinizi görüntüleyin ve yönetin</p>
         </div>
         <div className="flex items-center gap-2">
+          <ExportToExcel
+            data={filteredProjects.map((project) => ({
+              "Proje Adı": project.name,
+              "Konum": project.location || "-",
+              "Alan (m²)": project.area || "-",
+              "Başlangıç Tarihi": project.startDate || "-",
+              "Bitiş Tarihi": project.endDate || "-",
+              "Durum": project.status,
+              "Açıklama": project.description || "-",
+              "Notlar": project.notes || "-",
+            }))}
+            filename="projeler"
+            sheetName="Projeler"
+          />
           <PrintButton />
           <Button onClick={handleAddProject} data-testid="button-add-project">
             <Plus className="h-4 w-4 mr-2" />

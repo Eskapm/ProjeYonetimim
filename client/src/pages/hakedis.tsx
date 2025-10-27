@@ -63,6 +63,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PrintButton } from "@/components/print-button";
+import { ExportToExcel } from "@/components/export-to-excel";
 
 export default function Hakedis() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -323,6 +324,24 @@ export default function Hakedis() {
           <p className="text-muted-foreground mt-1">Proje bazlı hakediş ve ödeme yönetimi</p>
         </div>
         <div className="flex items-center gap-2">
+          <ExportToExcel
+            data={filteredPayments.map((payment) => {
+              const projectName = projects.find(p => p.id === payment.projectId)?.name || "-";
+              return {
+                "Hakediş No": payment.paymentNumber,
+                "Proje": projectName,
+                "Tarih": format(parseISO(payment.date as string), "dd.MM.yyyy"),
+                "Brüt Tutar": parseFloat(payment.grossAmount || "0"),
+                "Avans Kesinti Oranı (%)": parseFloat(payment.advanceDeductionRate || "0"),
+                "Avans Kesintisi": parseFloat(payment.advanceDeduction || "0"),
+                "Net Ödeme": parseFloat(payment.netPayment || "0"),
+                "Durum": payment.status,
+                "Açıklama": payment.description || "",
+              };
+            })}
+            filename="hakedis"
+            sheetName="Hakediş"
+          />
           <PrintButton />
           <Button onClick={handleAddPayment} data-testid="button-add-payment">
             <Plus className="h-4 w-4 mr-2" />

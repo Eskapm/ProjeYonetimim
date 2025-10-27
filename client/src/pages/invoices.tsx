@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PrintButton } from "@/components/print-button";
+import { ExportToExcel } from "@/components/export-to-excel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -341,6 +342,24 @@ export default function Invoices() {
           <p className="text-muted-foreground mt-1">Alış ve satış faturaları yönetimi</p>
         </div>
         <div className="flex items-center gap-2">
+          <ExportToExcel
+            data={filteredInvoices.map((invoice) => ({
+              "Fatura No": invoice.invoiceNumber,
+              "Tür": invoice.type,
+              "Tarih": format(parseISO(invoice.date as string), "dd.MM.yyyy"),
+              "Müşteri/Taşeron": invoice.type === "Satış" ? invoice.customerName : invoice.subcontractorName,
+              "Proje": invoice.projectName || "-",
+              "Tutar": parseFloat(invoice.subtotal),
+              "KDV": parseFloat(invoice.taxAmount),
+              "Toplam": parseFloat(invoice.total),
+              "Ödenen": parseFloat(invoice.paidAmount || "0"),
+              "Kalan": parseFloat(invoice.total) - parseFloat(invoice.paidAmount || "0"),
+              "Durum": invoice.status,
+              "Açıklama": invoice.description || "",
+            }))}
+            filename="faturalar"
+            sheetName="Faturalar"
+          />
           <PrintButton />
           <Button onClick={handleAddInvoice} data-testid="button-add-invoice">
             <Plus className="h-4 w-4 mr-2" />
@@ -483,6 +502,8 @@ export default function Invoices() {
                     <TableHead className="text-right">Tutar</TableHead>
                     <TableHead className="text-right">KDV</TableHead>
                     <TableHead className="text-right">Toplam</TableHead>
+                    <TableHead className="text-right">Ödenen</TableHead>
+                    <TableHead className="text-right">Kalan</TableHead>
                     <TableHead>Durum</TableHead>
                     <TableHead className="text-right">İşlemler</TableHead>
                   </TableRow>
@@ -513,6 +534,12 @@ export default function Invoices() {
                       </TableCell>
                       <TableCell className="text-right font-mono font-semibold">
                         {parseFloat(invoice.total).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-green-600 dark:text-green-400">
+                        {parseFloat(invoice.paidAmount || "0").toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-orange-600 dark:text-orange-400">
+                        {(parseFloat(invoice.total) - parseFloat(invoice.paidAmount || "0")).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                       </TableCell>
                       <TableCell>
                         <Badge variant={getStatusBadgeVariant(invoice.status)}>

@@ -372,29 +372,37 @@
   * {
     box-shadow: none !important;
     text-shadow: none !important;
+    overflow: visible !important;
   }
 
-  /* Clean white background for professional look */
+  /* Clean white background for professional look - REMOVE SCROLLBARS */
   body {
     background: white !important;
     color: black !important;
     margin: 0 !important;
     padding: 0 !important;
+    overflow: visible !important;
+  }
+  
+  html {
+    overflow: visible !important;
   }
 
-  /* Ensure main content takes full width with proper margins */
+  /* Ensure main content takes full width with proper margins - NO SCROLL */
   main {
     width: 100% !important;
     max-width: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
+    overflow: visible !important;
   }
   
-  /* Container should have professional spacing */
+  /* Container should have professional spacing - NO SCROLL */
   .container {
     max-width: 100% !important;
     padding: 0.8cm 1.2cm !important;
     margin: 0 !important;
+    overflow: visible !important;
   }
 
   * {
@@ -430,22 +438,37 @@
     page-break-after: always;
   }
 
-  /* Optimize table printing - fit to page */
+  /* Optimize table printing - fit to page WIDTH */
   table {
-    width: 100%;
+    width: 100% !important;
+    max-width: 100% !important;
     border-collapse: collapse;
-    font-size: 9px !important; /* Küçük font ile daha çok sütun sığar */
-    table-layout: auto;
+    font-size: 8px !important;
+    table-layout: fixed !important;
+    overflow: visible !important;
   }
 
   table th,
   table td {
-    padding: 4px 6px !important; /* Küçük padding ile daha çok sütun */
+    padding: 3px 4px !important;
     border: 1px solid #ddd;
-    font-size: 9px !important;
-    line-height: 1.3;
+    font-size: 8px !important;
+    line-height: 1.2;
     word-wrap: break-word;
-    overflow: hidden;
+    overflow: visible !important;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  
+  /* Auto-scale table if too wide - FIT TO PAGE */
+  table {
+    transform-origin: top left;
+  }
+  
+  @supports (zoom: 1) {
+    table {
+      zoom: 0.9;
+    }
   }
 
   table th {

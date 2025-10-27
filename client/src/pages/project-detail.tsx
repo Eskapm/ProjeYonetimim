@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useRoute } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import type { Project } from "@shared/schema";
 
 export default function ProjectDetail() {
   const [, params] = useRoute("/projeler/:id");
+  const [, setLocation] = useLocation();
   const projectId = params?.id;
 
   // Fetch real project data
@@ -23,6 +24,11 @@ export default function ProjectDetail() {
     queryKey: ["/api/projects", projectId],
     enabled: !!projectId,
   });
+
+  const handleEdit = () => {
+    // Navigate to projects page with edit mode
+    setLocation(`/projeler?edit=${projectId}`);
+  };
 
   if (!projectId) {
     return <div>Proje ID bulunamadı</div>;
@@ -135,7 +141,7 @@ export default function ProjectDetail() {
         </div>
         <div className="flex items-center gap-2">
           <PrintButton />
-          <Button data-testid="button-edit-project">
+          <Button onClick={handleEdit} data-testid="button-edit-project">
             <Edit className="h-4 w-4 mr-2" />
             Düzenle
           </Button>
