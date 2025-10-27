@@ -709,4 +709,20 @@
     padding: 0 !important;
     height: 1cm !important;
   }
+
+  /* Print header additional info - full width date display */
+  .print-header-wrapper > div:last-child {
+    width: 100% !important;
+  }
+  
+  .print-header-wrapper > div:last-child p {
+    width: 100% !important;
+    display: block !important;
+    padding: 4px 0 !important;
+    border-bottom: 1px solid #ddd !important;
+  }
+  
+  .print-header-wrapper > div:last-child p:last-child {
+    border-bottom: none !important;
+  }
 }

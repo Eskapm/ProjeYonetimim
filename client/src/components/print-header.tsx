@@ -71,7 +71,7 @@ export function PrintHeader({ documentTitle, documentNumber, additionalInfo }: P
       </h2>
       
       {additionalInfo && (
-        <div className="mb-4 text-xs">
+        <div className="mb-4 text-xs w-full">
           {additionalInfo}
         </div>
       )}
