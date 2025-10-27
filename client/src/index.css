@@ -378,35 +378,17 @@
     display: block !important;
   }
   
-  /* Print header - Fixed at top of every page to prevent content hiding */
+  /* Print header - Normal flow, only on first page */
   .print-header-wrapper {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    background: white;
-    z-index: 1000;
-    padding: 0.5cm 1cm;
-    height: auto;
-    max-height: 8cm;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 0.5cm;
   }
   
-  /* Main content must have top margin to avoid hiding under fixed header */
-  body > div {
-    margin-top: 9cm !important;
-  }
-  
-  /* Ensure space-y classes don't override our critical margin */
-  body > div[class*="space-y"] {
-    margin-top: 9cm !important;
-  }
-  
-  /* Use a pseudo-approach: Keep header in flow but ensure tables can break properly */
-  /* The header stays at top of document, tables flow naturally after it */
+  /* Allow tables to span pages naturally */
   table {
     break-inside: auto;
     page-break-inside: auto;
-    margin-bottom: 0.5cm;
   }
   
   .print-logo {
@@ -460,7 +442,7 @@
   /* Container should have professional spacing - NO SCROLL */
   .container {
     max-width: 100% !important;
-    padding: 0 0.5cm !important;
+    padding: 0.5cm !important;
     margin: 0 !important;
     overflow: visible !important;
   }
@@ -469,9 +451,9 @@
     color: black !important;
   }
   
-  /* Print page setup - Minimal margins since we use fixed header */
+  /* Print page setup - Standard margins for clean printing */
   @page {
-    margin: 0.5cm 1cm 2cm 1cm;
+    margin: 1.5cm 1cm;
     size: A4;
   }
   
@@ -531,8 +513,9 @@
   /* Clean professional borders for tables */
   table {
     border: 1px solid #333 !important;
-    table-layout: fixed !important;
+    border-collapse: collapse !important;
     width: 100% !important;
+    table-layout: auto !important;
   }
   
   /* Table headers repeat on each page - CRITICAL for multi-page tables */
