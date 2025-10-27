@@ -260,7 +260,7 @@ export default function BudgetPage() {
     <div className="container mx-auto p-6 space-y-6">
       <PrintHeader documentTitle="BÜTÇE-KEŞİF RAPORU" />
       
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between no-print">
         <div>
           <h1 className="text-3xl font-bold">Bütçe-Keşif</h1>
           <p className="text-muted-foreground">Proje bütçelerini yönetin ve gerçekleşen maliyetleri takip edin</p>
@@ -582,7 +582,7 @@ export default function BudgetPage() {
       </div>
 
       {/* Özet Kartlar */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 no-print">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Toplam Bütçe</CardTitle>
