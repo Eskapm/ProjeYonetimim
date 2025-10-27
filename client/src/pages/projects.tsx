@@ -167,7 +167,6 @@ export default function Projects() {
   };
 
   const handleAddProject = () => {
-    console.log("Yeni Proje Ekle butonuna tıklandı");
     setEditingProject(null);
     form.reset({
       name: "",
@@ -184,7 +183,6 @@ export default function Projects() {
   };
 
   const handleEditProject = React.useCallback((project: Project) => {
-    console.log('handleEditProject called for:', project.name);
     setEditingProject(project);
     form.reset({
       name: project.name,
@@ -235,10 +233,7 @@ export default function Projects() {
     if (editId && projects.length > 0 && !isDialogOpen) {
       const project = projects.find(p => p.id === editId);
       if (project) {
-        console.log('Opening edit dialog for project:', project.name);
         handleEditProject(project);
-      } else {
-        console.log('Project not found with ID:', editId);
       }
     }
   }, [location, projects, isDialogOpen, handleEditProject]);
@@ -364,9 +359,13 @@ export default function Projects() {
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={(open) => {
         setIsDialogOpen(open);
-        // Clear query parameter when dialog is closed
-        if (!open && location.includes('?edit=')) {
-          setLocation('/projeler');
+        // Clear query parameter and state when dialog is closed
+        if (!open) {
+          setEditingProject(null);
+          form.reset();
+          if (location.includes('?edit=')) {
+            setLocation('/projeler');
+          }
         }
       }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -645,6 +644,10 @@ export default function Projects() {
                     setIsDialogOpen(false);
                     setEditingProject(null);
                     form.reset();
+                    // Clear query parameter when closing dialog
+                    if (location.includes('?edit=')) {
+                      setLocation('/projeler');
+                    }
                   }}
                   data-testid="button-cancel-project"
                 >
