@@ -9,13 +9,14 @@ interface PrintHeaderProps {
 
 export function PrintHeader({ documentTitle, documentNumber, additionalInfo }: PrintHeaderProps) {
   return (
-    <div className="hidden print:block">
+    <div className="hidden print:block print-header-wrapper">
       {/* Logo - Centered and Large */}
       <div className="text-center mb-4">
         <img 
           src={eskaLogo} 
           alt="Eska Yapı Logo" 
-          className="h-24 w-auto mx-auto object-contain"
+          className="print-logo"
+          style={{ height: '80px', width: 'auto', margin: '0 auto', display: 'block' }}
         />
       </div>
 

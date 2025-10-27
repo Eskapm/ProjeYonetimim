@@ -378,11 +378,36 @@
     display: block !important;
   }
   
+  /* Print header and logo styles */
+  .print-header-wrapper {
+    page-break-inside: avoid;
+    margin-bottom: 1rem !important;
+  }
+  
+  .print-logo {
+    display: block !important;
+    height: 80px !important;
+    width: auto !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    object-fit: contain !important;
+    page-break-inside: avoid !important;
+  }
+  
   /* Remove any margins, shadows, and backgrounds for clean professional look */
   * {
     box-shadow: none !important;
     text-shadow: none !important;
+  }
+  
+  /* Only apply overflow visible to non-image elements */
+  *:not(img) {
     overflow: visible !important;
+  }
+  
+  img {
+    overflow: visible !important;
+    max-width: 100% !important;
   }
 
   /* Clean white background for professional look - REMOVE SCROLLBARS */

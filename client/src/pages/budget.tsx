@@ -283,14 +283,10 @@ export default function BudgetPage() {
               "Durum": item.status,
               "İlerleme %": item.progress,
             }))}
-            fileName="butce-kesifleri"
+            filename="butce-kesifleri"
             sheetName="Bütçe Kalemleri"
-            className="no-print"
           />
-          <PrintButton 
-            title="Bütçe-Keşif Raporu"
-            className="no-print"
-          />
+          <PrintButton />
           <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
             <DialogTrigger asChild>
               <Button data-testid="button-add-budget-item" className="no-print">
