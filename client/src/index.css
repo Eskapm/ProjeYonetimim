@@ -472,6 +472,7 @@
   }
 
   /* Professional card styling for print - targets actual Shadcn classes */
+  /* Allow cards to break across pages naturally so tables can flow from page 1 to 2 */
   .shadcn-card,
   [class*="rounded-xl"][class*="border"][class*="bg-card"] {
     border: 1.5px solid #333 !important;
@@ -480,7 +481,6 @@
     padding: 12px !important;
     margin-bottom: 12px !important;
     box-shadow: none !important;
-    page-break-inside: avoid;
   }
   
   /* Card headers - only target actual CardHeader components within shadcn-card */
