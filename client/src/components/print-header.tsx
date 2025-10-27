@@ -71,7 +71,7 @@ export function PrintHeader({ documentTitle, documentNumber, additionalInfo }: P
       </h2>
       
       {additionalInfo && (
-        <div className="mb-4 text-xs w-full">
+        <div style={{ width: '100%', marginBottom: '16px', fontSize: '11px' }}>
           {additionalInfo}
         </div>
       )}
