@@ -266,9 +266,6 @@ export default function Transactions() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Gelir & Gider İşlemleri</h1>
-          <p className="text-muted-foreground mt-1">
-            Tüm finansal işlemleri ve vergi hesaplamalarını görüntüleyin
-          </p>
         </div>
         <div className="flex items-center gap-2">
           <ExportToExcel 

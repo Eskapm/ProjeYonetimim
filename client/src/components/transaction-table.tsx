@@ -62,7 +62,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Tarih</TableHead>
+              <TableHead className="w-[110px] min-w-[110px]">Tarih</TableHead>
               <TableHead>Proje</TableHead>
               <TableHead>Tür</TableHead>
               <TableHead>İş Grubu</TableHead>
@@ -83,7 +83,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
             ) : (
               transactions.map((transaction) => (
                 <TableRow key={transaction.id} data-testid={`row-transaction-${transaction.id}`}>
-                  <TableCell className="font-medium">{formatDate(transaction.date)}</TableCell>
+                  <TableCell className="font-medium whitespace-nowrap">{formatDate(transaction.date)}</TableCell>
                   <TableCell>{transaction.projectName}</TableCell>
                   <TableCell>
                     <Badge

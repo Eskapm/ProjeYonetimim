@@ -543,6 +543,13 @@
   table th.text-right {
     white-space: nowrap !important;
   }
+  
+  /* Ensure date columns don't wrap and have sufficient width */
+  table th:first-child,
+  table td:first-child {
+    min-width: 90px !important;
+    white-space: nowrap !important;
+  }
 
   /* Page breaks */
   .page-break {
@@ -646,36 +653,20 @@
   }
 
   /* Prevent awkward breaks - keep related content together */
-  .shadcn-card,
-  [class*="rounded-xl"][class*="border"][class*="bg-card"] {
-    page-break-inside: avoid;
-  }
+  /* Allow tables and cards to break across pages naturally */
   
   /* Card headers should not be separated from content */
   .shadcn-card > [class*="flex"][class*="flex-col"][class*="space-y-1.5"]:first-child {
     page-break-after: avoid;
   }
   
-  /* Card content should stay with header */
-  .shadcn-card > [class*="p-6"][class*="pt-0"] {
-    page-break-before: avoid;
-  }
-  
-  /* Table rows should not break */
+  /* Table rows should not break internally but table can span pages */
   tr {
     page-break-inside: avoid;
   }
   
-  /* Grid items - keep within page when possible */
-  .grid > div {
-    page-break-inside: avoid;
-  }
-  
-  /* Summary totals - always keep together */
-  .grid[class*="grid-cols-1"][class*="md:grid-cols-3"],
-  .grid[class*="grid-cols-3"] {
-    page-break-inside: avoid !important;
-  }
+  /* Grid items and summary totals can break across pages if needed */
+  /* Removed page-break-inside: avoid to allow natural page flow */
   
   /* Orphan and widow control */
   p {
