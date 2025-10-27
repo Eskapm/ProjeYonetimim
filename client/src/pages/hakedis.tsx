@@ -252,14 +252,16 @@ export default function Hakedis() {
   const summary = useMemo(() => {
     const totalAmount = filteredPayments.reduce((sum, p) => sum + parseFloat(p.amount as string), 0);
     const totalReceived = filteredPayments.reduce((sum, p) => sum + parseFloat(p.receivedAmount as string), 0);
-    // Bekleyen ödeme = Net Ödeme - Tahsil Edilen (Tüm bekleyen statüdeki kayıtlar için)
+    // Bekleyen ödeme = TÜM kayıtlar için (Net Ödeme - Tahsil Edilen) toplamı
+    // Sadece pozitif bakiyeleri (henüz tahsil edilmemiş tutarlar) topla
     // Fallback to amount if netPayment is not available (legacy records)
     const pendingAmount = filteredPayments
-      .filter(p => p.status === "Bekliyor")
       .reduce((sum, p) => {
         const netPayment = parseFloat(p.netPayment as string || p.amount as string || "0");
         const received = parseFloat(p.receivedAmount as string || "0");
-        return sum + (netPayment - received);
+        const balance = netPayment - received;
+        // Sadece pozitif bakiyeleri topla (henüz ödenmemiş tutarlar)
+        return sum + (balance > 0 ? balance : 0);
       }, 0);
 
     return { totalAmount, totalReceived, pendingAmount };
