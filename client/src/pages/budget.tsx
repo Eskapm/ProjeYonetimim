@@ -19,7 +19,6 @@ import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { PrintButton } from "@/components/print-button";
-import { PDFDownloadButton } from "@/components/pdf-download-button";
 import { ExportToExcel } from "@/components/export-to-excel";
 import { cn } from "@/lib/utils";
 import {
@@ -287,7 +286,6 @@ export default function BudgetPage() {
             filename="butce-kesifleri"
             sheetName="Bütçe Kalemleri"
           />
-          <PDFDownloadButton filename="butce-kesif.pdf" />
           <PrintButton />
           <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
             <DialogTrigger asChild>

@@ -3,7 +3,6 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { TransactionTable } from "@/components/transaction-table";
 import { TaxSummaryPanel } from "@/components/tax-summary-panel";
 import { PrintButton } from "@/components/print-button";
-import { PDFDownloadButton } from "@/components/pdf-download-button";
 import { ExportToExcel } from "@/components/export-to-excel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -275,7 +274,6 @@ export default function Transactions() {
             sheetName="İşlemler"
             documentTitle="GELİR & GİDER İŞLEMLERİ"
           />
-          <PDFDownloadButton filename="gelir-gider-islemleri.pdf" />
           <PrintButton />
           <Button onClick={handleAddTransaction} data-testid="button-add-transaction">
             <Plus className="h-4 w-4 mr-2" />

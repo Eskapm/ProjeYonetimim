@@ -63,7 +63,6 @@ import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { PrintButton } from "@/components/print-button";
-import { PDFDownloadButton } from "@/components/pdf-download-button";
 import { ExportToExcel } from "@/components/export-to-excel";
 import { PrintHeader } from "@/components/print-header";
 
@@ -345,15 +344,11 @@ export default function WorkSchedule() {
                   "Bitiş": task.dueDate || "-",
                   "Açıklama": task.description || "-",
                 }))}
-                fileName="is-programi"
+                filename="is-programi"
                 sheetName="Görevler"
                 className="no-print"
               />
-              <PDFDownloadButton filename="is-programi.pdf" />
-              <PrintButton
-                title="İş Programı"
-                className="no-print"
-              />
+              <PrintButton className="no-print" />
               <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
               <DialogTrigger asChild>
                 <Button

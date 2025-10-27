@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PrintButton } from "@/components/print-button";
-import { PDFDownloadButton } from "@/components/pdf-download-button";
 import { PrintHeader } from "@/components/print-header";
 import { ExportToExcel } from "@/components/export-to-excel";
 import { Button } from "@/components/ui/button";
@@ -366,7 +365,6 @@ export default function Invoices() {
             sheetName="Faturalar"
             documentTitle="FATURALAR LİSTESİ"
           />
-          <PDFDownloadButton filename="faturalar.pdf" />
           <PrintButton />
           <Button onClick={handleAddInvoice} data-testid="button-add-invoice">
             <Plus className="h-4 w-4 mr-2" />

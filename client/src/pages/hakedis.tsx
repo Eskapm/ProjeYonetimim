@@ -64,7 +64,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PrintButton } from "@/components/print-button";
-import { PDFDownloadButton } from "@/components/pdf-download-button";
 import { ExportToExcel } from "@/components/export-to-excel";
 
 export default function Hakedis() {
@@ -376,7 +375,6 @@ export default function Hakedis() {
             sheetName="Hakediş"
             documentTitle="HAKEDİŞ LİSTESİ"
           />
-          <PDFDownloadButton filename="hakedis-listesi.pdf" />
           <PrintButton />
           <Button onClick={handleAddPayment} data-testid="button-add-payment">
             <Plus className="h-4 w-4 mr-2" />

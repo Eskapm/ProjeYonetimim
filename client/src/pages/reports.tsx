@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PrintButton } from "@/components/print-button";
-import { PDFDownloadButton } from "@/components/pdf-download-button";
 import { PrintHeader } from "@/components/print-header";
 import { StatsCard } from "@/components/stats-card";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -357,7 +356,6 @@ export default function Reports() {
           <p className="text-muted-foreground mt-1">Detaylı analiz ve raporlama</p>
         </div>
         <div className="flex gap-2">
-          <PDFDownloadButton filename="raporlar.pdf" />
           <PrintButton />
         </div>
       </div>
