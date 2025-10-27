@@ -57,6 +57,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { format, parseISO } from "date-fns";
 import { tr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/format";
 import {
   Table,
   TableBody,
@@ -521,8 +522,8 @@ export default function Invoices() {
                           {invoice.type}
                         </Badge>
                       </TableCell>
-                      <TableCell>
-                        {format(parseISO(invoice.date as string), "dd MMM yyyy", { locale: tr })}
+                      <TableCell className="whitespace-nowrap">
+                        {formatDate(invoice.date as string)}
                       </TableCell>
                       <TableCell>
                         {invoice.type === "Satış" ? invoice.customerName : invoice.subcontractorName}

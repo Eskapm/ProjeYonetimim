@@ -54,6 +54,7 @@ import { format, parseISO } from "date-fns";
 import { tr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { PrintHeader } from "@/components/print-header";
+import { formatDate } from "@/lib/format";
 import {
   Table,
   TableBody,
@@ -533,8 +534,8 @@ export default function Hakedis() {
                             {project?.name || "Bilinmiyor"}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-sm">
-                          {format(parseISO(payment.date as string), "dd MMM yyyy", { locale: tr })}
+                        <TableCell className="text-sm whitespace-nowrap">
+                          {formatDate(payment.date as string)}
                         </TableCell>
                         <TableCell className="text-right font-mono text-sm whitespace-nowrap">
                           {amount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
@@ -1028,8 +1029,8 @@ export default function Hakedis() {
                                 data-testid={`checkbox-transaction-${transaction.id}`}
                               />
                             </TableCell>
-                            <TableCell className="text-sm">
-                              {format(parseISO(transaction.date as string), "dd MMM yyyy", { locale: tr })}
+                            <TableCell className="text-sm whitespace-nowrap">
+                              {formatDate(transaction.date as string)}
                             </TableCell>
                             <TableCell className="text-sm">
                               <Badge variant={transaction.type === "Gelir" ? "default" : "secondary"} className="text-xs">
@@ -1153,7 +1154,7 @@ export default function Hakedis() {
                 additionalInfo={
                   <>
                     <p><strong>Proje:</strong> {projects.find(p => p.id === viewingPaymentDetail?.projectId)?.name || "Bilinmiyor"}</p>
-                    <p><strong>Hakediş Tarihi:</strong> {format(parseISO(viewingPaymentDetail.date as string), "dd MMMM yyyy", { locale: tr })}</p>
+                    <p><strong>Hakediş Tarihi:</strong> {formatDate(viewingPaymentDetail.date as string)}</p>
                   </>
                 }
               />
@@ -1242,8 +1243,8 @@ export default function Hakedis() {
                         <TableBody>
                           {transactions.map((transaction) => (
                             <TableRow key={transaction.id}>
-                              <TableCell className="text-sm">
-                                {format(parseISO(transaction.date as string), "dd MMM yyyy", { locale: tr })}
+                              <TableCell className="text-sm whitespace-nowrap">
+                                {formatDate(transaction.date as string)}
                               </TableCell>
                               <TableCell className="text-sm">
                                 <Badge variant={transaction.type === "Gelir" ? "default" : "secondary"} className="text-xs">
