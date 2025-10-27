@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useRoute, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PrintButton } from "@/components/print-button";
@@ -12,7 +12,35 @@ import { TimesheetTable } from "@/components/timesheet-table";
 import { SiteDiaryCard } from "@/components/site-diary-card";
 import { Edit, MapPin, Calendar, Ruler, ArrowLeft, Plus } from "lucide-react";
 import { Link } from "wouter";
-import type { Project } from "@shared/schema";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { insertProjectSchema, type InsertProject, type Project, type Customer, projectStatusEnum, contractTypeEnum } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export default function ProjectDetail() {
@@ -20,6 +48,7 @@ export default function ProjectDetail() {
   const [, setLocation] = useLocation();
   const projectId = params?.id;
   const { toast } = useToast();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Fetch real project data
   const { data: project, isLoading } = useQuery<Project>({
@@ -27,9 +56,76 @@ export default function ProjectDetail() {
     enabled: !!projectId,
   });
 
+  // Fetch customers for the form
+  const { data: customers = [] } = useQuery<Customer[]>({
+    queryKey: ["/api/customers"],
+  });
+
+  // Form setup
+  const form = useForm<InsertProject>({
+    resolver: zodResolver(insertProjectSchema),
+    defaultValues: {
+      name: "",
+      location: "",
+      area: undefined,
+      startDate: "",
+      endDate: "",
+      status: "Planlama",
+      contractType: undefined,
+      contractAmount: undefined,
+      customerId: undefined,
+      description: "",
+      notes: "",
+    },
+  });
+
+  // Update project mutation
+  const updateProjectMutation = useMutation({
+    mutationFn: async (data: Partial<InsertProject>) => {
+      const response = await apiRequest("PATCH", `/api/projects/${projectId}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/projects", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      toast({
+        title: "Başarılı",
+        description: "Proje başarıyla güncellendi",
+      });
+      setIsEditDialogOpen(false);
+      form.reset();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Hata",
+        description: error.message || "Proje güncellenirken bir hata oluştu",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleEdit = () => {
-    // Navigate to projects page with edit mode
-    setLocation(`/projeler?edit=${projectId}`);
+    // Open edit dialog and populate form with current project data
+    if (project) {
+      form.reset({
+        name: project.name,
+        location: project.location || "",
+        area: project.area || undefined,
+        startDate: project.startDate || "",
+        endDate: project.endDate || "",
+        status: project.status,
+        contractType: project.contractType || undefined,
+        contractAmount: project.contractAmount || undefined,
+        customerId: project.customerId || undefined,
+        description: project.description || "",
+        notes: project.notes || "",
+      });
+      setIsEditDialogOpen(true);
+    }
+  };
+
+  const onSubmit = (data: InsertProject) => {
+    updateProjectMutation.mutate(data);
   };
 
   const handleAddBudgetItem = () => {
@@ -318,6 +414,307 @@ export default function ProjectDetail() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Edit Project Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          setIsEditDialogOpen(false);
+          form.reset();
+        } else {
+          setIsEditDialogOpen(true);
+        }
+      }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Proje Düzenle</DialogTitle>
+            <DialogDescription>
+              Proje bilgilerini güncelleyin
+            </DialogDescription>
+          </DialogHeader>
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Proje Adı *</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Örn: Ataşehir Konut Projesi" data-testid="input-project-name" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Konum</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value ?? ""} placeholder="Örn: İstanbul, Ataşehir" data-testid="input-project-location" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="area"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Alan (m²)</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value ?? ""} type="number" step="0.01" placeholder="2500" data-testid="input-project-area" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="startDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Başlangıç Tarihi</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value ?? ""} type="date" data-testid="input-project-start-date" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="endDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bitiş Tarihi</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value ?? ""} type="date" data-testid="input-project-end-date" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Durum *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-project-status">
+                            <SelectValue placeholder="Durum seçin" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {projectStatusEnum.map((status) => (
+                            <SelectItem key={status} value={status}>
+                              {status}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="customerId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Müşteri</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || "none"}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-project-customer">
+                            <SelectValue placeholder="Müşteri seçin" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">Müşteri yok</SelectItem>
+                          {customers.map((customer) => (
+                            <SelectItem key={customer.id} value={customer.id}>
+                              {customer.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="contractType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sözleşme Türü</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || "none"}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-contract-type">
+                            <SelectValue placeholder="Sözleşme türü seçin" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">Sözleşme yok</SelectItem>
+                          {contractTypeEnum.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="contractAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sözleşme Tutarı (TL)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          value={field.value ?? ""} 
+                          type="number" 
+                          step="0.01" 
+                          placeholder="0.00" 
+                          data-testid="input-contract-amount" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="advancePayment"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Avans Ödemesi (TL)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          value={field.value ?? ""} 
+                          type="number" 
+                          step="0.01" 
+                          placeholder="0.00" 
+                          data-testid="input-advance-payment" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {form.watch("contractType") === "Maliyet + Kar Marjı" && (
+                  <FormField
+                    control={form.control}
+                    name="profitMargin"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Kar Marjı (%)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            value={field.value ?? ""} 
+                            type="number" 
+                            step="0.01" 
+                            placeholder="15" 
+                            data-testid="input-profit-margin" 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Açıklama</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          {...field}
+                          value={field.value ?? ""}
+                          placeholder="Proje hakkında detaylı bilgi..."
+                          rows={3}
+                          data-testid="input-project-description"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Notlar</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          {...field}
+                          value={field.value ?? ""}
+                          placeholder="Ekstra notlar..."
+                          rows={3}
+                          data-testid="input-project-notes"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <DialogFooter>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsEditDialogOpen(false);
+                    form.reset();
+                  }}
+                  data-testid="button-cancel-project"
+                >
+                  İptal
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={updateProjectMutation.isPending}
+                  data-testid="button-save-project"
+                >
+                  {updateProjectMutation.isPending && (
+                    <span className="mr-2">⏳</span>
+                  )}
+                  Güncelle
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
