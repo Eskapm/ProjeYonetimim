@@ -1152,10 +1152,10 @@ export default function Hakedis() {
                 documentTitle="HAKEDİŞ TUTANAĞI"
                 documentNumber={viewingPaymentDetail.paymentNumber?.toString()}
                 additionalInfo={
-                  <>
-                    <p><strong>Proje:</strong> {projects.find(p => p.id === viewingPaymentDetail?.projectId)?.name || "Bilinmiyor"}</p>
-                    <p><strong>Hakediş Tarihi:</strong> {formatDate(viewingPaymentDetail.date as string)}</p>
-                  </>
+                  <div className="hakedis-date-info-wrapper">
+                    <p className="hakedis-date-row"><strong>Proje:</strong> {projects.find(p => p.id === viewingPaymentDetail?.projectId)?.name || "Bilinmiyor"}</p>
+                    <p className="hakedis-date-row"><strong>Hakediş Tarihi:</strong> {formatDate(viewingPaymentDetail.date as string)}</p>
+                  </div>
                 }
               />
 
