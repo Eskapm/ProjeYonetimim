@@ -444,7 +444,7 @@
     max-width: 100% !important;
     border-collapse: collapse;
     font-size: 8px !important;
-    table-layout: fixed !important;
+    table-layout: auto !important;
     overflow: visible !important;
   }
 
@@ -455,9 +455,10 @@
     font-size: 8px !important;
     line-height: 1.2;
     word-wrap: break-word;
+    word-break: break-word;
     overflow: visible !important;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    white-space: normal;
+    hyphens: auto;
   }
   
   /* Auto-scale table if too wide - FIT TO PAGE */
