@@ -138,14 +138,30 @@ export default function Hakedis() {
     };
   }, [form.watch("projectId"), projects, payments, editingPayment]);
 
-  // Calculate total amount from selected transactions
+  // Calculate amounts from selected transactions
+  // Gelirler (Income) -> Tahsil Edilen tutara ekle
+  // Giderler (Expense) -> Brüt Tutar'a ekle
   useEffect(() => {
-    const total = selectedTransactionIds.reduce((sum, id) => {
-      const transaction = allTransactions.find((t) => t.id === id);
-      return sum + (transaction ? parseFloat(transaction.amount as string) : 0);
-    }, 0);
+    let incomeTotal = 0;
+    let expenseTotal = 0;
     
-    form.setValue("amount", total.toFixed(2));
+    selectedTransactionIds.forEach((id) => {
+      const transaction = allTransactions.find((t) => t.id === id);
+      if (transaction) {
+        const amount = parseFloat(transaction.amount as string);
+        if (transaction.type === "Gelir") {
+          incomeTotal += amount;
+        } else if (transaction.type === "Gider") {
+          expenseTotal += amount;
+        }
+      }
+    });
+    
+    // Giderler toplamı = Amount (Brüt Tutar'ın hesaplanması için baz)
+    form.setValue("amount", expenseTotal.toFixed(2));
+    
+    // Gelirler toplamı = Tahsil Edilen (otomatik hesaplanan)
+    form.setValue("receivedAmount", incomeTotal.toFixed(2));
   }, [selectedTransactionIds, allTransactions, form]);
 
   // Auto-set advance deduction rate to 0 if no remaining advance
@@ -942,26 +958,32 @@ export default function Hakedis() {
                   }}
                 />
 
-                {/* Received Amount */}
+                {/* Received Amount (auto-calculated from income transactions) */}
                 <FormField
                   control={form.control}
                   name="receivedAmount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tahsil Edilen Tutar (TL) *</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          {...field}
-                          value={field.value || ""}
-                          data-testid="input-received-amount"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const receivedAmount = parseFloat(field.value || "0");
+                    
+                    return (
+                      <FormItem>
+                        <FormLabel>Tahsil Edilen Tutar (TL)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="text"
+                            value={receivedAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            readOnly
+                            className="bg-muted font-mono font-semibold text-green-600"
+                            data-testid="input-received-amount"
+                          />
+                        </FormControl>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Seçilen gelir kalemlerinin toplamı
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
               </div>
 
@@ -974,6 +996,10 @@ export default function Hakedis() {
                       {selectedTransactionIds.length} / {projectTransactions.length} seçildi
                     </Badge>
                   </div>
+                  <p className="text-xs text-muted-foreground bg-muted/30 p-3 rounded-lg">
+                    <span className="font-semibold text-green-600">Gelirler</span> tahsil edilen tutara,{" "}
+                    <span className="font-semibold text-blue-600">Giderler</span> brüt tutara otomatik eklenir.
+                  </p>
                   <div className="border rounded-lg max-h-64 overflow-y-auto">
                     <Table>
                       <TableHeader className="sticky top-0 bg-background">
