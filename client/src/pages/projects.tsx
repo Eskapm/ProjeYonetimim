@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { ProjectCard } from "@/components/project-card";
@@ -183,7 +183,8 @@ export default function Projects() {
     setIsDialogOpen(true);
   };
 
-  const handleEditProject = (project: Project) => {
+  const handleEditProject = React.useCallback((project: Project) => {
+    console.log('handleEditProject called for:', project.name);
     setEditingProject(project);
     form.reset({
       name: project.name,
@@ -197,7 +198,7 @@ export default function Projects() {
       customerId: project.customerId ?? "none",
     });
     setIsDialogOpen(true);
-  };
+  }, [form]);
 
   const handleDeleteProject = (id: string) => {
     setDeleteProjectId(id);
@@ -228,18 +229,19 @@ export default function Projects() {
 
   // Handle query parameter for editing
   useEffect(() => {
-    const params = new URLSearchParams(location.split('?')[1] || '');
+    const params = new URLSearchParams(window.location.search);
     const editId = params.get('edit');
     
-    if (editId && projects.length > 0) {
+    if (editId && projects.length > 0 && !isDialogOpen) {
       const project = projects.find(p => p.id === editId);
       if (project) {
+        console.log('Opening edit dialog for project:', project.name);
         handleEditProject(project);
-        // Clear query params
-        setLocation('/projeler');
+      } else {
+        console.log('Project not found with ID:', editId);
       }
     }
-  }, [location, projects]);
+  }, [location, projects, isDialogOpen, handleEditProject]);
 
   return (
     <div className="space-y-6">
@@ -359,7 +361,13 @@ export default function Projects() {
       )}
 
       {/* Create/Edit Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isDialogOpen} onOpenChange={(open) => {
+        setIsDialogOpen(open);
+        // Clear query parameter when dialog is closed
+        if (!open && location.includes('?edit=')) {
+          setLocation('/projeler');
+        }
+      }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>

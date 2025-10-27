@@ -10,14 +10,16 @@ import { BudgetTable } from "@/components/budget-table";
 import { TaskList } from "@/components/task-list";
 import { TimesheetTable } from "@/components/timesheet-table";
 import { SiteDiaryCard } from "@/components/site-diary-card";
-import { Edit, MapPin, Calendar, Ruler, ArrowLeft } from "lucide-react";
+import { Edit, MapPin, Calendar, Ruler, ArrowLeft, Plus } from "lucide-react";
 import { Link } from "wouter";
 import type { Project } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ProjectDetail() {
   const [, params] = useRoute("/projeler/:id");
   const [, setLocation] = useLocation();
   const projectId = params?.id;
+  const { toast } = useToast();
 
   // Fetch real project data
   const { data: project, isLoading } = useQuery<Project>({
@@ -28,6 +30,26 @@ export default function ProjectDetail() {
   const handleEdit = () => {
     // Navigate to projects page with edit mode
     setLocation(`/projeler?edit=${projectId}`);
+  };
+
+  const handleAddBudgetItem = () => {
+    // Navigate to budget page with this project pre-selected
+    setLocation(`/butce?project=${projectId}`);
+  };
+
+  const handleAddTask = () => {
+    // Navigate to work schedule page with this project pre-selected
+    setLocation(`/is-programi?project=${projectId}`);
+  };
+
+  const handleAddTimesheet = () => {
+    // Navigate to timesheet page with this project pre-selected
+    setLocation(`/puantaj?project=${projectId}`);
+  };
+
+  const handleAddSiteDiary = () => {
+    // Navigate to site diary page with this project pre-selected
+    setLocation(`/santiye-defteri?project=${projectId}`);
   };
 
   if (!projectId) {
@@ -220,7 +242,8 @@ export default function ProjectDetail() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Bütçe Kalemleri</CardTitle>
-                <Button size="sm" data-testid="button-add-budget-item">
+                <Button size="sm" onClick={handleAddBudgetItem} data-testid="button-add-budget-item">
+                  <Plus className="h-4 w-4 mr-2" />
                   Kalem Ekle
                 </Button>
               </div>
@@ -228,8 +251,8 @@ export default function ProjectDetail() {
             <CardContent>
               <BudgetTable
                 items={mockBudgetItems}
-                onEdit={(id) => console.log('Edit budget', id)}
-                onDelete={(id) => console.log('Delete budget', id)}
+                onEdit={handleEdit}
+                onDelete={(id) => toast({ title: "Bilgi", description: "Bütçe kalemi silme işlemi için Bütçe sayfasını kullanın." })}
               />
             </CardContent>
           </Card>
@@ -239,14 +262,15 @@ export default function ProjectDetail() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">İş Programı Görevleri</h2>
-              <Button size="sm" data-testid="button-add-task">
+              <Button size="sm" onClick={handleAddTask} data-testid="button-add-task">
+                <Plus className="h-4 w-4 mr-2" />
                 Görev Ekle
               </Button>
             </div>
             <TaskList
               tasks={mockTasks}
-              onEdit={(id) => console.log('Edit task', id)}
-              onDelete={(id) => console.log('Delete task', id)}
+              onEdit={handleEdit}
+              onDelete={(id) => toast({ title: "Bilgi", description: "Görev silme işlemi için İş Programı sayfasını kullanın." })}
             />
           </div>
         </TabsContent>
@@ -256,7 +280,8 @@ export default function ProjectDetail() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Günlük Puantaj Kayıtları</CardTitle>
-                <Button size="sm" data-testid="button-add-timesheet">
+                <Button size="sm" onClick={handleAddTimesheet} data-testid="button-add-timesheet">
+                  <Plus className="h-4 w-4 mr-2" />
                   Puantaj Ekle
                 </Button>
               </div>
@@ -264,8 +289,8 @@ export default function ProjectDetail() {
             <CardContent>
               <TimesheetTable
                 entries={mockTimesheets}
-                onEdit={(id) => console.log('Edit timesheet', id)}
-                onDelete={(id) => console.log('Delete timesheet', id)}
+                onEdit={handleEdit}
+                onDelete={(id) => toast({ title: "Bilgi", description: "Puantaj silme işlemi için Puantaj sayfasını kullanın." })}
               />
             </CardContent>
           </Card>
@@ -275,7 +300,8 @@ export default function ProjectDetail() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Günlük Şantiye Raporları</h2>
-              <Button size="sm" data-testid="button-add-site-diary">
+              <Button size="sm" onClick={handleAddSiteDiary} data-testid="button-add-site-diary">
+                <Plus className="h-4 w-4 mr-2" />
                 Rapor Ekle
               </Button>
             </div>
@@ -284,8 +310,8 @@ export default function ProjectDetail() {
                 <SiteDiaryCard
                   key={entry.id}
                   entry={entry}
-                  onEdit={() => console.log('Edit diary', entry.id)}
-                  onDelete={() => console.log('Delete diary', entry.id)}
+                  onEdit={handleEdit}
+                  onDelete={() => toast({ title: "Bilgi", description: "Şantiye defteri silme işlemi için Şantiye Defteri sayfasını kullanın." })}
                 />
               ))}
             </div>
