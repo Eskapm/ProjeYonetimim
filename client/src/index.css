@@ -385,9 +385,15 @@
     margin-bottom: 1rem !important;
   }
   
-  /* Show header only on first page to prevent overlap with table content on page 2+ */
+  /* Header positioning strategy */
   .print-first-page-only {
     position: relative;
+    z-index: 1;
+  }
+  
+  /* Ensure content after header starts fresh and visible on all pages */
+  .print-header-wrapper + * {
+    margin-top: 0.5cm;
   }
   
   /* Use a pseudo-approach: Keep header in flow but ensure tables can break properly */
@@ -395,6 +401,7 @@
   table {
     break-inside: auto;
     page-break-inside: auto;
+    margin-bottom: 0.5cm;
   }
   
   .print-logo {
@@ -446,9 +453,10 @@
   }
   
   /* Container should have professional spacing - NO SCROLL */
+  /* Reduced padding to allow more content on first page before break */
   .container {
     max-width: 100% !important;
-    padding: 0.8cm 1.2cm !important;
+    padding: 0.3cm 1cm !important;
     margin: 0 !important;
     overflow: visible !important;
   }
@@ -457,9 +465,9 @@
     color: black !important;
   }
   
-  /* Print page setup - All pages have consistent margins */
+  /* Print page setup - Larger top margin to prevent content hiding under header */
   @page {
-    margin: 2cm 1cm 1.5cm 1cm;
+    margin: 3cm 1cm 2cm 1cm;
     size: A4;
   }
   
@@ -676,6 +684,18 @@
   /* Table rows should not break internally but table can span pages */
   tr {
     page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  /* Ensure tbody has proper orphan/widow control for better page breaks */
+  tbody {
+    orphans: 3;
+    widows: 3;
+  }
+  
+  /* Force earlier page breaks before table runs out of room */
+  tbody tr:nth-last-child(-n+3) {
+    page-break-before: auto;
   }
   
   /* Grid items and summary totals can break across pages if needed */
