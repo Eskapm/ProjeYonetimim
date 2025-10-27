@@ -341,6 +341,7 @@ export default function Hakedis() {
             })}
             filename="hakedis"
             sheetName="Hakediş"
+            documentTitle="HAKEDİŞ LİSTESİ"
           />
           <PrintButton />
           <Button onClick={handleAddPayment} data-testid="button-add-payment">

@@ -264,6 +264,7 @@ export default function Projects() {
             }))}
             filename="projeler"
             sheetName="Projeler"
+            documentTitle="PROJELER LİSTESİ"
           />
           <PrintButton />
           <Button onClick={handleAddProject} data-testid="button-add-project">

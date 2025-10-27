@@ -274,7 +274,8 @@ export default function Transactions() {
           <ExportToExcel 
             data={excelData} 
             filename="islemler" 
-            sheetName="İşlemler" 
+            sheetName="İşlemler"
+            documentTitle="GELİR & GİDER İŞLEMLERİ"
           />
           <PrintButton />
           <Button onClick={handleAddTransaction} data-testid="button-add-transaction">

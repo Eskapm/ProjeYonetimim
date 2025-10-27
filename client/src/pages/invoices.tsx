@@ -359,6 +359,7 @@ export default function Invoices() {
             }))}
             filename="faturalar"
             sheetName="Faturalar"
+            documentTitle="FATURALAR LİSTESİ"
           />
           <PrintButton />
           <Button onClick={handleAddInvoice} data-testid="button-add-invoice">
