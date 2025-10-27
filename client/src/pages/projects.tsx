@@ -358,14 +358,19 @@ export default function Projects() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={(open) => {
-        setIsDialogOpen(open);
-        // Clear query parameter and state when dialog is closed
         if (!open) {
+          // Clear state and query parameter when dialog is closed
+          setIsDialogOpen(false);
           setEditingProject(null);
           form.reset();
-          if (location.includes('?edit=')) {
-            setLocation('/projeler');
+          if (window.location.search.includes('edit=')) {
+            // Remove only the edit parameter, stay on current page
+            const url = new URL(window.location.href);
+            url.searchParams.delete('edit');
+            window.history.replaceState({}, '', url.pathname + url.search);
           }
+        } else {
+          setIsDialogOpen(true);
         }
       }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -645,8 +650,11 @@ export default function Projects() {
                     setEditingProject(null);
                     form.reset();
                     // Clear query parameter when closing dialog
-                    if (location.includes('?edit=')) {
-                      setLocation('/projeler');
+                    if (window.location.search.includes('edit=')) {
+                      // Remove only the edit parameter, stay on current page
+                      const url = new URL(window.location.href);
+                      url.searchParams.delete('edit');
+                      window.history.replaceState({}, '', url.pathname + url.search);
                     }
                   }}
                   data-testid="button-cancel-project"
