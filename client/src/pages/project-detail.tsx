@@ -461,6 +461,8 @@ export default function ProjectDetail() {
                     unitPrice: parseFloat(item.unitPrice),
                     isGrubu: item.isGrubu,
                     rayicGrubu: item.rayicGrubu,
+                    actualQuantity: item.actualQuantity ? parseFloat(item.actualQuantity) : undefined,
+                    actualUnitPrice: item.actualUnitPrice ? parseFloat(item.actualUnitPrice) : undefined,
                   }))}
                   onEdit={handleEditBudgetItem}
                   onDelete={handleDeleteBudgetItem}
