@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Check, X } from "lucide-react";
 
 interface TransactionWithProject {
   id: string;
@@ -21,6 +21,7 @@ interface TransactionWithProject {
   rayicGrubu: string;
   description: string | null;
   invoiceNumber: string | null;
+  progressPaymentId: string | null;
   createdAt: Date | null;
 }
 
@@ -75,6 +76,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
               <TableHead>İş Grubu</TableHead>
               <TableHead>Rayiç Grubu</TableHead>
               <TableHead>Açıklama</TableHead>
+              <TableHead className="text-center">Hakedişe Dahil</TableHead>
               <TableHead className="text-right">Tutar</TableHead>
               <TableHead className="text-right">İşlemler</TableHead>
             </TableRow>
@@ -82,7 +84,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
           <TableBody>
             {transactions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                   Henüz işlem kaydı bulunmamaktadır
                 </TableCell>
               </TableRow>
@@ -106,6 +108,13 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                   <TableCell className="text-sm">{transaction.rayicGrubu}</TableCell>
                   <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
                     {transaction.description || '-'}
+                  </TableCell>
+                  <TableCell className="text-center" data-testid={`text-progress-payment-status-${transaction.id}`}>
+                    {transaction.progressPaymentId ? (
+                      <Check className="h-5 w-5 text-green-600 dark:text-green-400 mx-auto" />
+                    ) : (
+                      <X className="h-5 w-5 text-muted-foreground mx-auto" />
+                    )}
                   </TableCell>
                   <TableCell className="text-right font-mono font-semibold">
                     {formatCurrency(transaction.amount)}
