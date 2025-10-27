@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PrintButton } from "@/components/print-button";
+import { PrintHeader } from "@/components/print-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BudgetTable } from "@/components/budget-table";
@@ -346,6 +347,8 @@ export default function ProjectDetail() {
 
   return (
     <div className="space-y-6">
+      <PrintHeader documentTitle={`PROJE DETAYI: ${project.name}`} />
+      
       <div className="flex items-center gap-4">
         <Link href="/projeler">
           <Button variant="ghost" size="icon" data-testid="button-back">

@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PrintButton } from "@/components/print-button";
+import { PrintHeader } from "@/components/print-header";
 import { StatsCard } from "@/components/stats-card";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { FileText, BarChart3, TrendingUp, TrendingDown, DollarSign, PieChart, Calendar, Receipt, ClipboardList, FolderKanban, CheckCircle2, Clock, XCircle, AlertCircle } from "lucide-react";
@@ -347,6 +348,8 @@ export default function Reports() {
 
   return (
     <div className="space-y-6">
+      <PrintHeader documentTitle="RAPORLAR" />
+      
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Raporlar</h1>

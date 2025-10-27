@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PrintButton } from "@/components/print-button";
+import { PrintHeader } from "@/components/print-header";
 import { ExportToExcel } from "@/components/export-to-excel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -336,6 +337,8 @@ export default function Invoices() {
 
   return (
     <div className="space-y-6">
+      <PrintHeader documentTitle="FATURALAR LİSTESİ" />
+      
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Faturalar</h1>
@@ -369,7 +372,7 @@ export default function Invoices() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 no-print">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

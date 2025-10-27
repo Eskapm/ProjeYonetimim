@@ -324,6 +324,8 @@ export default function Hakedis() {
 
   return (
     <div className="space-y-6">
+      <PrintHeader documentTitle="HAKEDİŞ LİSTESİ" />
+      
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Hakediş</h1>
@@ -357,7 +359,7 @@ export default function Hakedis() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 no-print">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

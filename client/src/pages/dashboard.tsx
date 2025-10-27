@@ -4,6 +4,7 @@ import { StatsCard } from "@/components/stats-card";
 import { ProjectCard } from "@/components/project-card";
 import { TransactionTable } from "@/components/transaction-table";
 import { PrintButton } from "@/components/print-button";
+import { PrintHeader } from "@/components/print-header";
 import { FolderKanban, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -229,6 +230,8 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
+      <PrintHeader documentTitle="ANA SAYFA ÖZETİ" />
+      
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Ana Sayfa</h1>

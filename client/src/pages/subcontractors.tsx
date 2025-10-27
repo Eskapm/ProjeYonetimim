@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { ContactCard } from "@/components/contact-card";
 import { PrintButton } from "@/components/print-button";
+import { PrintHeader } from "@/components/print-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search } from "lucide-react";
@@ -341,6 +342,8 @@ export default function Subcontractors() {
 
   return (
     <div className="space-y-6">
+      <PrintHeader documentTitle="TAŞERONLAR LİSTESİ" />
+      
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Taşeronlar</h1>
@@ -355,7 +358,7 @@ export default function Subcontractors() {
         </div>
       </div>
 
-      <div className="relative">
+      <div className="relative no-print">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Firma adı, yetkili veya uzmanlık alanı ile ara..."
