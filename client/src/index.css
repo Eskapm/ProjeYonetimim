@@ -378,22 +378,27 @@
     display: block !important;
   }
   
-  /* Print header and logo styles */
+  /* Print header - Fixed at top of every page to prevent content hiding */
   .print-header-wrapper {
-    page-break-inside: avoid;
-    page-break-after: avoid;
-    margin-bottom: 1rem !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    z-index: 1000;
+    padding: 0.5cm 1cm;
+    height: auto;
+    max-height: 8cm;
   }
   
-  /* Header positioning strategy */
-  .print-first-page-only {
-    position: relative;
-    z-index: 1;
+  /* Main content must have top margin to avoid hiding under fixed header */
+  body > div {
+    margin-top: 9cm !important;
   }
   
-  /* Ensure content after header starts fresh and visible on all pages */
-  .print-header-wrapper + * {
-    margin-top: 0.5cm;
+  /* Ensure space-y classes don't override our critical margin */
+  body > div[class*="space-y"] {
+    margin-top: 9cm !important;
   }
   
   /* Use a pseudo-approach: Keep header in flow but ensure tables can break properly */
@@ -453,10 +458,9 @@
   }
   
   /* Container should have professional spacing - NO SCROLL */
-  /* Reduced padding to allow more content on first page before break */
   .container {
     max-width: 100% !important;
-    padding: 0.3cm 1cm !important;
+    padding: 0 0.5cm !important;
     margin: 0 !important;
     overflow: visible !important;
   }
@@ -465,9 +469,9 @@
     color: black !important;
   }
   
-  /* Print page setup - Larger top margin to prevent content hiding under header */
+  /* Print page setup - Minimal margins since we use fixed header */
   @page {
-    margin: 3cm 1cm 2cm 1cm;
+    margin: 0.5cm 1cm 2cm 1cm;
     size: A4;
   }
   
@@ -531,18 +535,18 @@
     width: 100% !important;
   }
   
-  /* Table headers repeat on each page */
+  /* Table headers repeat on each page - CRITICAL for multi-page tables */
   table thead {
-    display: table-header-group;
+    display: table-header-group !important;
     background: #f5f5f5 !important;
   }
   
   table tbody {
-    display: table-row-group;
+    display: table-row-group !important;
   }
   
   table tfoot {
-    display: table-footer-group;
+    display: table-footer-group !important;
   }
   
   table th,
@@ -681,21 +685,18 @@
     page-break-after: avoid;
   }
   
-  /* Table rows should not break internally but table can span pages */
-  tr {
-    page-break-inside: avoid;
-    break-inside: avoid;
+  /* CRITICAL: Table rows must never break/split internally */
+  tbody tr,
+  thead tr,
+  tfoot tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
   
   /* Ensure tbody has proper orphan/widow control for better page breaks */
   tbody {
-    orphans: 3;
-    widows: 3;
-  }
-  
-  /* Force earlier page breaks before table runs out of room */
-  tbody tr:nth-last-child(-n+3) {
-    page-break-before: auto;
+    orphans: 2;
+    widows: 2;
   }
   
   /* Grid items and summary totals can break across pages if needed */
