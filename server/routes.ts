@@ -607,6 +607,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // PDF Generation endpoint - Server-side PDF with Puppeteer
+  app.post("/api/reports/generate-pdf", requireAuth, async (req, res) => {
+    try {
+      const { html, filename = "rapor.pdf" } = req.body;
+      
+      if (!html) {
+        return res.status(400).send("HTML içeriği gereklidir");
+      }
+
+      const puppeteer = await import("puppeteer");
+      
+      // Launch browser
+      const browser = await puppeteer.default.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
+      
+      const page = await browser.newPage();
+      
+      // Set content with proper encoding
+      await page.setContent(html, {
+        waitUntil: 'networkidle0'
+      });
+      
+      // Generate PDF with professional settings
+      const pdfBuffer = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: {
+          top: '1.5cm',
+          right: '1cm',
+          bottom: '2cm',
+          left: '1cm'
+        },
+        displayHeaderFooter: true,
+        headerTemplate: '<div></div>',
+        footerTemplate: `
+          <div style="font-size: 9pt; text-align: center; width: 100%; color: #666;">
+            <span class="pageNumber"></span> / <span class="totalPages"></span>
+          </div>
+        `
+      });
+      
+      await browser.close();
+      
+      // Send PDF as response
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(pdfBuffer);
+      
+    } catch (error: any) {
+      console.error('PDF generation error:', error);
+      res.status(500).send("PDF oluşturulurken hata oluştu: " + error.message);
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
