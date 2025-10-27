@@ -107,14 +107,17 @@ export default function Hakedis() {
   });
 
   // Filter expense transactions for selected project
+  // Sadece hakedişe dahil edilmemiş veya şu an düzenlenen hakedişe ait transaction'ları göster
   const projectExpenseTransactions = useMemo(() => {
     const projectId = form.watch("projectId");
     if (!projectId) return [];
     
     return allTransactions.filter(
-      (t) => t.projectId === projectId && t.type === "Gider"
+      (t) => t.projectId === projectId && 
+             t.type === "Gider" && 
+             (!t.progressPaymentId || t.progressPaymentId === editingPayment?.id)
     );
-  }, [allTransactions, form.watch("projectId")]);
+  }, [allTransactions, form.watch("projectId"), editingPayment?.id]);
 
   // Calculate remaining advance for selected project
   const remainingAdvance = useMemo(() => {
@@ -161,6 +164,7 @@ export default function Hakedis() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/progress-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] }); // Transaction'ların progressPaymentId'si güncellendiği için
       toast({
         title: "Başarılı",
         description: "Hakediş kaydı başarıyla oluşturuldu",
@@ -185,6 +189,7 @@ export default function Hakedis() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/progress-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] }); // Transaction'ların progressPaymentId'si güncellendiği için
       toast({
         title: "Başarılı",
         description: "Hakediş kaydı başarıyla güncellendi",
@@ -210,6 +215,7 @@ export default function Hakedis() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/progress-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] }); // Transaction'ların progressPaymentId'si null yapıldığı için
       toast({
         title: "Başarılı",
         description: "Hakediş kaydı başarıyla silindi",
