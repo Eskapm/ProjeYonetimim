@@ -1151,30 +1151,38 @@ export default function Hakedis() {
               <PrintHeader 
                 documentTitle="HAKEDİŞ TUTANAĞI"
                 documentNumber={viewingPaymentDetail.paymentNumber?.toString()}
-                additionalInfo={
-                  <div style={{ width: '100%', display: 'block' }}>
-                    <div style={{ 
-                      width: '100%', 
-                      display: 'block', 
-                      padding: '8px 0', 
-                      borderBottom: '1px solid #000',
-                      marginBottom: '6px'
-                    }}>
-                      <strong style={{ marginRight: '10px' }}>Proje:</strong>
-                      <span>{projects.find(p => p.id === viewingPaymentDetail?.projectId)?.name || "Bilinmiyor"}</span>
-                    </div>
-                    <div style={{ 
-                      width: '100%', 
-                      display: 'block', 
-                      padding: '8px 0', 
-                      borderBottom: '1px solid #000'
-                    }}>
-                      <strong style={{ marginRight: '10px' }}>Hakediş Tarihi:</strong>
-                      <span>{formatDate(viewingPaymentDetail.date as string)}</span>
-                    </div>
-                  </div>
-                }
               />
+              
+              {/* Hakediş Date Info - Separate from PrintHeader to avoid CSS conflicts */}
+              <div className="hidden print:block" style={{ 
+                width: '100%', 
+                marginTop: '-12px',
+                marginBottom: '16px'
+              }}>
+                <div style={{ 
+                  width: '100%', 
+                  display: 'block', 
+                  padding: '10px 0', 
+                  borderBottom: '2px solid #000',
+                  marginBottom: '8px',
+                  fontSize: '12px',
+                  lineHeight: '1.5'
+                }}>
+                  <strong style={{ marginRight: '12px', fontWeight: '700' }}>Proje:</strong>
+                  <span>{projects.find(p => p.id === viewingPaymentDetail?.projectId)?.name || "Bilinmiyor"}</span>
+                </div>
+                <div style={{ 
+                  width: '100%', 
+                  display: 'block', 
+                  padding: '10px 0', 
+                  borderBottom: '2px solid #000',
+                  fontSize: '12px',
+                  lineHeight: '1.5'
+                }}>
+                  <strong style={{ marginRight: '12px', fontWeight: '700' }}>Hakediş Tarihi:</strong>
+                  <span>{formatDate(viewingPaymentDetail.date as string)}</span>
+                </div>
+              </div>
 
               {/* Summary Cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 print:grid-cols-4">
