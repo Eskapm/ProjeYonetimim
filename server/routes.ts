@@ -455,6 +455,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertProgressPaymentSchema.parse(req.body);
       const payment = await storage.createProgressPayment(validatedData);
+      
+      // Seçilen transaction'ların progressPaymentId'sini güncelle
+      if (payment && validatedData.transactionIds && Array.isArray(validatedData.transactionIds)) {
+        const transactionIds = validatedData.transactionIds as string[];
+        for (const transactionId of transactionIds) {
+          await storage.updateTransaction(transactionId, { progressPaymentId: payment.id });
+        }
+      }
+      
       res.status(201).json(payment);
     } catch (error: any) {
       if (error instanceof ZodError) {
@@ -469,6 +478,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/progress-payments/:id", requireAuth, async (req, res) => {
     try {
       const validatedData = insertProgressPaymentSchema.partial().parse(req.body);
+      
+      // Eğer transactionIds değişiyorsa, eski ve yeni ID'leri karşılaştır
+      if (validatedData.transactionIds && Array.isArray(validatedData.transactionIds)) {
+        const oldPayment = await storage.getProgressPayment(req.params.id);
+        
+        if (oldPayment && oldPayment.transactionIds && Array.isArray(oldPayment.transactionIds)) {
+          const oldIds = oldPayment.transactionIds as string[];
+          const newIds = validatedData.transactionIds as string[];
+          
+          // Eski transaction'ların progressPaymentId'sini null yap
+          for (const oldId of oldIds) {
+            if (!newIds.includes(oldId)) {
+              await storage.updateTransaction(oldId, { progressPaymentId: null });
+            }
+          }
+          
+          // Yeni transaction'ların progressPaymentId'sini güncelle
+          for (const newId of newIds) {
+            await storage.updateTransaction(newId, { progressPaymentId: req.params.id });
+          }
+        } else {
+          // İlk defa transactionIds ekleniyor
+          const newIds = validatedData.transactionIds as string[];
+          for (const newId of newIds) {
+            await storage.updateTransaction(newId, { progressPaymentId: req.params.id });
+          }
+        }
+      }
+      
       const payment = await storage.updateProgressPayment(req.params.id, validatedData);
       if (!payment) {
         return res.status(404).send("Hakediş bulunamadı");
@@ -484,6 +522,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/progress-payments/:id", requireAuth, async (req, res) => {
     try {
+      // Hakediş silinmeden önce bağlı transaction'ları al
+      const payment = await storage.getProgressPayment(req.params.id);
+      
+      // Transaction'ların progressPaymentId'sini null yap
+      if (payment && payment.transactionIds && Array.isArray(payment.transactionIds)) {
+        const transactionIds = payment.transactionIds as string[];
+        for (const transactionId of transactionIds) {
+          await storage.updateTransaction(transactionId, { progressPaymentId: null });
+        }
+      }
+      
       const success = await storage.deleteProgressPayment(req.params.id);
       if (!success) {
         return res.status(404).send("Hakediş bulunamadı");
