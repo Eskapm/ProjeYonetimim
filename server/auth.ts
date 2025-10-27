@@ -45,7 +45,7 @@ export function setupAuth(app: Express) {
     cookie: {
       secure: process.env.NODE_ENV === "production", // HTTPS'de çalışırken true
       httpOnly: true, // JavaScript ile cookie'ye erişimi engelle
-      sameSite: "strict", // CSRF koruması
+      sameSite: "lax", // CSRF koruması (lax daha uyumlu)
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 gün
     },
   };

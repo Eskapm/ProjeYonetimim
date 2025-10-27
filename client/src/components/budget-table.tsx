@@ -137,22 +137,22 @@ export function BudgetTable({ items, onEdit, onDelete }: BudgetTableProps) {
       </div>
       
       {items.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/50 rounded-md">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-md border border-border/50">
           <div className="text-right">
-            <div className="text-sm text-muted-foreground">Toplam Bütçe</div>
-            <div className="text-2xl font-bold font-mono text-primary">
+            <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Toplam Bütçe</div>
+            <div className="text-lg font-semibold font-mono text-primary">
               {formatCurrency(totalBudget)}
             </div>
           </div>
           <div className="text-right">
-            <div className="text-sm text-muted-foreground">Toplam Gerçekleşen</div>
-            <div className="text-2xl font-bold font-mono text-blue-600 dark:text-blue-400">
+            <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Toplam Gerçekleşen</div>
+            <div className="text-lg font-semibold font-mono text-blue-600 dark:text-blue-400">
               {formatCurrency(totalActual)}
             </div>
           </div>
           <div className="text-right">
-            <div className="text-sm text-muted-foreground">Toplam Fark (Artı/Eksi)</div>
-            <div className={`text-2xl font-bold font-mono ${
+            <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Toplam Fark</div>
+            <div className={`text-lg font-semibold font-mono ${
               totalDifference > 0 ? 'text-green-600 dark:text-green-400' : 
               totalDifference < 0 ? 'text-red-600 dark:text-red-400' : 
               'text-muted-foreground'

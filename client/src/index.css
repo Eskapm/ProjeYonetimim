@@ -415,22 +415,42 @@
     size: A4;
   }
 
+  /* Professional card styling for print */
+  .card {
+    border: 1.5px solid #333 !important;
+    border-radius: 4px !important;
+    background: white !important;
+    padding: 12px !important;
+    margin-bottom: 12px !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+  }
+  
+  /* Card headers - clean and professional */
+  .card-header {
+    border-bottom: 1px solid #ddd !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 12px !important;
+  }
+  
+  .card-title {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #222 !important;
+  }
+  
+  .card-content {
+    padding: 0 !important;
+  }
+
   /* Clean professional borders for tables */
   table thead {
     background: #f5f5f5 !important;
   }
 
   /* Minimal borders for professional look */
-  table,
-  .border {
+  table {
     border: 1px solid #333 !important;
-  }
-  
-  /* Remove card borders for cleaner look */
-  .card {
-    border: none !important;
-    background: transparent !important;
-    padding: 0 !important;
   }
 
   /* Page breaks */
@@ -477,33 +497,48 @@
     background: #f0f0f0 !important;
   }
 
-  /* Reduce spacing everywhere for more content */
+  /* Professional typography for print */
   body {
     font-size: 10px !important;
+    line-height: 1.4 !important;
   }
 
-  h1 { font-size: 18px !important; }
-  h2 { font-size: 16px !important; }
-  h3 { font-size: 14px !important; }
-  h4, h5, h6 { font-size: 12px !important; }
-
-  .text-sm, .text-xs {
-    font-size: 8px !important;
+  h1 { 
+    font-size: 16px !important; 
+    font-weight: 700 !important;
+    margin-bottom: 8px !important;
   }
+  h2 { font-size: 14px !important; font-weight: 600 !important; }
+  h3 { font-size: 12px !important; font-weight: 600 !important; }
+  h4, h5, h6 { font-size: 11px !important; font-weight: 600 !important; }
 
-  /* Compact cards and sections */
-  .card {
-    padding: 8px !important;
-    margin: 6px 0 !important;
-  }
+  .text-sm { font-size: 9px !important; }
+  .text-xs { font-size: 8px !important; }
+  .text-lg { font-size: 11px !important; }
+  .text-xl { font-size: 12px !important; }
+  .text-2xl { font-size: 14px !important; }
 
-  /* Reduce gap between elements */
-  .space-y-6 > * + * { margin-top: 12px !important; }
+  /* Compact spacing for professional look */
+  .space-y-6 > * + * { margin-top: 10px !important; }
   .space-y-4 > * + * { margin-top: 8px !important; }
   .space-y-2 > * + * { margin-top: 4px !important; }
+  .space-y-1 > * + * { margin-top: 2px !important; }
 
-  .gap-4 { gap: 8px !important; }
-  .gap-6 { gap: 12px !important; }
+  .gap-4 { gap: 6px !important; }
+  .gap-6 { gap: 8px !important; }
+  .gap-2 { gap: 4px !important; }
+  
+  /* Total summary section - professional styling */
+  .grid.grid-cols-3 {
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+    padding: 8px !important;
+    background: #f9f9f9 !important;
+  }
+  
+  .grid.grid-cols-3 > div {
+    padding: 6px !important;
+  }
 
   /* Badges compact */
   .badge {
@@ -511,15 +546,44 @@
     padding: 2px 4px !important;
   }
 
-  /* Keep headings together with content */
+  /* Smart page break management */
   h1, h2, h3, h4, h5, h6 {
     page-break-after: avoid;
+    page-break-inside: avoid;
   }
 
-  /* Avoid breaking inside cards and tables */
-  .card,
+  /* Prevent awkward breaks - keep related content together */
+  .card {
+    page-break-inside: avoid;
+  }
+  
+  .card-header {
+    page-break-after: avoid;
+  }
+  
+  .card-content {
+    page-break-before: avoid;
+  }
+  
+  /* Table rows should not break */
   tr {
     page-break-inside: avoid;
+  }
+  
+  /* Grid items - keep within page when possible */
+  .grid > div {
+    page-break-inside: avoid;
+  }
+  
+  /* Summary totals - always keep together */
+  .grid.grid-cols-3 {
+    page-break-inside: avoid !important;
+  }
+  
+  /* Orphan and widow control */
+  p {
+    orphans: 3;
+    widows: 3;
   }
 
   /* Landscape orientation for wide tables (optional - uncomment if needed) */

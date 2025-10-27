@@ -333,7 +333,7 @@ export default function WorkSchedule() {
             </div>
             <div className="flex gap-2">
               <ExportToExcel
-                data={filteredTasks.map(task => ({
+                data={filteredAndSortedTasks.map(task => ({
                   "Görev": task.title,
                   "Proje": getProjectName(task.projectId),
                   "Durum": task.status,
