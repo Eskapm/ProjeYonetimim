@@ -381,7 +381,20 @@
   /* Print header and logo styles */
   .print-header-wrapper {
     page-break-inside: avoid;
+    page-break-after: avoid;
     margin-bottom: 1rem !important;
+  }
+  
+  /* Show header only on first page to prevent overlap with table content on page 2+ */
+  .print-first-page-only {
+    position: relative;
+  }
+  
+  /* Use a pseudo-approach: Keep header in flow but ensure tables can break properly */
+  /* The header stays at top of document, tables flow naturally after it */
+  table {
+    break-inside: auto;
+    page-break-inside: auto;
   }
   
   .print-logo {
@@ -444,9 +457,9 @@
     color: black !important;
   }
   
-  /* Print page setup */
+  /* Print page setup - All pages have consistent margins */
   @page {
-    margin: 1.5cm 1cm 1.5cm 1cm;
+    margin: 2cm 1cm 1.5cm 1cm;
     size: A4;
   }
   

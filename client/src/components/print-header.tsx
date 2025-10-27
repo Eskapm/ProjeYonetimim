@@ -9,7 +9,7 @@ interface PrintHeaderProps {
 
 export function PrintHeader({ documentTitle, documentNumber, additionalInfo }: PrintHeaderProps) {
   return (
-    <div className="hidden print:block print-header-wrapper">
+    <div className="hidden print:block print-header-wrapper print-first-page-only">
       {/* Logo - Centered and Large */}
       <div className="text-center mb-4">
         <img 
