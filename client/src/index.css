@@ -719,14 +719,11 @@
       display: block !important;
     }
 
-    /* Her sayfa tam A4 boyutu */
+    /* Her sayfa native page break ile ayrılıyor */
     .print-page {
       page-break-after: always !important;
-      page-break-inside: avoid !important;
-      width: 100% !important;
-      display: flex !important;
-      flex-direction: column !important;
-      height: 100vh !important;
+      margin-bottom: 0 !important;
+      padding-bottom: 0 !important;
     }
 
     .print-page:last-child {
@@ -735,26 +732,27 @@
 
     /* Sayfa başlığı */
     .print-page-header {
-      margin-bottom: 8px !important;
+      margin-bottom: 4px !important;
+      padding-bottom: 4px !important;
     }
 
     .print-page-title {
-      font-size: 12px !important;
+      font-size: 10px !important;
       font-weight: bold !important;
       margin: 0 !important;
       padding: 0 !important;
       color: #000 !important;
     }
 
-    /* Sayfa tablosu */
+    /* Sayfa tablosu - native page break */
     .print-transactions-table {
       width: 100% !important;
       border-collapse: collapse !important;
       font-family: Arial, sans-serif !important;
       font-size: 8px !important;
-      line-height: 1.1 !important;
+      line-height: 1.0 !important;
       table-layout: fixed !important;
-      flex-grow: 1 !important;
+      margin-bottom: 2px !important;
     }
 
     .print-transactions-table thead {
@@ -762,63 +760,70 @@
       display: table-header-group !important;
     }
 
-    .print-transactions-table th {
-      border: 1px solid #333 !important;
-      padding: 2px 2px !important;
-      text-align: left !important;
-      font-weight: bold !important;
-      background-color: #e8e8e8 !important;
-      font-size: 8px !important;
-      line-height: 1.1 !important;
-      white-space: nowrap !important;
-      overflow: hidden !important;
-      text-overflow: ellipsis !important;
+    .print-transactions-table thead tr {
+      page-break-inside: avoid !important;
     }
 
+    .print-transactions-table th {
+      border: 1px solid #333 !important;
+      padding: 1px 2px !important;
+      text-align: center !important;
+      font-weight: bold !important;
+      background-color: #e8e8e8 !important;
+      font-size: 7px !important;
+      line-height: 1.0 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+    }
+
+    /* Satırlar kesimi olmadan tam sayfa fill etsin */
     .print-transactions-table tbody tr {
-      height: 16px !important;
+      page-break-inside: avoid !important;
+      height: auto !important;
     }
 
     .print-transactions-table td {
       border: 1px solid #ccc !important;
-      padding: 1px 2px !important;
-      font-size: 8px !important;
-      line-height: 1.1 !important;
+      padding: 1px 1px !important;
+      font-size: 7px !important;
+      line-height: 1.0 !important;
       vertical-align: middle !important;
       overflow: hidden !important;
-      text-overflow: ellipsis !important;
+      text-overflow: clip !important;
       white-space: nowrap !important;
+      text-align: left !important;
     }
 
     .print-transactions-table tbody tr:nth-child(odd) {
-      background-color: #ffffff !important;
+      background-color: #fff !important;
     }
 
     .print-transactions-table tbody tr:nth-child(even) {
-      background-color: #f9f9f9 !important;
+      background-color: #f8f8f8 !important;
     }
 
     /* Sayfa altı */
     .print-page-footer {
-      margin-top: 8px !important;
-      border-top: 2px solid #000 !important;
-      padding-top: 4px !important;
+      margin-top: 2px !important;
+      border-top: 1px solid #000 !important;
+      padding-top: 2px !important;
+      font-size: 8px !important;
     }
 
     .print-page-total {
-      font-size: 9px !important;
+      font-size: 8px !important;
       font-weight: bold !important;
       text-align: right !important;
-      margin-bottom: 4px !important;
+      margin-bottom: 2px !important;
     }
 
     .print-grand-total {
-      font-size: 10px !important;
+      font-size: 9px !important;
       font-weight: bold !important;
       text-align: right !important;
-      padding: 4px 0 !important;
+      padding: 2px 0 !important;
       border-top: 1px solid #000 !important;
-      margin-top: 4px !important;
+      margin-top: 2px !important;
     }
   }
 
