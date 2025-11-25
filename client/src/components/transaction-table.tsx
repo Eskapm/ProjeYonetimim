@@ -105,6 +105,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
         <Table className="w-full">
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[60px] min-w-[60px] text-center">Sıra No</TableHead>
               <TableHead className="w-[110px] min-w-[110px]">Tarih</TableHead>
               <TableHead>Proje</TableHead>
               <TableHead>Tür</TableHead>
@@ -119,19 +120,20 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
           <TableBody>
             {transactions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
                   Henüz işlem kaydı bulunmamaktadır
                 </TableCell>
               </TableRow>
             ) : (
               <>
                 {/* Screen view - all transactions (visible only on screen) */}
-                {transactions.map((transaction) => (
+                {transactions.map((transaction, index) => (
                   <TableRow 
                     key={transaction.id} 
                     data-testid={`row-transaction-${transaction.id}`}
                     className="print-hidden"
                   >
+                    <TableCell className="text-center font-medium text-muted-foreground">{index + 1}</TableCell>
                     <TableCell className="font-medium whitespace-nowrap">{formatDate(transaction.date)}</TableCell>
                     <TableCell>{transaction.projectName}</TableCell>
                     <TableCell>
@@ -187,19 +189,22 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                 {pages.map((pageTransactions, pageIndex) => {
                   const cumulativeTotal = getCumulativeTotal(pageIndex);
                   const pageTotals = getPageTotals(pageTransactions);
+                  // Calculate starting row number for this page
+                  const startRowNumber = pageIndex * ROWS_PER_PAGE + 1;
                   
                   return (
                     <Fragment key={`page-${pageIndex}`}>
                       {/* Page break before each page except first */}
                       {pageIndex > 0 && (
                         <TableRow className="print-only print-page-break">
-                          <TableCell colSpan={9} className="p-0 h-[3cm] border-none"></TableCell>
+                          <TableCell colSpan={10} className="p-0 h-[3cm] border-none"></TableCell>
                         </TableRow>
                       )}
 
                       {/* "Bir Önceki Sayfadan Nakledilen Tutar" row for pages 2+ */}
                       {pageIndex > 0 && (
                         <TableRow className="print-only print-carryover-row">
+                          <TableCell></TableCell>
                           <TableCell colSpan={7} className="font-bold text-right pr-4">
                             Bir Önceki Sayfadan Nakledilen Tutar:
                           </TableCell>
@@ -211,12 +216,13 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                       )}
 
                       {/* Page transactions */}
-                      {pageTransactions.map((transaction) => (
+                      {pageTransactions.map((transaction, indexInPage) => (
                         <TableRow 
                           key={`print-${transaction.id}`}
                           data-testid={`row-transaction-${transaction.id}`}
                           className="print-only"
                         >
+                          <TableCell className="text-center font-medium text-muted-foreground">{startRowNumber + indexInPage}</TableCell>
                           <TableCell className="font-medium whitespace-nowrap">{formatDate(transaction.date)}</TableCell>
                           <TableCell>{transaction.projectName}</TableCell>
                           <TableCell>
@@ -247,6 +253,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
 
                       {/* Page summary row */}
                       <TableRow className="print-only print-page-summary">
+                        <TableCell></TableCell>
                         <TableCell colSpan={7} className="text-right font-bold pr-4">
                           Sayfa Toplamı:
                         </TableCell>
