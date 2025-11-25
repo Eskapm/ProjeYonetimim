@@ -1,167 +1,826 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Edit, Trash2, Check, X } from "lucide-react";
-import { formatCurrency } from "@/lib/format";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-interface TransactionWithProject {
-  id: string;
-  date: string;
-  projectId: string;
-  projectName: string;
-  type: string;
-  amount: string;
-  isGrubu: string;
-  rayicGrubu: string;
-  description: string | null;
-  invoiceNumber: string | null;
-  progressPaymentId: string | null;
-  createdAt: Date | null;
+/* LIGHT MODE */
+:root {
+  --button-outline: rgba(0,0,0, .10);
+  --badge-outline: rgba(0,0,0, .05);
+
+  /* Automatic computation of border around primary / danger buttons */
+  --opaque-button-border-intensity: -8; /* In terms of percentages */
+
+  /* Backgrounds applied on top of other backgrounds when hovered/active */
+  --elevate-1: rgba(0,0,0, .03);
+  --elevate-2: rgba(0,0,0, .08);
+
+  --background: 220 5% 98%;
+
+  --foreground: 220 10% 15%;
+
+  --border: 220 8% 88%;
+
+  --card: 220 6% 96%;
+
+  --card-foreground: 220 10% 15%;
+
+  --card-border: 220 8% 92%;
+
+  --sidebar: 220 6% 94%;
+
+  --sidebar-foreground: 220 10% 15%;
+
+  --sidebar-border: 220 8% 90%;
+
+  --sidebar-primary: 210 85% 45%;
+
+  --sidebar-primary-foreground: 210 20% 98%;
+
+  --sidebar-accent: 220 8% 88%;
+
+  --sidebar-accent-foreground: 220 10% 25%;
+
+  --sidebar-ring: 210 85% 45%;
+
+  --popover: 220 6% 92%;
+
+  --popover-foreground: 220 10% 15%;
+
+  --popover-border: 220 8% 88%;
+
+  --primary: 210 85% 45%;
+
+  --primary-foreground: 210 20% 98%;
+
+  --secondary: 220 8% 86%;
+
+  --secondary-foreground: 220 10% 20%;
+
+  --muted: 220 10% 90%;
+
+  --muted-foreground: 220 10% 35%;
+
+  --accent: 220 12% 88%;
+
+  --accent-foreground: 220 10% 25%;
+
+  --destructive: 0 75% 42%;
+
+  --destructive-foreground: 0 10% 98%;
+
+  --input: 220 12% 75%;
+  --ring: 210 85% 45%;
+  --chart-1: 210 85% 45%;
+  --chart-2: 30 85% 48%;
+  --chart-3: 150 60% 42%;
+  --chart-4: 280 65% 50%;
+  --chart-5: 340 75% 50%;
+
+  --font-sans: Inter, Roboto, -apple-system, system-ui, sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: 'SF Mono', Menlo, Monaco, 'Courier New', monospace;
+  --radius: .5rem; /* 8px */
+  --shadow-2xs: 0px 1px 2px 0px hsl(220 10% 15% / 0.05);
+  --shadow-xs: 0px 1px 3px 0px hsl(220 10% 15% / 0.08);
+  --shadow-sm: 0px 2px 4px 0px hsl(220 10% 15% / 0.08), 0px 1px 2px -1px hsl(220 10% 15% / 0.06);
+  --shadow: 0px 4px 6px -1px hsl(220 10% 15% / 0.08), 0px 2px 4px -2px hsl(220 10% 15% / 0.06);
+  --shadow-md: 0px 6px 12px -2px hsl(220 10% 15% / 0.10), 0px 3px 7px -3px hsl(220 10% 15% / 0.08);
+  --shadow-lg: 0px 10px 20px -3px hsl(220 10% 15% / 0.12), 0px 4px 10px -4px hsl(220 10% 15% / 0.08);
+  --shadow-xl: 0px 20px 30px -4px hsl(220 10% 15% / 0.14), 0px 8px 16px -6px hsl(220 10% 15% / 0.10);
+  --shadow-2xl: 0px 30px 50px -8px hsl(220 10% 15% / 0.18);
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+
+  /* Automatically computed borders - intensity can be controlled by the user by the --opaque-button-border-intensity setting */
+
+  /* Fallback for older browsers */
+  --sidebar-primary-border: hsl(var(--sidebar-primary));
+  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --sidebar-accent-border: hsl(var(--sidebar-accent));
+  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --primary-border: hsl(var(--primary));
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --secondary-border: hsl(var(--secondary));
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --muted-border: hsl(var(--muted));
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --accent-border: hsl(var(--accent));
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --destructive-border: hsl(var(--destructive));
+  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
-interface TransactionTableProps {
-  transactions: TransactionWithProject[];
-  onEdit?: (transaction: TransactionWithProject) => void;
-  onDelete?: (id: string) => void;
+.dark {
+  --button-outline: rgba(255,255,255, .10);
+  --badge-outline: rgba(255,255,255, .05);
+
+  --opaque-button-border-intensity: 9;  /* In terms of percentages */
+
+  /* Backgrounds applied on top of other backgrounds when hovered/active */
+  --elevate-1: rgba(255,255,255, .04);
+  --elevate-2: rgba(255,255,255, .09);
+
+  --background: 220 6% 8%;
+
+  --foreground: 220 10% 92%;
+
+  --border: 220 8% 18%;
+
+  --card: 220 6% 11%;
+
+  --card-foreground: 220 10% 92%;
+
+  --card-border: 220 8% 16%;
+
+  --sidebar: 220 6% 13%;
+
+  --sidebar-foreground: 220 10% 92%;
+
+  --sidebar-border: 220 8% 20%;
+
+  --sidebar-primary: 210 85% 48%;
+
+  --sidebar-primary-foreground: 210 20% 98%;
+
+  --sidebar-accent: 220 8% 18%;
+
+  --sidebar-accent-foreground: 220 10% 88%;
+
+  --sidebar-ring: 210 85% 48%;
+
+  --popover: 220 6% 15%;
+
+  --popover-foreground: 220 10% 92%;
+
+  --popover-border: 220 8% 22%;
+
+  --primary: 210 85% 48%;
+
+  --primary-foreground: 210 20% 98%;
+
+  --secondary: 220 8% 20%;
+
+  --secondary-foreground: 220 10% 90%;
+
+  --muted: 220 10% 17%;
+
+  --muted-foreground: 220 10% 75%;
+
+  --accent: 220 12% 19%;
+
+  --accent-foreground: 220 10% 88%;
+
+  --destructive: 0 75% 45%;
+
+  --destructive-foreground: 0 10% 98%;
+
+  --input: 220 12% 35%;
+  --ring: 210 85% 48%;
+  --chart-1: 210 85% 60%;
+  --chart-2: 30 85% 65%;
+  --chart-3: 150 60% 58%;
+  --chart-4: 280 65% 65%;
+  --chart-5: 340 75% 65%;
+
+  --shadow-2xs: 0px 1px 2px 0px hsl(220 10% 0% / 0.20);
+  --shadow-xs: 0px 1px 3px 0px hsl(220 10% 0% / 0.25);
+  --shadow-sm: 0px 2px 4px 0px hsl(220 10% 0% / 0.25), 0px 1px 2px -1px hsl(220 10% 0% / 0.20);
+  --shadow: 0px 4px 6px -1px hsl(220 10% 0% / 0.25), 0px 2px 4px -2px hsl(220 10% 0% / 0.20);
+  --shadow-md: 0px 6px 12px -2px hsl(220 10% 0% / 0.30), 0px 3px 7px -3px hsl(220 10% 0% / 0.25);
+  --shadow-lg: 0px 10px 20px -3px hsl(220 10% 0% / 0.35), 0px 4px 10px -4px hsl(220 10% 0% / 0.25);
+  --shadow-xl: 0px 20px 30px -4px hsl(220 10% 0% / 0.40), 0px 8px 16px -6px hsl(220 10% 0% / 0.30);
+  --shadow-2xl: 0px 30px 50px -8px hsl(220 10% 0% / 0.50);
+
+  /* Automatically computed borders - intensity can be controlled by the user by the --opaque-button-border-intensity setting */
+  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
-export function TransactionTable({ transactions, onEdit, onDelete }: TransactionTableProps) {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('tr-TR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  };
+@layer base {
+  * {
+    @apply border-border;
+  }
 
-  const totalIncome = transactions
-    .filter(t => t.type === "Gelir")
-    .reduce((sum, t) => {
-      const amount = typeof t.amount === 'string' ? parseFloat(t.amount) : t.amount;
-      return sum + amount;
-    }, 0);
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
 
-  const totalExpense = transactions
-    .filter(t => t.type === "Gider")
-    .reduce((sum, t) => {
-      const amount = typeof t.amount === 'string' ? parseFloat(t.amount) : t.amount;
-      return sum + amount;
-    }, 0);
+/**
+ * Using the elevate system.
+ * Automatic contrast adjustment.
+ *
+ * <element className="hover-elevate" />
+ * <element className="active-elevate-2" />
+ *
+ * // Using the tailwind utility when a data attribute is "on"
+ * <element className="toggle-elevate data-[state=on]:toggle-elevated" />
+ * // Or manually controlling the toggle state
+ * <element className="toggle-elevate toggle-elevated" />
+ *
+ * Elevation systems have to handle many states.
+ * - not-hovered, vs. hovered vs. active  (three mutually exclusive states)
+ * - toggled or not
+ * - focused or not (this is not handled with these utilities)
+ *
+ * Even without handling focused or not, this is six possible combinations that
+ * need to be distinguished from eachother visually.
+ */
+@layer utilities {
 
-  return (
-    <div className="space-y-4">
-      <div className="rounded-md border overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[60px] min-w-[60px] text-center">Sıra No</TableHead>
-              <TableHead className="w-[110px] min-w-[110px]">Tarih</TableHead>
-              <TableHead>Proje</TableHead>
-              <TableHead>Tür</TableHead>
-              <TableHead>İş Grubu</TableHead>
-              <TableHead>Rayiç Grubu</TableHead>
-              <TableHead>Açıklama</TableHead>
-              <TableHead className="text-center">Hakedişe Dahil</TableHead>
-              <TableHead className="text-right">Tutar</TableHead>
-              <TableHead className="text-right">İşlemler</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {transactions.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
-                  Henüz işlem kaydı bulunmamaktadır
-                </TableCell>
-              </TableRow>
-            ) : (
-              transactions.map((transaction, index) => (
-                <TableRow key={transaction.id} data-testid={`row-transaction-${transaction.id}`}>
-                  <TableCell className="text-center font-medium text-sm">{index + 1}</TableCell>
-                  <TableCell className="font-medium whitespace-nowrap">{formatDate(transaction.date)}</TableCell>
-                  <TableCell>{transaction.projectName}</TableCell>
-                  <TableCell>
-                    <Badge
-                      className={
-                        transaction.type === "Gelir"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                          : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                      }
-                    >
-                      {transaction.type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm">{transaction.isGrubu}</TableCell>
-                  <TableCell className="text-sm">{transaction.rayicGrubu}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
-                    {transaction.description || '-'}
-                  </TableCell>
-                  <TableCell className="text-center" data-testid={`text-progress-payment-status-${transaction.id}`}>
-                    {transaction.progressPaymentId ? (
-                      <Check className="h-5 w-5 text-green-600 dark:text-green-400 mx-auto" />
-                    ) : (
-                      <X className="h-5 w-5 text-muted-foreground mx-auto" />
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right font-mono font-semibold">
-                    {formatCurrency(transaction.amount)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onEdit?.(transaction)}
-                        data-testid={`button-edit-transaction-${transaction.id}`}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onDelete?.(transaction.id)}
-                        data-testid={`button-delete-transaction-${transaction.id}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      
-      {transactions.length > 0 && (
-        <div className="flex justify-end gap-8 p-4 bg-muted/50 rounded-md">
-          <div className="text-right">
-            <div className="text-sm text-muted-foreground">Toplam Gelir</div>
-            <div className="text-lg font-bold font-mono text-green-600 dark:text-green-400">
-              {formatCurrency(totalIncome)}
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-sm text-muted-foreground">Toplam Gider</div>
-            <div className="text-lg font-bold font-mono text-red-600 dark:text-red-400">
-              {formatCurrency(totalExpense)}
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-sm text-muted-foreground">Net</div>
-            <div className={`text-lg font-bold font-mono ${totalIncome - totalExpense >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-              {formatCurrency(totalIncome - totalExpense)}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  /* Hide ugly search cancel button in Chrome until we can style it properly */
+  input[type="search"]::-webkit-search-cancel-button {
+    @apply hidden;
+  }
+
+  /* Placeholder styling for contentEditable div */
+  [contenteditable][data-placeholder]:empty::before {
+    content: attr(data-placeholder);
+    color: hsl(var(--muted-foreground));
+    pointer-events: none;
+  }
+
+  /* .no-default-hover-elevate/no-default-active-elevate is an escape hatch so consumers of
+   * buttons/badges can remove the automatic brightness adjustment on interactions
+   * and program their own. */
+  .no-default-hover-elevate {}
+
+  .no-default-active-elevate {}
+  
+  /* Hide print-only elements in normal view */
+  .print-only {
+    display: none;
+  }
+
+
+  /**
+   * Toggleable backgrounds go behind the content. Hoverable/active goes on top.
+   * This way they can stack/compound. Both will overlap the parent's borders!
+   * So borders will be automatically adjusted both on toggle, and hover/active,
+   * and they will be compounded.
+   */
+  .toggle-elevate::before,
+  .toggle-elevate-2::before {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0px;
+    /*border-radius: inherit;   match rounded corners */
+    border-radius: inherit;
+    z-index: -1;
+    /* sits behind content but above backdrop */
+  }
+
+  .toggle-elevate.toggle-elevated::before {
+    background-color: var(--elevate-2);
+  }
+
+  /* If there's a 1px border, adjust the inset so that it covers that parent's border */
+  .border.toggle-elevate::before {
+    inset: -1px;
+  }
+
+  /* Does not work on elements with overflow:hidden! */
+  .hover-elevate:not(.no-default-hover-elevate),
+  .active-elevate:not(.no-default-active-elevate),
+  .hover-elevate-2:not(.no-default-hover-elevate),
+  .active-elevate-2:not(.no-default-active-elevate) {
+    position: relative;
+    z-index: 0;
+  }
+
+  .hover-elevate:not(.no-default-hover-elevate)::after,
+  .active-elevate:not(.no-default-active-elevate)::after,
+  .hover-elevate-2:not(.no-default-hover-elevate)::after,
+  .active-elevate-2:not(.no-default-active-elevate)::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0px;
+    /*border-radius: inherit;   match rounded corners */
+    border-radius: inherit;
+    z-index: 999;
+    /* sits in front of content */
+  }
+
+  .hover-elevate:hover:not(.no-default-hover-elevate)::after,
+  .active-elevate:active:not(.no-default-active-elevate)::after {
+    background-color: var(--elevate-1);
+  }
+
+  .hover-elevate-2:hover:not(.no-default-hover-elevate)::after,
+  .active-elevate-2:active:not(.no-default-active-elevate)::after {
+    background-color: var(--elevate-2);
+  }
+
+  /* If there's a 1px border, adjust the inset so that it covers that parent's border */
+  .border.hover-elevate:not(.no-hover-interaction-elevate)::after,
+  .border.active-elevate:not(.no-active-interaction-elevate)::after,
+  .border.hover-elevate-2:not(.no-hover-interaction-elevate)::after,
+  .border.active-elevate-2:not(.no-active-interaction-elevate)::after,
+  .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
+    inset: -1px;
+  }
+}
+
+/* Print Styles */
+@media print {
+  /* Hide all navigation, sidebar, buttons, filters, and interactive elements */
+  header,
+  aside,
+  .sidebar,
+  [data-sidebar],
+  [data-testid*="sidebar"],
+  [data-testid="button-theme-toggle"],
+  [data-testid="button-logout"],
+  [data-testid="button-sidebar-toggle"],
+  [data-testid*="button-add"],
+  [data-testid*="button-new"],
+  [data-testid*="button-edit"],
+  [data-testid*="button-delete"],
+  [data-testid*="button-print"],
+  [data-testid*="button-filter"],
+  [data-testid*="select-"],
+  [data-testid*="input-search"],
+  button,
+  input[type="search"],
+  .no-print,
+  .print-hide {
+    display: none !important;
+  }
+  
+  /* Hide filter cards and summary cards that are not needed in print */
+  .no-print,
+  [class*="filter"],
+  [class*="search"] {
+    display: none !important;
+  }
+  
+  /* Show print-only elements */
+  .print-only {
+    display: block !important;
+  }
+  
+  /* Print header - Shows only on first page */
+  .print-header-wrapper {
+    page-break-after: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 0.8cm;
+  }
+  
+  /* PUPPETEER PDF: Tables span pages perfectly */
+  table {
+    break-inside: auto;
+    page-break-inside: auto;
+    width: 100% !important;
+  }
+  
+  .print-logo {
+    display: block !important;
+    height: 80px !important;
+    width: auto !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    object-fit: contain !important;
+    page-break-inside: avoid !important;
+  }
+  
+  /* Remove any margins, shadows, and backgrounds for clean professional look */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  
+  /* Only apply overflow visible to non-image elements */
+  *:not(img) {
+    overflow: visible !important;
+  }
+  
+  img {
+    overflow: visible !important;
+    max-width: 100% !important;
+  }
+
+  /* Clean white background for professional look - REMOVE SCROLLBARS */
+  body {
+    background: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  
+  html {
+    overflow: visible !important;
+  }
+
+  /* Ensure main content takes full width with proper margins - NO SCROLL */
+  main {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+  
+  /* Container should have professional spacing - NO SCROLL */
+  .container {
+    max-width: 100% !important;
+    padding: 0.5cm !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  * {
+    color: black !important;
+  }
+  
+  /* Print page setup - Standard margins for clean printing */
+  @page {
+    margin: 1.5cm 1cm;
+    size: A4;
+  }
+  
+  /* Page counter setup */
+  body {
+    counter-reset: page;
+  }
+  
+  /* Print footer with page numbers on every page */
+  @media print {
+    body::after {
+      content: "Sayfa " counter(page);
+      counter-increment: page;
+      position: fixed;
+      bottom: 0.5cm;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 9pt;
+      color: #666;
+      font-family: Arial, sans-serif;
+    }
+  }
+
+  /* Professional card styling for print - targets actual Shadcn classes */
+  /* Allow cards to break across pages naturally so tables can flow from page 1 to 2 */
+  .shadcn-card,
+  [class*="rounded-xl"][class*="border"][class*="bg-card"] {
+    border: 1.5px solid #333 !important;
+    border-radius: 4px !important;
+    background: white !important;
+    padding: 12px !important;
+    margin-bottom: 12px !important;
+    box-shadow: none !important;
+  }
+  
+  /* Card headers - only target actual CardHeader components within shadcn-card */
+  .shadcn-card > [class*="flex"][class*="flex-col"][class*="space-y-1.5"][class*="p-6"]:first-child {
+    border-bottom: 1px solid #ddd !important;
+    padding: 12px !important;
+    margin-bottom: 12px !important;
+  }
+  
+  /* Card titles - only within shadcn-card */
+  .shadcn-card [class*="text-2xl"][class*="font-semibold"][class*="tracking-tight"] {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #222 !important;
+    margin: 0 !important;
+  }
+  
+  /* Card content - target actual CardContent with p-6 pt-0 pattern */
+  .shadcn-card > [class*="p-6"][class*="pt-0"] {
+    padding: 12px !important;
+  }
+
+  /* Clean professional borders for tables */
+  table {
+    border: 1px solid #333 !important;
+    border-collapse: collapse !important;
+    width: 100% !important;
+    table-layout: auto !important;
+  }
+  
+  /* Table headers repeat on each page - CRITICAL for multi-page tables */
+  table thead {
+    display: table-header-group !important;
+    background: #f5f5f5 !important;
+  }
+  
+  table tbody {
+    display: table-row-group !important;
+  }
+  
+  table tfoot {
+    display: table-footer-group !important;
+  }
+  
+  table th,
+  table td {
+    border: 1px solid #ddd !important;
+    padding: 6px 8px !important;
+    font-size: 11px !important;
+  }
+  
+  /* Allow text wrapping in print mode for long descriptions */
+  table td {
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+  }
+  
+  /* Keep number columns nowrap for better readability */
+  table td.text-right,
+  table th.text-right {
+    white-space: nowrap !important;
+  }
+  
+  /* Ensure date columns don't wrap and have sufficient width */
+  table th:first-child,
+  table td:first-child {
+    min-width: 90px !important;
+    white-space: nowrap !important;
+  }
+
+  /* Page breaks */
+  .page-break {
+    page-break-after: always;
+  }
+
+  /* Optimize table printing - fit to page WIDTH */
+  table {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-collapse: collapse;
+    font-size: 8px !important;
+    table-layout: auto !important;
+    overflow: visible !important;
+  }
+
+  table th,
+  table td {
+    padding: 3px 4px !important;
+    border: 1px solid #ddd;
+    font-size: 8px !important;
+    line-height: 1.2;
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow: visible !important;
+    white-space: normal;
+    hyphens: auto;
+  }
+  
+  /* Auto-scale table if too wide - FIT TO PAGE */
+  table {
+    transform-origin: top left;
+  }
+  
+  @supports (zoom: 1) {
+    table {
+      zoom: 0.9;
+    }
+  }
+
+  table th {
+    font-weight: 600;
+    background: #f0f0f0 !important;
+  }
+
+  /* Professional typography for print */
+  body {
+    font-size: 10px !important;
+    line-height: 1.4 !important;
+  }
+
+  h1 { 
+    font-size: 16px !important; 
+    font-weight: 700 !important;
+    margin-bottom: 8px !important;
+  }
+  h2 { font-size: 14px !important; font-weight: 600 !important; }
+  h3 { font-size: 12px !important; font-weight: 600 !important; }
+  h4, h5, h6 { font-size: 11px !important; font-weight: 600 !important; }
+
+  .text-sm { font-size: 9px !important; }
+  .text-xs { font-size: 8px !important; }
+  .text-lg { font-size: 11px !important; }
+  .text-xl { font-size: 12px !important; }
+  .text-2xl { font-size: 14px !important; }
+
+  /* Compact spacing for professional look */
+  .space-y-6 > * + * { margin-top: 10px !important; }
+  .space-y-4 > * + * { margin-top: 8px !important; }
+  .space-y-2 > * + * { margin-top: 4px !important; }
+  .space-y-1 > * + * { margin-top: 2px !important; }
+
+  .gap-4 { gap: 6px !important; }
+  .gap-6 { gap: 8px !important; }
+  .gap-2 { gap: 4px !important; }
+  
+  /* Total summary section - professional styling - matches actual rendered classes */
+  .grid[class*="grid-cols-1"][class*="md:grid-cols-3"],
+  .grid[class*="grid-cols-3"] {
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+    padding: 8px !important;
+    background: #f9f9f9 !important;
+  }
+  
+  .grid[class*="grid-cols-1"][class*="md:grid-cols-3"] > div,
+  .grid[class*="grid-cols-3"] > div {
+    padding: 6px !important;
+  }
+
+  /* Badges compact */
+  .badge {
+    font-size: 8px !important;
+    padding: 2px 4px !important;
+  }
+
+  /* Smart page break management */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Prevent awkward breaks - keep related content together */
+  /* Allow tables and cards to break across pages naturally */
+  
+  /* Card headers should not be separated from content */
+  .shadcn-card > [class*="flex"][class*="flex-col"][class*="space-y-1.5"]:first-child {
+    page-break-after: avoid;
+  }
+  
+  /* CRITICAL: Table rows must never break/split internally */
+  tbody tr,
+  thead tr,
+  tfoot tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  
+  /* Ensure tbody has proper orphan/widow control for better page breaks */
+  tbody {
+    orphans: 2;
+    widows: 2;
+  }
+  
+  /* Grid items and summary totals can break across pages if needed */
+  /* Removed page-break-inside: avoid to allow natural page flow */
+  
+  /* Orphan and widow control */
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Landscape orientation for wide tables (optional - uncomment if needed) */
+  /* @page {
+    size: A4 landscape;
+  } */
+
+  /* Print view control */
+  .print-hidden {
+    display: block !important;
+  }
+  
+  /* Print view page container */
+  .print-page-container {
+    page-break-after: always !important;
+    width: 100% !important;
+  }
+  
+  /* Page break spacer - 10mm before each page except first */
+  .print-page-break {
+    height: 10mm !important;
+    page-break-before: always !important;
+  }
+  
+  /* Print table styling */
+  .print-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 11px !important;
+    page-break-inside: avoid !important;
+  }
+  
+  .print-table thead {
+    display: table-header-group !important;
+    page-break-inside: avoid !important;
+  }
+  
+  .print-th {
+    border: 1px solid #333 !important;
+    padding: 6px 4px !important;
+    text-align: left !important;
+    font-weight: bold !important;
+    background-color: #f0f0f0 !important;
+    font-size: 10px !important;
+  }
+  
+  .print-td {
+    border: 1px solid #ddd !important;
+    padding: 4px 6px !important;
+    font-size: 10px !important;
+  }
+  
+  /* Carryover row - "Bir Önceki Sayfadan Nakledilen Tutar" */
+  .print-carryover-row {
+    background-color: #fafafa !important;
+    page-break-inside: avoid !important;
+    border-top: 2px solid #000 !important;
+    border-bottom: 2px solid #000 !important;
+  }
+  
+  .print-carryover-row .print-td {
+    border: none !important;
+    padding: 6px 8px !important;
+    border-top: 2px solid #000 !important;
+    border-bottom: 2px solid #000 !important;
+    font-size: 11px !important;
+  }
+  
+  /* Table rows */
+  .print-table-row {
+    page-break-inside: avoid !important;
+  }
+  
+  /* Page summary row */
+  .print-page-summary {
+    background-color: #f5f5f5 !important;
+    page-break-inside: avoid !important;
+    border-top: 2px solid #333 !important;
+    border-bottom: 2px solid #333 !important;
+  }
+  
+  .print-page-summary .print-td {
+    border: none !important;
+    padding: 6px 8px !important;
+    border-top: 2px solid #333 !important;
+    border-bottom: 2px solid #333 !important;
+    font-weight: bold !important;
+    font-size: 11px !important;
+  }
+
+  /* Hakediş Date Info - FULL WIDTH HORIZONTAL - PRINT MODE ONLY */
+  .print-header-wrapper .hakedis-date-info-wrapper,
+  .hakedis-date-info-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  .print-header-wrapper .hakedis-date-row,
+  .hakedis-date-row {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    display: block !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    word-break: normal !important;
+    padding: 10px 0 !important;
+    margin: 0 0 8px 0 !important;
+    border-bottom: 2px solid #000 !important;
+    min-height: 32px !important;
+    line-height: 1.8 !important;
+    font-size: 12px !important;
+    text-align: left !important;
+    box-sizing: border-box !important;
+  }
+  
+  .print-header-wrapper .hakedis-date-row strong,
+  .hakedis-date-row strong {
+    display: inline !important;
+    white-space: nowrap !important;
+    margin-right: 12px !important;
+    font-weight: 700 !important;
+  }
+  
+  .print-header-wrapper .hakedis-date-row:last-child,
+  .hakedis-date-row:last-child {
+    margin-bottom: 0 !important;
+    border-bottom: 1px solid #000 !important;
+  }
 }
