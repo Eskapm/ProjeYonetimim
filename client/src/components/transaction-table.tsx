@@ -56,7 +56,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
       return sum + amount;
     }, 0);
 
-  // Calculate cumulative total up to specific index (for carryover rows)
+  // Calculate cumulative total up to specific index
   const getCumulativeTotal = (upToIndex: number) => {
     let total = 0;
     for (let i = 0; i < upToIndex; i++) {
@@ -67,26 +67,52 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
     return total;
   };
 
-  // Calculate totals for all remaining transactions
-  const getIncomeTotals = () => {
-    let totalInc = 0;
-    transactions.forEach(t => {
-      if (t.type === "Gelir") {
-        totalInc += parseFloat(t.amount);
+  // Calculate totals for a range
+  const getRangeTotals = (startIndex: number, endIndex: number) => {
+    let income = 0;
+    let expense = 0;
+    for (let i = startIndex; i < endIndex; i++) {
+      if (transactions[i]) {
+        const amount = parseFloat(transactions[i].amount);
+        if (transactions[i].type === "Gelir") {
+          income += amount;
+        } else {
+          expense += amount;
+        }
       }
-    });
-    return totalInc;
+    }
+    return { income, expense };
   };
 
-  const getTotalExpense = () => {
-    let totalExp = 0;
-    transactions.forEach(t => {
-      if (t.type === "Gider") {
-        totalExp += parseFloat(t.amount);
-      }
-    });
-    return totalExp;
+  // Excel-like pagination: First page 19 rows, subsequent pages 30 rows
+  const FIRST_PAGE_ROWS = 19;
+  const SUBSEQUENT_PAGE_ROWS = 30;
+
+  const buildPages = () => {
+    const pages: Array<{ startIndex: number; endIndex: number; pageNumber: number }> = [];
+    let currentIndex = 0;
+    let pageNum = 1;
+
+    // First page
+    if (transactions.length > 0) {
+      const firstPageEnd = Math.min(FIRST_PAGE_ROWS, transactions.length);
+      pages.push({ startIndex: 0, endIndex: firstPageEnd, pageNumber: pageNum });
+      currentIndex = firstPageEnd;
+      pageNum++;
+    }
+
+    // Subsequent pages
+    while (currentIndex < transactions.length) {
+      const pageEnd = Math.min(currentIndex + SUBSEQUENT_PAGE_ROWS, transactions.length);
+      pages.push({ startIndex: currentIndex, endIndex: pageEnd, pageNumber: pageNum });
+      currentIndex = pageEnd;
+      pageNum++;
+    }
+
+    return pages;
   };
+
+  const pages = buildPages();
 
   return (
     <div className="space-y-4">
@@ -173,48 +199,77 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
         </Table>
       </div>
 
-      {/* PRINT VIEW - Simple table, let browser handle page breaks automatically */}
+      {/* PRINT VIEW - Excel-like manual page breaks */}
       <div className="hidden print:block print-view">
         {transactions.length === 0 ? (
           <div className="text-center py-8">Henüz işlem kaydı bulunmamaktadır</div>
         ) : (
-          <table className="print-table-main">
-            <thead>
-              <tr className="print-table-header-row">
-                <th className="print-th">Sıra No</th>
-                <th className="print-th">Tarih</th>
-                <th className="print-th">Proje</th>
-                <th className="print-th">Tür</th>
-                <th className="print-th">İş Grubu</th>
-                <th className="print-th">Rayiç Grubu</th>
-                <th className="print-th">Açıklama</th>
-                <th className="print-th">Hakedişe Dahil</th>
-                <th className="print-th">Tutar</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map((transaction, index) => (
-                <tr key={transaction.id} className="print-table-data-row">
-                  <td className="print-td">{index + 1}</td>
-                  <td className="print-td">{formatDate(transaction.date)}</td>
-                  <td className="print-td">{transaction.projectName}</td>
-                  <td className="print-td">{transaction.type}</td>
-                  <td className="print-td">{transaction.isGrubu}</td>
-                  <td className="print-td">{transaction.rayicGrubu}</td>
-                  <td className="print-td">{transaction.description || '-'}</td>
-                  <td className="print-td text-center">{transaction.progressPaymentId ? '✓' : ''}</td>
-                  <td className="print-td text-right">{formatCurrency(transaction.amount)}</td>
-                </tr>
-              ))}
-              
-              {/* Final totals row */}
-              <tr className="print-table-total-row">
-                <td colSpan={7} className="print-td text-right font-bold">Toplam:</td>
-                <td className="print-td"></td>
-                <td className="print-td text-right font-bold">{formatCurrency(totalIncome - totalExpense)}</td>
-              </tr>
-            </tbody>
-          </table>
+          <>
+            {pages.map((page, pageIndex) => {
+              const pageTransactions = transactions.slice(page.startIndex, page.endIndex);
+              const cumulativeTotal = getCumulativeTotal(page.startIndex);
+              const pageTotals = getRangeTotals(page.startIndex, page.endIndex);
+              const pageTotal = pageTotals.income - pageTotals.expense;
+
+              return (
+                <div key={`page-${pageIndex}`} className="print-page">
+                  <table className="print-table-main">
+                    <thead>
+                      <tr className="print-table-header-row">
+                        <th className="print-th">Sıra No</th>
+                        <th className="print-th">Tarih</th>
+                        <th className="print-th">Proje</th>
+                        <th className="print-th">Tür</th>
+                        <th className="print-th">İş Grubu</th>
+                        <th className="print-th">Rayiç Grubu</th>
+                        <th className="print-th">Açıklama</th>
+                        <th className="print-th">Hakedişe Dahil</th>
+                        <th className="print-th">Tutar</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* Carryover row for page 2+ */}
+                      {pageIndex > 0 && (
+                        <tr className="print-carryover-row">
+                          <td colSpan={7} className="print-td text-right font-bold">
+                            Bir Önceki Sayfadan Nakledilen Tutar:
+                          </td>
+                          <td className="print-td"></td>
+                          <td className="print-td text-right font-bold">{formatCurrency(cumulativeTotal)}</td>
+                        </tr>
+                      )}
+
+                      {/* Data rows */}
+                      {pageTransactions.map((transaction, transIndex) => (
+                        <tr key={transaction.id} className="print-table-data-row">
+                          <td className="print-td text-center">{page.startIndex + transIndex + 1}</td>
+                          <td className="print-td">{formatDate(transaction.date)}</td>
+                          <td className="print-td">{transaction.projectName}</td>
+                          <td className="print-td">{transaction.type}</td>
+                          <td className="print-td">{transaction.isGrubu}</td>
+                          <td className="print-td">{transaction.rayicGrubu}</td>
+                          <td className="print-td">{transaction.description || '-'}</td>
+                          <td className="print-td text-center">{transaction.progressPaymentId ? '✓' : ''}</td>
+                          <td className="print-td text-right">{formatCurrency(transaction.amount)}</td>
+                        </tr>
+                      ))}
+
+                      {/* Page total row */}
+                      <tr className="print-page-total-row">
+                        <td colSpan={7} className="print-td text-right font-bold">
+                          Sayfa Toplamı:
+                        </td>
+                        <td className="print-td"></td>
+                        <td className="print-td text-right font-bold">{formatCurrency(pageTotal)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  {/* Manual page break (except last page) */}
+                  {pageIndex < pages.length - 1 && <div className="print-page-break"></div>}
+                </div>
+              );
+            })}
+          </>
         )}
       </div>
 
