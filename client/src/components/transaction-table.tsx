@@ -106,6 +106,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[60px] min-w-[60px] text-center">Sıra No</TableHead>
               <TableHead className="w-[110px] min-w-[110px]">Tarih</TableHead>
               <TableHead>Proje</TableHead>
               <TableHead>Tür</TableHead>
@@ -120,13 +121,14 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
           <TableBody>
             {transactions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
                   Henüz işlem kaydı bulunmamaktadır
                 </TableCell>
               </TableRow>
             ) : (
-              transactions.map((transaction) => (
+              transactions.map((transaction, index) => (
                 <TableRow key={transaction.id} data-testid={`row-transaction-${transaction.id}`}>
+                  <TableCell className="text-center font-medium text-sm">{index + 1}</TableCell>
                   <TableCell className="font-medium whitespace-nowrap">{formatDate(transaction.date)}</TableCell>
                   <TableCell>{transaction.projectName}</TableCell>
                   <TableCell>
@@ -187,6 +189,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
         <Table className="print-table">
           <TableHeader className="print-table-header">
             <TableRow>
+              <TableHead className="w-[50px] min-w-[50px] text-center text-xs p-2">Sıra No</TableHead>
               <TableHead className="w-[110px] min-w-[110px] text-xs p-2">Tarih</TableHead>
               <TableHead className="text-xs p-2">Proje</TableHead>
               <TableHead className="text-xs p-2">Tür</TableHead>
@@ -201,7 +204,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
           <TableBody>
             {transactions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
                   Henüz işlem kaydı bulunmamaktadır
                 </TableCell>
               </TableRow>
@@ -211,19 +214,21 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                   const cumulativeTotal = getCumulativeTotal(pageIndex);
                   const pageTotals = getPageTotals(pageTransactions);
                   const isFirstPage = pageIndex === 0;
+                  const firstRowIndex = pageIndex * ROWS_PER_PAGE;
                   
                   return (
                     <Fragment key={`print-page-${pageIndex}`}>
                       {/* Page break - 3cm spacing before each page except first */}
                       {!isFirstPage && (
                         <TableRow className="print-page-break-row">
-                          <TableCell colSpan={9} className="p-0 border-none" style={{ height: '30mm' }}></TableCell>
+                          <TableCell colSpan={10} className="p-0 border-none" style={{ height: '30mm' }}></TableCell>
                         </TableRow>
                       )}
 
                       {/* Carryover row - "Bir Önceki Sayfadan Nakledilen Tutar" */}
                       {!isFirstPage && (
                         <TableRow className="print-carryover-row">
+                          <TableCell className="text-center text-xs p-1 border-b-2 border-black"></TableCell>
                           <TableCell colSpan={7} className="text-right pr-2 p-1 text-xs font-bold border-b-2 border-black">
                             Bir Önceki Sayfadan Nakledilen Tutar:
                           </TableCell>
@@ -235,12 +240,15 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                       )}
 
                       {/* Page transactions */}
-                      {pageTransactions.map((transaction) => (
+                      {pageTransactions.map((transaction, transIndex) => (
                         <TableRow 
                           key={`print-trans-${transaction.id}`}
                           className="print-table-row"
                           data-testid={`row-transaction-${transaction.id}`}
                         >
+                          <TableCell className="text-center font-medium text-xs p-1">
+                            {firstRowIndex + transIndex + 1}
+                          </TableCell>
                           <TableCell className="font-medium whitespace-nowrap text-xs p-1">
                             {formatDate(transaction.date)}
                           </TableCell>
@@ -265,6 +273,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
 
                       {/* Page summary row */}
                       <TableRow className="print-page-summary-row">
+                        <TableCell className="text-center text-xs p-1 border-t-2 border-black"></TableCell>
                         <TableCell colSpan={7} className="text-right pr-2 p-1 text-xs font-bold border-t-2 border-black">
                           Sayfa Toplamı:
                         </TableCell>
