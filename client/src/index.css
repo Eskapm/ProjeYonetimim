@@ -702,15 +702,24 @@
     display: block !important;
   }
   
-  /* Print table styling */
-  .print-view-wrapper {
+  /* Print view page container */
+  .print-page-container {
+    page-break-after: always !important;
     width: 100% !important;
   }
   
+  /* Page break spacer - 10mm before each page except first */
+  .print-page-break {
+    height: 10mm !important;
+    page-break-before: always !important;
+  }
+  
+  /* Print table styling */
   .print-table {
     width: 100% !important;
     border-collapse: collapse !important;
     font-size: 11px !important;
+    page-break-inside: avoid !important;
   }
   
   .print-table thead {
@@ -718,47 +727,56 @@
     page-break-inside: avoid !important;
   }
   
-  .print-table-row {
-    page-break-inside: avoid !important;
+  .print-th {
+    border: 1px solid #333 !important;
+    padding: 6px 4px !important;
+    text-align: left !important;
+    font-weight: bold !important;
+    background-color: #f0f0f0 !important;
+    font-size: 10px !important;
   }
   
-  .print-table-row td {
+  .print-td {
     border: 1px solid #ddd !important;
     padding: 4px 6px !important;
-  }
-  
-  /* Page break row - 10mm spacing */
-  .print-page-break-row {
-    page-break-before: always !important;
-    page-break-inside: avoid !important;
-  }
-  
-  .print-page-break-row td {
-    border: none !important;
-    padding: 0 !important;
-    height: 10mm !important;
+    font-size: 10px !important;
   }
   
   /* Carryover row - "Bir Önceki Sayfadan Nakledilen Tutar" */
   .print-carryover-row {
     background-color: #fafafa !important;
     page-break-inside: avoid !important;
+    border-top: 2px solid #000 !important;
+    border-bottom: 2px solid #000 !important;
   }
   
-  .print-carryover-row td {
+  .print-carryover-row .print-td {
+    border: none !important;
     padding: 6px 8px !important;
+    border-top: 2px solid #000 !important;
+    border-bottom: 2px solid #000 !important;
     font-size: 11px !important;
   }
   
-  /* Page summary row */
-  .print-page-summary-row {
-    background-color: #f5f5f5 !important;
+  /* Table rows */
+  .print-table-row {
     page-break-inside: avoid !important;
-    font-weight: bold !important;
   }
   
-  .print-page-summary-row td {
+  /* Page summary row */
+  .print-page-summary {
+    background-color: #f5f5f5 !important;
+    page-break-inside: avoid !important;
+    border-top: 2px solid #333 !important;
+    border-bottom: 2px solid #333 !important;
+  }
+  
+  .print-page-summary .print-td {
+    border: none !important;
     padding: 6px 8px !important;
+    border-top: 2px solid #333 !important;
+    border-bottom: 2px solid #333 !important;
+    font-weight: bold !important;
     font-size: 11px !important;
   }
 

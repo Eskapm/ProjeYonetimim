@@ -1,4 +1,3 @@
-import { Fragment, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -43,11 +42,6 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
     });
   };
 
-  // Dynamic page break calculation - A4 height: 297mm
-  // Header area: ~140mm, Table header: ~10mm, Carryover row: ~8mm
-  // Remaining: ~139mm. Each row: ~8mm. Rows per page: ~9
-  const ROWS_PER_PAGE = 9;
-
   const totalIncome = transactions
     .filter(t => t.type === "Gelir")
     .reduce((sum, t) => {
@@ -62,46 +56,37 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
       return sum + amount;
     }, 0);
 
-  // Group transactions by pages for printing
-  const pages = useMemo(() => {
-    if (transactions.length === 0) return [];
-    
-    const result = [];
-    for (let i = 0; i < transactions.length; i += ROWS_PER_PAGE) {
-      result.push(transactions.slice(i, i + ROWS_PER_PAGE));
-    }
-    return result;
-  }, [transactions]);
-
-  // Helper function to calculate page totals
-  const getPageTotals = (transactionsInPage: TransactionWithProject[]) => {
-    const income = transactionsInPage
-      .filter(t => t.type === "Gelir")
-      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-    
-    const expense = transactionsInPage
-      .filter(t => t.type === "Gider")
-      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-    
-    return { income, expense };
-  };
-
-  // Helper function to calculate cumulative total up to specific page
-  const getCumulativeTotal = (pageIndex: number) => {
+  // Helper function to calculate cumulative total up to specific index
+  const getCumulativeTotal = (upToIndex: number) => {
     let total = 0;
-    for (let i = 0; i < pageIndex; i++) {
-      const pageTransactions = pages[i] || [];
-      pageTransactions.forEach(t => {
-        const amount = parseFloat(t.amount);
-        total += t.type === "Gelir" ? amount : -amount;
-      });
+    for (let i = 0; i < upToIndex; i++) {
+      const t = transactions[i];
+      const amount = parseFloat(t.amount);
+      total += t.type === "Gelir" ? amount : -amount;
     }
     return total;
   };
 
+  // Helper function to calculate totals for a range of transactions
+  const getRangeTotals = (startIndex: number, endIndex: number) => {
+    let income = 0;
+    let expense = 0;
+    for (let i = startIndex; i < endIndex; i++) {
+      if (transactions[i]) {
+        const amount = parseFloat(transactions[i].amount);
+        if (transactions[i].type === "Gelir") {
+          income += amount;
+        } else {
+          expense += amount;
+        }
+      }
+    }
+    return { income, expense };
+  };
+
   return (
     <div className="space-y-4">
-      {/* SCREEN VIEW - Normal table for viewing on screen */}
+      {/* SCREEN VIEW */}
       <div className="rounded-md border overflow-x-auto print-hidden">
         <Table>
           <TableHeader>
@@ -184,114 +169,83 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
         </Table>
       </div>
 
-      {/* PRINT VIEW - Paginated table for printing */}
-      <div className="hidden print:block print-view-wrapper">
-        <Table className="print-table">
-          <TableHeader className="print-table-header">
-            <TableRow>
-              <TableHead className="w-[50px] min-w-[50px] text-center text-xs p-2">Sıra No</TableHead>
-              <TableHead className="w-[110px] min-w-[110px] text-xs p-2">Tarih</TableHead>
-              <TableHead className="text-xs p-2">Proje</TableHead>
-              <TableHead className="text-xs p-2">Tür</TableHead>
-              <TableHead className="text-xs p-2">İş Grubu</TableHead>
-              <TableHead className="text-xs p-2">Rayiç Grubu</TableHead>
-              <TableHead className="text-xs p-2">Açıklama</TableHead>
-              <TableHead className="text-center text-xs p-2">Hakedişe Dahil</TableHead>
-              <TableHead className="text-right text-xs p-2">Tutar</TableHead>
-              <TableHead className="text-right text-xs p-2"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {transactions.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
-                  Henüz işlem kaydı bulunmamaktadır
-                </TableCell>
-              </TableRow>
-            ) : (
-              <>
-                {pages.map((pageTransactions, pageIndex) => {
-                  const cumulativeTotal = getCumulativeTotal(pageIndex);
-                  const pageTotals = getPageTotals(pageTransactions);
-                  const isFirstPage = pageIndex === 0;
-                  const firstRowIndex = pageIndex * ROWS_PER_PAGE;
+      {/* PRINT VIEW - Simple pagination with 9 rows per page */}
+      <div className="hidden print:block print-view">
+        {transactions.length === 0 ? (
+          <div className="text-center py-8">Henüz işlem kaydı bulunmamaktadır</div>
+        ) : (
+          <>
+            {Array.from({ length: Math.ceil(transactions.length / 9) }).map((_, pageIndex) => {
+              const pageStart = pageIndex * 9;
+              const pageEnd = Math.min(pageStart + 9, transactions.length);
+              const pageTransactions = transactions.slice(pageStart, pageEnd);
+              const cumulativeTotal = getCumulativeTotal(pageStart);
+              const pageTotals = getRangeTotals(pageStart, pageEnd);
+              const pageTotal = pageTotals.income - pageTotals.expense;
+              
+              return (
+                <div key={`page-${pageIndex}`} className="print-page-container">
+                  {pageIndex > 0 && <div className="print-page-break"></div>}
                   
-                  return (
-                    <Fragment key={`print-page-${pageIndex}`}>
-                      {/* Page break - 10mm spacing before each page except first */}
-                      {!isFirstPage && (
-                        <TableRow className="print-page-break-row">
-                          <TableCell colSpan={10} className="p-0 border-none" style={{ height: '10mm' }}></TableCell>
-                        </TableRow>
-                      )}
-
-                      {/* Carryover row - "Bir Önceki Sayfadan Nakledilen Tutar" */}
-                      {!isFirstPage && (
-                        <TableRow className="print-carryover-row">
-                          <TableCell className="text-center text-xs p-1 border-b-2 border-black"></TableCell>
-                          <TableCell colSpan={7} className="text-right pr-2 p-1 text-xs font-bold border-b-2 border-black">
+                  <table className="print-table">
+                    <thead className="print-table-head">
+                      <tr>
+                        <th className="print-th">Sıra No</th>
+                        <th className="print-th">Tarih</th>
+                        <th className="print-th">Proje</th>
+                        <th className="print-th">Tür</th>
+                        <th className="print-th">İş Grubu</th>
+                        <th className="print-th">Rayiç Grubu</th>
+                        <th className="print-th">Açıklama</th>
+                        <th className="print-th">Hakedişe Dahil</th>
+                        <th className="print-th">Tutar</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* Carryover row for page 2+ */}
+                      {pageIndex > 0 && (
+                        <tr className="print-carryover-row">
+                          <td className="print-td"></td>
+                          <td colSpan={7} className="print-td text-right font-bold">
                             Bir Önceki Sayfadan Nakledilen Tutar:
-                          </TableCell>
-                          <TableCell className="text-right font-mono font-bold p-1 text-xs border-b-2 border-black">
-                            {formatCurrency(cumulativeTotal)}
-                          </TableCell>
-                          <TableCell className="border-b-2 border-black"></TableCell>
-                        </TableRow>
+                          </td>
+                          <td className="print-td text-right font-bold">{formatCurrency(cumulativeTotal)}</td>
+                        </tr>
                       )}
-
-                      {/* Page transactions */}
+                      
+                      {/* Transaction rows */}
                       {pageTransactions.map((transaction, transIndex) => (
-                        <TableRow 
-                          key={`print-trans-${transaction.id}`}
-                          className="print-table-row"
-                          data-testid={`row-transaction-${transaction.id}`}
-                        >
-                          <TableCell className="text-center font-medium text-xs p-1">
-                            {firstRowIndex + transIndex + 1}
-                          </TableCell>
-                          <TableCell className="font-medium whitespace-nowrap text-xs p-1">
-                            {formatDate(transaction.date)}
-                          </TableCell>
-                          <TableCell className="text-xs p-1">{transaction.projectName}</TableCell>
-                          <TableCell className="text-xs p-1">
-                            {transaction.type}
-                          </TableCell>
-                          <TableCell className="text-xs p-1">{transaction.isGrubu}</TableCell>
-                          <TableCell className="text-xs p-1">{transaction.rayicGrubu}</TableCell>
-                          <TableCell className="text-xs p-1 max-w-[150px] truncate">
-                            {transaction.description || '-'}
-                          </TableCell>
-                          <TableCell className="text-center text-xs p-1">
-                            {transaction.progressPaymentId ? "✓" : ""}
-                          </TableCell>
-                          <TableCell className="text-right font-mono font-semibold text-xs p-1">
-                            {formatCurrency(transaction.amount)}
-                          </TableCell>
-                          <TableCell className="text-xs p-1"></TableCell>
-                        </TableRow>
+                        <tr key={transaction.id} className="print-table-row">
+                          <td className="print-td text-center">{pageStart + transIndex + 1}</td>
+                          <td className="print-td">{formatDate(transaction.date)}</td>
+                          <td className="print-td">{transaction.projectName}</td>
+                          <td className="print-td">{transaction.type}</td>
+                          <td className="print-td">{transaction.isGrubu}</td>
+                          <td className="print-td">{transaction.rayicGrubu}</td>
+                          <td className="print-td">{transaction.description || '-'}</td>
+                          <td className="print-td text-center">{transaction.progressPaymentId ? '✓' : ''}</td>
+                          <td className="print-td text-right">{formatCurrency(transaction.amount)}</td>
+                        </tr>
                       ))}
-
-                      {/* Page summary row */}
-                      <TableRow className="print-page-summary-row">
-                        <TableCell className="text-center text-xs p-1 border-t-2 border-black"></TableCell>
-                        <TableCell colSpan={7} className="text-right pr-2 p-1 text-xs font-bold border-t-2 border-black">
+                      
+                      {/* Page total row */}
+                      <tr className="print-page-summary">
+                        <td className="print-td"></td>
+                        <td colSpan={7} className="print-td text-right font-bold">
                           Sayfa Toplamı:
-                        </TableCell>
-                        <TableCell className="text-right font-mono font-bold p-1 text-xs border-t-2 border-black">
-                          {formatCurrency(pageTotals.income - pageTotals.expense)}
-                        </TableCell>
-                        <TableCell className="border-t-2 border-black"></TableCell>
-                      </TableRow>
-                    </Fragment>
-                  );
-                })}
-              </>
-            )}
-          </TableBody>
-        </Table>
+                        </td>
+                        <td className="print-td text-right font-bold">{formatCurrency(pageTotal)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })}
+          </>
+        )}
       </div>
 
-      {/* Summary cards - screen only */}
+      {/* Summary cards */}
       {transactions.length > 0 && (
         <div className="flex justify-end gap-8 p-4 bg-muted/50 rounded-md print-hidden">
           <div className="text-right">
