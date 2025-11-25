@@ -113,7 +113,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
               <TableHead>Rayiç Grubu</TableHead>
               <TableHead>Açıklama</TableHead>
               <TableHead className="text-center">Hakedişe Dahil</TableHead>
-              <TableHead className="text-right w-[140px] min-w-[140px]">Tutar</TableHead>
+              <TableHead className="text-right w-[200px] min-w-[200px]">Tutar</TableHead>
               <TableHead className="text-right">İşlemler</TableHead>
             </TableRow>
           </TableHeader>
