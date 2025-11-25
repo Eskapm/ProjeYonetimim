@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -43,6 +43,11 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
     });
   };
 
+  // Dynamic page break calculation
+  // A4 height: 297mm, Header area: ~140mm, Table header: ~10mm
+  // Remaining: ~147mm. Each row: ~8mm. Rows per page: ~18
+  const ROWS_PER_PAGE = 18;
+
   const totalIncome = transactions
     .filter(t => t.type === "Gelir")
     .reduce((sum, t) => {
@@ -56,6 +61,43 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
       const amount = typeof t.amount === 'string' ? parseFloat(t.amount) : t.amount;
       return sum + amount;
     }, 0);
+
+  // Group transactions by pages for printing
+  const pages = useMemo(() => {
+    if (transactions.length === 0) return [];
+    
+    const result = [];
+    for (let i = 0; i < transactions.length; i += ROWS_PER_PAGE) {
+      result.push(transactions.slice(i, i + ROWS_PER_PAGE));
+    }
+    return result;
+  }, [transactions]);
+
+  // Helper function to calculate page totals
+  const getPageTotals = (transactionsInPage: TransactionWithProject[]) => {
+    const income = transactionsInPage
+      .filter(t => t.type === "Gelir")
+      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+    
+    const expense = transactionsInPage
+      .filter(t => t.type === "Gider")
+      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+    
+    return { income, expense };
+  };
+
+  // Helper function to calculate cumulative total up to specific page
+  const getCumulativeTotal = (pageIndex: number) => {
+    let total = 0;
+    for (let i = 0; i < pageIndex; i++) {
+      const pageTransactions = pages[i] || [];
+      pageTransactions.forEach(t => {
+        const amount = parseFloat(t.amount);
+        total += t.type === "Gelir" ? amount : -amount;
+      });
+    }
+    return total;
+  };
 
   return (
     <div className="space-y-4">
@@ -82,14 +124,14 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                 </TableCell>
               </TableRow>
             ) : (
-              transactions.map((transaction, index) => (
-                <Fragment key={transaction.id}>
-                  {index === 9 && (
-                    <TableRow className="page-break-spacer print-only">
-                      <TableCell colSpan={9} className="h-0 p-0 border-none"></TableCell>
-                    </TableRow>
-                  )}
-                  <TableRow data-testid={`row-transaction-${transaction.id}`}>
+              <>
+                {/* Screen view - all transactions (visible only on screen) */}
+                {transactions.map((transaction) => (
+                  <TableRow 
+                    key={transaction.id} 
+                    data-testid={`row-transaction-${transaction.id}`}
+                    className="print-hidden"
+                  >
                     <TableCell className="font-medium whitespace-nowrap">{formatDate(transaction.date)}</TableCell>
                     <TableCell>{transaction.projectName}</TableCell>
                     <TableCell>
@@ -139,8 +181,84 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                       </div>
                     </TableCell>
                   </TableRow>
-                </Fragment>
-              ))
+                ))}
+
+                {/* Print view - paginated (visible only on print) */}
+                {pages.map((pageTransactions, pageIndex) => {
+                  const cumulativeTotal = getCumulativeTotal(pageIndex);
+                  const pageTotals = getPageTotals(pageTransactions);
+                  
+                  return (
+                    <Fragment key={`page-${pageIndex}`}>
+                      {/* Page break before each page except first */}
+                      {pageIndex > 0 && (
+                        <TableRow className="print-only print-page-break">
+                          <TableCell colSpan={9} className="p-0 h-[3cm] border-none"></TableCell>
+                        </TableRow>
+                      )}
+
+                      {/* "Bir Önceki Sayfadan Nakledilen Tutar" row for pages 2+ */}
+                      {pageIndex > 0 && (
+                        <TableRow className="print-only print-carryover-row">
+                          <TableCell colSpan={7} className="font-bold text-right pr-4">
+                            Bir Önceki Sayfadan Nakledilen Tutar:
+                          </TableCell>
+                          <TableCell className="text-right font-mono font-bold">
+                            {formatCurrency(cumulativeTotal)}
+                          </TableCell>
+                          <TableCell></TableCell>
+                        </TableRow>
+                      )}
+
+                      {/* Page transactions */}
+                      {pageTransactions.map((transaction) => (
+                        <TableRow 
+                          key={`print-${transaction.id}`}
+                          data-testid={`row-transaction-${transaction.id}`}
+                          className="print-only"
+                        >
+                          <TableCell className="font-medium whitespace-nowrap">{formatDate(transaction.date)}</TableCell>
+                          <TableCell>{transaction.projectName}</TableCell>
+                          <TableCell>
+                            <Badge
+                              className={
+                                transaction.type === "Gelir"
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                  : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                              }
+                            >
+                              {transaction.type}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm">{transaction.isGrubu}</TableCell>
+                          <TableCell className="text-sm">{transaction.rayicGrubu}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                            {transaction.description || '-'}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {transaction.progressPaymentId ? "✓" : ""}
+                          </TableCell>
+                          <TableCell className="text-right font-mono font-semibold">
+                            {formatCurrency(transaction.amount)}
+                          </TableCell>
+                          <TableCell></TableCell>
+                        </TableRow>
+                      ))}
+
+                      {/* Page summary row */}
+                      <TableRow className="print-only print-page-summary">
+                        <TableCell colSpan={7} className="text-right font-bold pr-4">
+                          Sayfa Toplamı:
+                        </TableCell>
+                        <TableCell className="text-right font-mono font-bold">
+                          {formatCurrency(pageTotals.income - pageTotals.expense)}
+                        </TableCell>
+                        <TableCell></TableCell>
+                      </TableRow>
+                    </Fragment>
+                  );
+                })}
+              </>
             )}
           </TableBody>
         </Table>

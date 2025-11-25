@@ -697,17 +697,54 @@
     size: A4 landscape;
   } */
 
-  /* Custom page break spacer for transaction table (9th row break with 3cm top margin on page 2) */
-  .page-break-spacer {
+  /* Print view control */
+  .print-hidden {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: table-row !important;
+  }
+  
+  /* Dynamic page break with 3cm top margin */
+  .print-page-break {
     page-break-before: always !important;
     height: 3cm !important;
     display: table-row !important;
   }
   
-  .page-break-spacer td {
+  .print-page-break td {
     border: none !important;
     padding: 0 !important;
     height: 3cm !important;
+  }
+  
+  /* Carryover row - "Bir Önceki Sayfadan Nakledilen Tutar" */
+  .print-carryover-row {
+    background-color: #f0f0f0 !important;
+    font-weight: bold !important;
+    border-top: 2px solid #000 !important;
+    border-bottom: 2px solid #000 !important;
+    page-break-inside: avoid !important;
+  }
+  
+  .print-carryover-row td {
+    padding: 8px 12px !important;
+    border: none !important;
+  }
+  
+  /* Page summary row */
+  .print-page-summary {
+    background-color: #f9f9f9 !important;
+    font-weight: bold !important;
+    border-top: 2px solid #333 !important;
+    border-bottom: 2px solid #333 !important;
+    page-break-inside: avoid !important;
+  }
+  
+  .print-page-summary td {
+    padding: 8px 12px !important;
+    border: none !important;
   }
 
   /* Hakediş Date Info - FULL WIDTH HORIZONTAL - PRINT MODE ONLY */
