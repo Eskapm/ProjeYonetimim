@@ -101,8 +101,8 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border overflow-x-auto">
-        <Table>
+      <div className="rounded-md border overflow-x-auto w-full">
+        <Table className="w-full">
           <TableHeader>
             <TableRow>
               <TableHead className="w-[110px] min-w-[110px]">Tarih</TableHead>
