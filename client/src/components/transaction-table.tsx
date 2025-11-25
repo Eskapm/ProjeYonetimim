@@ -43,9 +43,11 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
     });
   };
 
-  // Dynamic page break calculation
-  // A4 height: 297mm, Header area: ~140mm, Table header: ~10mm
-  // Remaining: ~147mm. Each row: ~8mm. Rows per page: ~18
+  // Dynamic page break calculation - optimized for first page vs subsequent pages
+  // A4 height: 297mm
+  // First page: Header area with company info (~100mm), Table header (~10mm) = ~110mm remaining = ~13 rows
+  // Subsequent pages: Just table header (~10mm), no company header = ~287mm remaining = ~18 rows
+  const ROWS_FIRST_PAGE = 13;
   const ROWS_PER_PAGE = 18;
 
   const totalIncome = transactions
@@ -62,14 +64,25 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
       return sum + amount;
     }, 0);
 
-  // Group transactions by pages for printing
+  // Group transactions by pages for printing - different row counts for first and subsequent pages
   const pages = useMemo(() => {
     if (transactions.length === 0) return [];
     
     const result = [];
-    for (let i = 0; i < transactions.length; i += ROWS_PER_PAGE) {
-      result.push(transactions.slice(i, i + ROWS_PER_PAGE));
+    let index = 0;
+    
+    // First page with reduced rows
+    if (transactions.length > 0) {
+      result.push(transactions.slice(0, ROWS_FIRST_PAGE));
+      index = ROWS_FIRST_PAGE;
     }
+    
+    // Subsequent pages with full rows
+    while (index < transactions.length) {
+      result.push(transactions.slice(index, index + ROWS_PER_PAGE));
+      index += ROWS_PER_PAGE;
+    }
+    
     return result;
   }, [transactions]);
 
@@ -189,8 +202,13 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                 {pages.map((pageTransactions, pageIndex) => {
                   const cumulativeTotal = getCumulativeTotal(pageIndex);
                   const pageTotals = getPageTotals(pageTransactions);
-                  // Calculate starting row number for this page
-                  const startRowNumber = pageIndex * ROWS_PER_PAGE + 1;
+                  // Calculate starting row number for this page - account for different first page size
+                  let startRowNumber = 1;
+                  if (pageIndex === 0) {
+                    startRowNumber = 1;
+                  } else {
+                    startRowNumber = ROWS_FIRST_PAGE + 1 + ((pageIndex - 1) * ROWS_PER_PAGE);
+                  }
                   
                   return (
                     <Fragment key={`page-${pageIndex}`}>
