@@ -32,44 +32,6 @@ interface TransactionTableProps {
   onDelete?: (id: string) => void;
 }
 
-// Print configuration - Mathematical calculations for page breaks
-interface PrintPageConfig {
-  pageHeightMm: number;
-  headerHeightMm: number;
-  rowHeightMm: number;
-  bottomMarginMm: number;
-  topMarginSubsequentMm: number;
-  carryoverRowHeightMm: number;
-}
-
-const PRINT_CONFIG: PrintPageConfig = {
-  pageHeightMm: 297, // A4 standard
-  headerHeightMm: 140, // PrintHeader + title area
-  rowHeightMm: 8, // Table row height in print
-  bottomMarginMm: 20, // Bottom spacing
-  topMarginSubsequentMm: 10, // Top spacing for subsequent pages
-  carryoverRowHeightMm: 8, // "Bir Önceki Sayfadan" row
-};
-
-// Calculate rows that fit on first page (with header)
-const calculateFirstPageRows = (config: PrintPageConfig): number => {
-  const availableHeight = config.pageHeightMm - config.headerHeightMm - config.bottomMarginMm;
-  return Math.floor(availableHeight / config.rowHeightMm);
-};
-
-// Calculate rows that fit on subsequent pages (without header, with carryover)
-const calculateSubsequentPageRows = (config: PrintPageConfig): number => {
-  const availableHeight = 
-    config.pageHeightMm - 
-    config.topMarginSubsequentMm - 
-    config.carryoverRowHeightMm - 
-    config.bottomMarginMm;
-  return Math.floor(availableHeight / config.rowHeightMm);
-};
-
-const FIRST_PAGE_ROWS = calculateFirstPageRows(PRINT_CONFIG);
-const SUBSEQUENT_PAGE_ROWS = calculateSubsequentPageRows(PRINT_CONFIG);
-
 export function TransactionTable({ transactions, onEdit, onDelete }: TransactionTableProps) {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -94,7 +56,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
       return sum + amount;
     }, 0);
 
-  // Calculate cumulative total up to specific index
+  // Calculate cumulative total up to specific index (for carryover rows)
   const getCumulativeTotal = (upToIndex: number) => {
     let total = 0;
     for (let i = 0; i < upToIndex; i++) {
@@ -105,54 +67,26 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
     return total;
   };
 
-  // Calculate totals for a range of transactions
-  const getRangeTotals = (startIndex: number, endIndex: number) => {
-    let income = 0;
-    let expense = 0;
-    for (let i = startIndex; i < endIndex; i++) {
-      if (transactions[i]) {
-        const amount = parseFloat(transactions[i].amount);
-        if (transactions[i].type === "Gelir") {
-          income += amount;
-        } else {
-          expense += amount;
-        }
+  // Calculate totals for all remaining transactions
+  const getIncomeTotals = () => {
+    let totalInc = 0;
+    transactions.forEach(t => {
+      if (t.type === "Gelir") {
+        totalInc += parseFloat(t.amount);
       }
-    }
-    return { income, expense };
+    });
+    return totalInc;
   };
 
-  // Build pages with automatic row calculation
-  const buildPages = () => {
-    const pages = [];
-    let currentIndex = 0;
-
-    // First page
-    if (transactions.length > 0) {
-      const firstPageEnd = Math.min(FIRST_PAGE_ROWS, transactions.length);
-      pages.push({
-        startIndex: 0,
-        endIndex: firstPageEnd,
-        isFirstPage: true,
-      });
-      currentIndex = firstPageEnd;
-    }
-
-    // Subsequent pages
-    while (currentIndex < transactions.length) {
-      const pageEnd = Math.min(currentIndex + SUBSEQUENT_PAGE_ROWS, transactions.length);
-      pages.push({
-        startIndex: currentIndex,
-        endIndex: pageEnd,
-        isFirstPage: false,
-      });
-      currentIndex = pageEnd;
-    }
-
-    return pages;
+  const getTotalExpense = () => {
+    let totalExp = 0;
+    transactions.forEach(t => {
+      if (t.type === "Gider") {
+        totalExp += parseFloat(t.amount);
+      }
+    });
+    return totalExp;
   };
-
-  const pages = buildPages();
 
   return (
     <div className="space-y-4">
@@ -239,77 +173,48 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
         </Table>
       </div>
 
-      {/* PRINT VIEW - Automatic page breaks based on mathematical calculation */}
+      {/* PRINT VIEW - Simple table, let browser handle page breaks automatically */}
       <div className="hidden print:block print-view">
         {transactions.length === 0 ? (
           <div className="text-center py-8">Henüz işlem kaydı bulunmamaktadır</div>
         ) : (
-          <>
-            {pages.map((page, pageIndex) => {
-              const pageTransactions = transactions.slice(page.startIndex, page.endIndex);
-              const cumulativeTotal = getCumulativeTotal(page.startIndex);
-              const pageTotals = getRangeTotals(page.startIndex, page.endIndex);
-              const pageTotal = pageTotals.income - pageTotals.expense;
+          <table className="print-table-main">
+            <thead>
+              <tr className="print-table-header-row">
+                <th className="print-th">Sıra No</th>
+                <th className="print-th">Tarih</th>
+                <th className="print-th">Proje</th>
+                <th className="print-th">Tür</th>
+                <th className="print-th">İş Grubu</th>
+                <th className="print-th">Rayiç Grubu</th>
+                <th className="print-th">Açıklama</th>
+                <th className="print-th">Hakedişe Dahil</th>
+                <th className="print-th">Tutar</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.map((transaction, index) => (
+                <tr key={transaction.id} className="print-table-data-row">
+                  <td className="print-td">{index + 1}</td>
+                  <td className="print-td">{formatDate(transaction.date)}</td>
+                  <td className="print-td">{transaction.projectName}</td>
+                  <td className="print-td">{transaction.type}</td>
+                  <td className="print-td">{transaction.isGrubu}</td>
+                  <td className="print-td">{transaction.rayicGrubu}</td>
+                  <td className="print-td">{transaction.description || '-'}</td>
+                  <td className="print-td text-center">{transaction.progressPaymentId ? '✓' : ''}</td>
+                  <td className="print-td text-right">{formatCurrency(transaction.amount)}</td>
+                </tr>
+              ))}
               
-              return (
-                <div key={`page-${pageIndex}`} className="print-page-container">
-                  {pageIndex > 0 && <div className="print-page-break"></div>}
-                  
-                  <table className="print-table">
-                    <thead className="print-table-head">
-                      <tr>
-                        <th className="print-th">Sıra No</th>
-                        <th className="print-th">Tarih</th>
-                        <th className="print-th">Proje</th>
-                        <th className="print-th">Tür</th>
-                        <th className="print-th">İş Grubu</th>
-                        <th className="print-th">Rayiç Grubu</th>
-                        <th className="print-th">Açıklama</th>
-                        <th className="print-th">Hakedişe Dahil</th>
-                        <th className="print-th">Tutar</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {/* Carryover row for page 2+ */}
-                      {pageIndex > 0 && (
-                        <tr className="print-carryover-row">
-                          <td className="print-td"></td>
-                          <td colSpan={7} className="print-td text-right font-bold">
-                            Bir Önceki Sayfadan Nakledilen Tutar:
-                          </td>
-                          <td className="print-td text-right font-bold">{formatCurrency(cumulativeTotal)}</td>
-                        </tr>
-                      )}
-                      
-                      {/* Transaction rows */}
-                      {pageTransactions.map((transaction, transIndex) => (
-                        <tr key={transaction.id} className="print-table-row">
-                          <td className="print-td text-center">{page.startIndex + transIndex + 1}</td>
-                          <td className="print-td">{formatDate(transaction.date)}</td>
-                          <td className="print-td">{transaction.projectName}</td>
-                          <td className="print-td">{transaction.type}</td>
-                          <td className="print-td">{transaction.isGrubu}</td>
-                          <td className="print-td">{transaction.rayicGrubu}</td>
-                          <td className="print-td">{transaction.description || '-'}</td>
-                          <td className="print-td text-center">{transaction.progressPaymentId ? '✓' : ''}</td>
-                          <td className="print-td text-right">{formatCurrency(transaction.amount)}</td>
-                        </tr>
-                      ))}
-                      
-                      {/* Page total row */}
-                      <tr className="print-page-summary">
-                        <td className="print-td"></td>
-                        <td colSpan={7} className="print-td text-right font-bold">
-                          Sayfa Toplamı:
-                        </td>
-                        <td className="print-td text-right font-bold">{formatCurrency(pageTotal)}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              );
-            })}
-          </>
+              {/* Final totals row */}
+              <tr className="print-table-total-row">
+                <td colSpan={7} className="print-td text-right font-bold">Toplam:</td>
+                <td className="print-td"></td>
+                <td className="print-td text-right font-bold">{formatCurrency(totalIncome - totalExpense)}</td>
+              </tr>
+            </tbody>
+          </table>
         )}
       </div>
 
