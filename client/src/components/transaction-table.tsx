@@ -84,8 +84,8 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
     return { income, expense };
   };
 
-  // Excel-like pagination: First page 19 rows, subsequent pages 30 rows
-  const FIRST_PAGE_ROWS = 19;
+  // Excel-like pagination: First page 9 rows, subsequent pages 30 rows
+  const FIRST_PAGE_ROWS = 9;
   const SUBSEQUENT_PAGE_ROWS = 30;
 
   const buildPages = () => {
@@ -109,6 +109,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
       pageNum++;
     }
 
+    console.log('Pages built:', pages.map(p => `Page ${p.pageNumber}: rows ${p.startIndex}-${p.endIndex-1}`));
     return pages;
   };
 
@@ -199,10 +200,10 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
         </Table>
       </div>
 
-      {/* PRINT VIEW - Excel-like manual page breaks */}
-      <div className="hidden print:block print-view">
+      {/* PRINT VIEW */}
+      <div className="hidden print:block">
         {transactions.length === 0 ? (
-          <div className="text-center py-8">Henüz işlem kaydı bulunmamaktadır</div>
+          <div>Henüz işlem kaydı bulunmamaktadır</div>
         ) : (
           <>
             {pages.map((page, pageIndex) => {
@@ -212,60 +213,62 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
               const pageTotal = pageTotals.income - pageTotals.expense;
 
               return (
-                <div key={`page-${pageIndex}`} className="print-page">
-                  <table className="print-table-main">
+                <div key={`page-${pageIndex}`} style={{ pageBreakAfter: pageIndex < pages.length - 1 ? 'always' : 'avoid' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
                     <thead>
-                      <tr className="print-table-header-row">
-                        <th className="print-th">Sıra No</th>
-                        <th className="print-th">Tarih</th>
-                        <th className="print-th">Proje</th>
-                        <th className="print-th">Tür</th>
-                        <th className="print-th">İş Grubu</th>
-                        <th className="print-th">Rayiç Grubu</th>
-                        <th className="print-th">Açıklama</th>
-                        <th className="print-th">Hakedişe Dahil</th>
-                        <th className="print-th">Tutar</th>
+                      <tr style={{ display: 'table-header-group' }}>
+                        <th style={{ border: '1px solid #333', padding: '4px', textAlign: 'left', fontWeight: 'bold', backgroundColor: '#f0f0f0', fontSize: '10px' }}>Sıra No</th>
+                        <th style={{ border: '1px solid #333', padding: '4px', textAlign: 'left', fontWeight: 'bold', backgroundColor: '#f0f0f0', fontSize: '10px' }}>Tarih</th>
+                        <th style={{ border: '1px solid #333', padding: '4px', textAlign: 'left', fontWeight: 'bold', backgroundColor: '#f0f0f0', fontSize: '10px' }}>Proje</th>
+                        <th style={{ border: '1px solid #333', padding: '4px', textAlign: 'left', fontWeight: 'bold', backgroundColor: '#f0f0f0', fontSize: '10px' }}>Tür</th>
+                        <th style={{ border: '1px solid #333', padding: '4px', textAlign: 'left', fontWeight: 'bold', backgroundColor: '#f0f0f0', fontSize: '10px' }}>İş Grubu</th>
+                        <th style={{ border: '1px solid #333', padding: '4px', textAlign: 'left', fontWeight: 'bold', backgroundColor: '#f0f0f0', fontSize: '10px' }}>Rayiç Grubu</th>
+                        <th style={{ border: '1px solid #333', padding: '4px', textAlign: 'left', fontWeight: 'bold', backgroundColor: '#f0f0f0', fontSize: '10px' }}>Açıklama</th>
+                        <th style={{ border: '1px solid #333', padding: '4px', textAlign: 'center', fontWeight: 'bold', backgroundColor: '#f0f0f0', fontSize: '10px' }}>Hakedişe Dahil</th>
+                        <th style={{ border: '1px solid #333', padding: '4px', textAlign: 'right', fontWeight: 'bold', backgroundColor: '#f0f0f0', fontSize: '10px' }}>Tutar</th>
                       </tr>
                     </thead>
                     <tbody>
                       {/* Carryover row for page 2+ */}
                       {pageIndex > 0 && (
-                        <tr className="print-carryover-row">
-                          <td colSpan={7} className="print-td text-right font-bold">
+                        <tr style={{ backgroundColor: '#f5f5f5', borderTop: '2px solid #000', borderBottom: '2px solid #000' }}>
+                          <td colSpan={7} style={{ border: 'none', borderTop: '2px solid #000', borderBottom: '2px solid #000', padding: '4px', textAlign: 'right', fontWeight: 'bold', fontSize: '10px' }}>
                             Bir Önceki Sayfadan Nakledilen Tutar:
                           </td>
-                          <td className="print-td"></td>
-                          <td className="print-td text-right font-bold">{formatCurrency(cumulativeTotal)}</td>
+                          <td style={{ border: 'none', borderTop: '2px solid #000', borderBottom: '2px solid #000', padding: '4px', textAlign: 'center', fontSize: '10px' }}></td>
+                          <td style={{ border: 'none', borderTop: '2px solid #000', borderBottom: '2px solid #000', padding: '4px', textAlign: 'right', fontWeight: 'bold', fontSize: '10px' }}>
+                            {formatCurrency(cumulativeTotal)}
+                          </td>
                         </tr>
                       )}
 
                       {/* Data rows */}
                       {pageTransactions.map((transaction, transIndex) => (
-                        <tr key={transaction.id} className="print-table-data-row">
-                          <td className="print-td text-center">{page.startIndex + transIndex + 1}</td>
-                          <td className="print-td">{formatDate(transaction.date)}</td>
-                          <td className="print-td">{transaction.projectName}</td>
-                          <td className="print-td">{transaction.type}</td>
-                          <td className="print-td">{transaction.isGrubu}</td>
-                          <td className="print-td">{transaction.rayicGrubu}</td>
-                          <td className="print-td">{transaction.description || '-'}</td>
-                          <td className="print-td text-center">{transaction.progressPaymentId ? '✓' : ''}</td>
-                          <td className="print-td text-right">{formatCurrency(transaction.amount)}</td>
+                        <tr key={transaction.id} style={{ pageBreakInside: 'avoid' }}>
+                          <td style={{ border: '1px solid #ddd', padding: '4px', fontSize: '10px', textAlign: 'center' }}>{page.startIndex + transIndex + 1}</td>
+                          <td style={{ border: '1px solid #ddd', padding: '4px', fontSize: '10px' }}>{formatDate(transaction.date)}</td>
+                          <td style={{ border: '1px solid #ddd', padding: '4px', fontSize: '10px' }}>{transaction.projectName}</td>
+                          <td style={{ border: '1px solid #ddd', padding: '4px', fontSize: '10px' }}>{transaction.type}</td>
+                          <td style={{ border: '1px solid #ddd', padding: '4px', fontSize: '10px' }}>{transaction.isGrubu}</td>
+                          <td style={{ border: '1px solid #ddd', padding: '4px', fontSize: '10px' }}>{transaction.rayicGrubu}</td>
+                          <td style={{ border: '1px solid #ddd', padding: '4px', fontSize: '10px' }}>{transaction.description || '-'}</td>
+                          <td style={{ border: '1px solid #ddd', padding: '4px', fontSize: '10px', textAlign: 'center' }}>{transaction.progressPaymentId ? '✓' : ''}</td>
+                          <td style={{ border: '1px solid #ddd', padding: '4px', fontSize: '10px', textAlign: 'right' }}>{formatCurrency(transaction.amount)}</td>
                         </tr>
                       ))}
 
                       {/* Page total row */}
-                      <tr className="print-page-total-row">
-                        <td colSpan={7} className="print-td text-right font-bold">
+                      <tr style={{ backgroundColor: '#f5f5f5', borderTop: '2px solid #333', borderBottom: '2px solid #333' }}>
+                        <td colSpan={7} style={{ border: 'none', borderTop: '2px solid #333', borderBottom: '2px solid #333', padding: '4px', textAlign: 'right', fontWeight: 'bold', fontSize: '10px' }}>
                           Sayfa Toplamı:
                         </td>
-                        <td className="print-td"></td>
-                        <td className="print-td text-right font-bold">{formatCurrency(pageTotal)}</td>
+                        <td style={{ border: 'none', borderTop: '2px solid #333', borderBottom: '2px solid #333', padding: '4px', textAlign: 'center', fontSize: '10px' }}></td>
+                        <td style={{ border: 'none', borderTop: '2px solid #333', borderBottom: '2px solid #333', padding: '4px', textAlign: 'right', fontWeight: 'bold', fontSize: '10px' }}>
+                          {formatCurrency(pageTotal)}
+                        </td>
                       </tr>
                     </tbody>
                   </table>
-                  {/* Manual page break (except last page) */}
-                  {pageIndex < pages.length - 1 && <div className="print-page-break"></div>}
                 </div>
               );
             })}
