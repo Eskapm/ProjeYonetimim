@@ -815,24 +815,18 @@
       display: none !important;
     }
     
-    /* Show print elements */
-    .print-only {
-      display: block !important;
-    }
-    
-    /* Print page wrapper - manual page management */
-    .print-page-wrapper {
-      display: block !important;
-      page-break-after: always !important;
-      break-after: page !important;
+    /* Print table container */
+    .print-table-container {
+      display: table !important;
+      width: 100% !important;
+      border-collapse: collapse !important;
       margin: 0 !important;
       padding: 0 !important;
-      width: 100% !important;
-      min-height: 257mm !important;
+      border: none !important;
       overflow: visible !important;
     }
     
-    .print-page-wrapper table {
+    .print-table-container table {
       width: 100% !important;
       border-collapse: collapse !important;
       font-size: 9pt !important;
@@ -840,40 +834,31 @@
       padding: 0 !important;
     }
     
-    .print-page-wrapper thead tr,
-    .print-page-wrapper tbody tr {
+    .print-table-container thead {
+      display: table-header-group;
+      page-break-inside: avoid !important;
+    }
+    
+    .print-table-container tbody tr {
       page-break-inside: avoid !important;
       break-inside: avoid !important;
       orphans: 1 !important;
       widows: 1 !important;
     }
     
-    .print-page-wrapper th,
-    .print-page-wrapper td {
-      padding: 4px 6px !important;
-      margin: 0 !important;
-      word-wrap: break-word !important;
-      word-break: break-word !important;
-    }
-    
-    .print-page-wrapper th {
+    .print-table-container th {
       font-weight: bold !important;
       background-color: #f5f5f5 !important;
       border-bottom: 1px solid #999 !important;
+      padding: 5px 6px !important;
       text-align: left;
     }
     
-    .print-page-wrapper td {
+    .print-table-container td {
       border-bottom: 1px solid #e0e0e0 !important;
-    }
-    
-    /* Summary and totals */
-    .space-y-6,
-    .space-y-4,
-    .rounded-md,
-    .overflow-x-auto,
-    .bg-muted\/50 {
-      display: none !important;
+      padding: 4px 6px !important;
+      word-wrap: break-word !important;
+      word-break: break-word !important;
     }
   }
 
