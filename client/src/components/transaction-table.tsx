@@ -202,7 +202,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
       </div>
 
       {/* PRINT VIEW - Paginated for printing */}
-      <div className="print-only" style={{ display: 'none' }}>
+      <div className="print-only">
         {pages.map((pageTransactions, pageIndex) => {
           const cumulativeTotal = getCumulativeTotal(pageIndex);
           const pageTotals = getPageTotals(pageTransactions);
