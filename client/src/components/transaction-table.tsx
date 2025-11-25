@@ -32,6 +32,44 @@ interface TransactionTableProps {
   onDelete?: (id: string) => void;
 }
 
+// Print configuration - Mathematical calculations for page breaks
+interface PrintPageConfig {
+  pageHeightMm: number;
+  headerHeightMm: number;
+  rowHeightMm: number;
+  bottomMarginMm: number;
+  topMarginSubsequentMm: number;
+  carryoverRowHeightMm: number;
+}
+
+const PRINT_CONFIG: PrintPageConfig = {
+  pageHeightMm: 297, // A4 standard
+  headerHeightMm: 140, // PrintHeader + title area
+  rowHeightMm: 8, // Table row height in print
+  bottomMarginMm: 20, // Bottom spacing
+  topMarginSubsequentMm: 10, // Top spacing for subsequent pages
+  carryoverRowHeightMm: 8, // "Bir Önceki Sayfadan" row
+};
+
+// Calculate rows that fit on first page (with header)
+const calculateFirstPageRows = (config: PrintPageConfig): number => {
+  const availableHeight = config.pageHeightMm - config.headerHeightMm - config.bottomMarginMm;
+  return Math.floor(availableHeight / config.rowHeightMm);
+};
+
+// Calculate rows that fit on subsequent pages (without header, with carryover)
+const calculateSubsequentPageRows = (config: PrintPageConfig): number => {
+  const availableHeight = 
+    config.pageHeightMm - 
+    config.topMarginSubsequentMm - 
+    config.carryoverRowHeightMm - 
+    config.bottomMarginMm;
+  return Math.floor(availableHeight / config.rowHeightMm);
+};
+
+const FIRST_PAGE_ROWS = calculateFirstPageRows(PRINT_CONFIG);
+const SUBSEQUENT_PAGE_ROWS = calculateSubsequentPageRows(PRINT_CONFIG);
+
 export function TransactionTable({ transactions, onEdit, onDelete }: TransactionTableProps) {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -56,7 +94,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
       return sum + amount;
     }, 0);
 
-  // Helper function to calculate cumulative total up to specific index
+  // Calculate cumulative total up to specific index
   const getCumulativeTotal = (upToIndex: number) => {
     let total = 0;
     for (let i = 0; i < upToIndex; i++) {
@@ -67,7 +105,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
     return total;
   };
 
-  // Helper function to calculate totals for a range of transactions
+  // Calculate totals for a range of transactions
   const getRangeTotals = (startIndex: number, endIndex: number) => {
     let income = 0;
     let expense = 0;
@@ -83,6 +121,38 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
     }
     return { income, expense };
   };
+
+  // Build pages with automatic row calculation
+  const buildPages = () => {
+    const pages = [];
+    let currentIndex = 0;
+
+    // First page
+    if (transactions.length > 0) {
+      const firstPageEnd = Math.min(FIRST_PAGE_ROWS, transactions.length);
+      pages.push({
+        startIndex: 0,
+        endIndex: firstPageEnd,
+        isFirstPage: true,
+      });
+      currentIndex = firstPageEnd;
+    }
+
+    // Subsequent pages
+    while (currentIndex < transactions.length) {
+      const pageEnd = Math.min(currentIndex + SUBSEQUENT_PAGE_ROWS, transactions.length);
+      pages.push({
+        startIndex: currentIndex,
+        endIndex: pageEnd,
+        isFirstPage: false,
+      });
+      currentIndex = pageEnd;
+    }
+
+    return pages;
+  };
+
+  const pages = buildPages();
 
   return (
     <div className="space-y-4">
@@ -169,18 +239,16 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
         </Table>
       </div>
 
-      {/* PRINT VIEW - Simple pagination with 9 rows per page */}
+      {/* PRINT VIEW - Automatic page breaks based on mathematical calculation */}
       <div className="hidden print:block print-view">
         {transactions.length === 0 ? (
           <div className="text-center py-8">Henüz işlem kaydı bulunmamaktadır</div>
         ) : (
           <>
-            {Array.from({ length: Math.ceil(transactions.length / 9) }).map((_, pageIndex) => {
-              const pageStart = pageIndex * 9;
-              const pageEnd = Math.min(pageStart + 9, transactions.length);
-              const pageTransactions = transactions.slice(pageStart, pageEnd);
-              const cumulativeTotal = getCumulativeTotal(pageStart);
-              const pageTotals = getRangeTotals(pageStart, pageEnd);
+            {pages.map((page, pageIndex) => {
+              const pageTransactions = transactions.slice(page.startIndex, page.endIndex);
+              const cumulativeTotal = getCumulativeTotal(page.startIndex);
+              const pageTotals = getRangeTotals(page.startIndex, page.endIndex);
               const pageTotal = pageTotals.income - pageTotals.expense;
               
               return (
@@ -216,7 +284,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                       {/* Transaction rows */}
                       {pageTransactions.map((transaction, transIndex) => (
                         <tr key={transaction.id} className="print-table-row">
-                          <td className="print-td text-center">{pageStart + transIndex + 1}</td>
+                          <td className="print-td text-center">{page.startIndex + transIndex + 1}</td>
                           <td className="print-td">{formatDate(transaction.date)}</td>
                           <td className="print-td">{transaction.projectName}</td>
                           <td className="print-td">{transaction.type}</td>
