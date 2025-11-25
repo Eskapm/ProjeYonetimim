@@ -692,139 +692,59 @@
     widows: 3;
   }
 
-  /* PROFESSIONAL PRINT LAYOUT */
-  @page {
-    size: A4 portrait;
-    margin: 15mm 10mm;
-  }
+  /* Landscape orientation for wide tables (optional - uncomment if needed) */
+  /* @page {
+    size: A4 landscape;
+  } */
 
-  /* Screen only - hide in print */
-  .screen-only {
-    display: block !important;
-  }
-
-  @media print {
-    .screen-only {
-      display: none !important;
-    }
-  }
-
-  /* Print wrapper - dinamik sayfa break sistemi */
-  .print-only-wrapper {
+  /* Print view control */
+  .print-hidden {
     display: none !important;
   }
-
-  @media print {
-    .print-only-wrapper {
-      display: block !important;
-    }
-
-    /* Her sayfa native page break ile ayrılıyor */
-    .print-page {
-      page-break-after: always !important;
-      margin-bottom: 0 !important;
-      padding-bottom: 0 !important;
-    }
-
-    .print-page:last-child {
-      page-break-after: auto !important;
-    }
-
-    /* Sayfa başlığı */
-    .print-page-header {
-      margin-bottom: 4px !important;
-      padding-bottom: 4px !important;
-    }
-
-    .print-page-title {
-      font-size: 10px !important;
-      font-weight: bold !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      color: #000 !important;
-    }
-
-    /* Sayfa tablosu - native page break */
-    .print-transactions-table {
-      width: 100% !important;
-      border-collapse: collapse !important;
-      font-family: Arial, sans-serif !important;
-      font-size: 8px !important;
-      line-height: 1.0 !important;
-      table-layout: fixed !important;
-      margin-bottom: 2px !important;
-    }
-
-    .print-transactions-table thead {
-      background-color: #e8e8e8 !important;
-      display: table-header-group !important;
-    }
-
-    .print-transactions-table thead tr {
-      page-break-inside: avoid !important;
-    }
-
-    .print-transactions-table th {
-      border: 1px solid #333 !important;
-      padding: 1px 2px !important;
-      text-align: center !important;
-      font-weight: bold !important;
-      background-color: #e8e8e8 !important;
-      font-size: 7px !important;
-      line-height: 1.0 !important;
-      white-space: nowrap !important;
-      overflow: hidden !important;
-    }
-
-    /* Satırlar kesimi olmadan tam sayfa fill etsin */
-    .print-transactions-table tbody tr {
-      page-break-inside: avoid !important;
-      height: auto !important;
-    }
-
-    .print-transactions-table td {
-      border: 1px solid #ccc !important;
-      padding: 1px 1px !important;
-      font-size: 7px !important;
-      line-height: 1.0 !important;
-      vertical-align: middle !important;
-      overflow: hidden !important;
-      text-overflow: clip !important;
-      white-space: nowrap !important;
-      text-align: left !important;
-    }
-
-    .print-transactions-table tbody tr:nth-child(odd) {
-      background-color: #fff !important;
-    }
-
-    .print-transactions-table tbody tr:nth-child(even) {
-      background-color: #f8f8f8 !important;
-    }
-
-    /* Sayfa altı */
-    .print-page-footer {
-      margin-top: 2px !important;
-      border-top: 1px solid #000 !important;
-      padding-top: 2px !important;
-      font-size: 8px !important;
-    }
-
-    .print-page-total {
-      font-size: 8px !important;
-      font-weight: bold !important;
-      text-align: right !important;
-      margin-bottom: 2px !important;
-    }
-
-    .print-grand-total {
-      font-size: 9px !important;
-      font-weight: bold !important;
-      text-align: right !important;
-      padding: 2px 0 !important;
-      border-top: 1px solid #000 !important;
-      margin-top: 2px !important;
-    }
+  
+  .print-only {
+    display: table-row !important;
+  }
+  
+  /* Dynamic page break with 3cm top margin */
+  .print-page-break {
+    page-break-before: always !important;
+    height: 3cm !important;
+    display: table-row !important;
+  }
+  
+  .print-page-break td {
+    border: none !important;
+    padding: 0 !important;
+    height: 3cm !important;
+  }
+  
+  /* Carryover row - "Bir Önceki Sayfadan Nakledilen Tutar" */
+  .print-carryover-row {
+    background-color: #f0f0f0 !important;
+    font-weight: bold !important;
+    border-top: 2px solid #000 !important;
+    border-bottom: 2px solid #000 !important;
+    page-break-inside: avoid !important;
+  }
+  
+  .print-carryover-row td {
+    padding: 8px 12px !important;
+    border: none !important;
+  }
+  
+  /* Page summary row */
+  .print-page-summary {
+    background-color: #f9f9f9 !important;
+    font-weight: bold !important;
+    border-top: 2px solid #333 !important;
+    border-bottom: 2px solid #333 !important;
+    page-break-inside: avoid !important;
+  }
+  
+  .print-page-summary td {
+    padding: 8px 12px !important;
+    border: none !important;
   }
 
   /* Hakediş Date Info - FULL WIDTH HORIZONTAL - PRINT MODE ONLY */
