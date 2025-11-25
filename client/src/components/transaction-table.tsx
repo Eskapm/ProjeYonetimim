@@ -45,8 +45,8 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
 
   // Dynamic page break calculation - A4 height: 297mm
   // Header area: ~140mm, Table header: ~10mm, Carryover row: ~8mm
-  // Remaining: ~139mm. Each row: ~8mm. Rows per page: ~17
-  const ROWS_PER_PAGE = 17;
+  // Remaining: ~139mm. Each row: ~8mm. Rows per page: ~9
+  const ROWS_PER_PAGE = 9;
 
   const totalIncome = transactions
     .filter(t => t.type === "Gelir")
@@ -218,10 +218,10 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                   
                   return (
                     <Fragment key={`print-page-${pageIndex}`}>
-                      {/* Page break - 3cm spacing before each page except first */}
+                      {/* Page break - 10mm spacing before each page except first */}
                       {!isFirstPage && (
                         <TableRow className="print-page-break-row">
-                          <TableCell colSpan={10} className="p-0 border-none" style={{ height: '30mm' }}></TableCell>
+                          <TableCell colSpan={10} className="p-0 border-none" style={{ height: '10mm' }}></TableCell>
                         </TableRow>
                       )}
 

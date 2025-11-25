@@ -727,7 +727,7 @@
     padding: 4px 6px !important;
   }
   
-  /* Page break row - 30mm (approx 3cm) spacing */
+  /* Page break row - 10mm spacing */
   .print-page-break-row {
     page-break-before: always !important;
     page-break-inside: avoid !important;
@@ -736,7 +736,7 @@
   .print-page-break-row td {
     border: none !important;
     padding: 0 !important;
-    height: 30mm !important;
+    height: 10mm !important;
   }
   
   /* Carryover row - "Bir Önceki Sayfadan Nakledilen Tutar" */
