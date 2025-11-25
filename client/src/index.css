@@ -720,8 +720,9 @@
       width: 100% !important;
       border-collapse: collapse !important;
       font-family: Arial, sans-serif !important;
-      font-size: 10px !important;
-      line-height: 1.4 !important;
+      font-size: 8px !important;
+      line-height: 1.1 !important;
+      table-layout: fixed !important;
     }
   }
 
@@ -734,30 +735,37 @@
 
     .print-only thead tr {
       page-break-inside: avoid !important;
-      page-break-after: avoid !important;
     }
 
     .print-only th {
       border: 1px solid #333 !important;
-      padding: 5px 4px !important;
+      padding: 2px 2px !important;
       text-align: left !important;
       font-weight: bold !important;
       background-color: #e8e8e8 !important;
-      font-size: 9px !important;
-      line-height: 1.2 !important;
+      font-size: 8px !important;
+      line-height: 1.1 !important;
+      overflow: hidden !important;
+      white-space: nowrap !important;
+      text-overflow: ellipsis !important;
     }
 
     /* Print table body - auto page breaks */
     .print-only tbody tr {
-      page-break-inside: avoid !important;
+      page-break-inside: auto !important;
+      height: auto !important;
     }
 
     .print-only td {
       border: 1px solid #ccc !important;
-      padding: 4px 3px !important;
-      font-size: 9px !important;
-      line-height: 1.3 !important;
-      vertical-align: top !important;
+      padding: 2px 2px !important;
+      font-size: 8px !important;
+      line-height: 1.1 !important;
+      vertical-align: middle !important;
+      overflow: hidden !important;
+      white-space: normal !important;
+      word-wrap: break-word !important;
+      max-height: 18px !important;
     }
 
     .print-only tbody tr:nth-child(odd) {
@@ -778,9 +786,10 @@
 
     .print-total-row td {
       border: 1px solid #333 !important;
-      padding: 6px 4px !important;
-      font-size: 10px !important;
+      padding: 3px 2px !important;
+      font-size: 8px !important;
       font-weight: bold !important;
+      line-height: 1.1 !important;
     }
   }
 
