@@ -784,6 +784,11 @@
     }
   }
   
+  /* Hide print-only elements on screen */
+  .print-only {
+    display: none !important;
+  }
+  
   /* Set exact page margins for print - 20mm all sides */
   @page {
     size: A4;
