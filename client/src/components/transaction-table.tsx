@@ -58,8 +58,8 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
 
   return (
     <div className="space-y-4">
-      {/* SCREEN VIEW */}
-      <div className="rounded-md border overflow-x-auto print-hidden">
+      {/* SCREEN VIEW ONLY */}
+      <div className="screen-only rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -141,54 +141,54 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
         </Table>
       </div>
 
-      {/* PRINT VIEW - Single optimized table */}
-      <div className="hidden print:block print-table-wrapper">
-        {transactions.length === 0 ? (
-          <div>Henüz işlem kaydı bulunmamaktadır</div>
-        ) : (
-          <table className="print-transactions-table">
-            <thead>
-              <tr>
-                <th>Sıra No</th>
-                <th>Tarih</th>
-                <th>Proje</th>
-                <th>Tür</th>
-                <th>İş Grubu</th>
-                <th>Rayiç Grubu</th>
-                <th>Açıklama</th>
-                <th>Hakedişe Dahil</th>
-                <th>Tutar</th>
+      {/* PRINT VIEW ONLY - Auto page breaks by browser */}
+      <table className="print-only">
+        <thead>
+          <tr>
+            <th>Sıra No</th>
+            <th>Tarih</th>
+            <th>Proje</th>
+            <th>Tür</th>
+            <th>İş Grubu</th>
+            <th>Rayiç Grubu</th>
+            <th>Açıklama</th>
+            <th>Hakedişe Dahil</th>
+            <th>Tutar</th>
+          </tr>
+        </thead>
+        <tbody>
+          {transactions.length === 0 ? (
+            <tr>
+              <td colSpan={9}>Henüz işlem kaydı bulunmamaktadır</td>
+            </tr>
+          ) : (
+            transactions.map((transaction, index) => (
+              <tr key={transaction.id}>
+                <td>{index + 1}</td>
+                <td>{formatDate(transaction.date)}</td>
+                <td>{transaction.projectName}</td>
+                <td>{transaction.type}</td>
+                <td>{transaction.isGrubu}</td>
+                <td>{transaction.rayicGrubu}</td>
+                <td>{transaction.description || '-'}</td>
+                <td>{transaction.progressPaymentId ? '✓' : ''}</td>
+                <td>{formatCurrency(transaction.amount)}</td>
               </tr>
-            </thead>
-            <tbody>
-              {transactions.map((transaction, index) => (
-                <tr key={transaction.id}>
-                  <td className="text-center">{index + 1}</td>
-                  <td>{formatDate(transaction.date)}</td>
-                  <td>{transaction.projectName}</td>
-                  <td>{transaction.type}</td>
-                  <td>{transaction.isGrubu}</td>
-                  <td>{transaction.rayicGrubu}</td>
-                  <td>{transaction.description || '-'}</td>
-                  <td className="text-center">{transaction.progressPaymentId ? '✓' : ''}</td>
-                  <td className="text-right">{formatCurrency(transaction.amount)}</td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr className="print-total-row">
-                <td colSpan={7} className="text-right">TOPLAM:</td>
-                <td></td>
-                <td className="text-right">{formatCurrency(totalIncome - totalExpense)}</td>
-              </tr>
-            </tfoot>
-          </table>
-        )}
-      </div>
+            ))
+          )}
+        </tbody>
+        <tfoot>
+          <tr className="print-total-row">
+            <td colSpan={7} className="text-right">TOPLAM:</td>
+            <td></td>
+            <td>{formatCurrency(totalIncome - totalExpense)}</td>
+          </tr>
+        </tfoot>
+      </table>
 
-      {/* Summary cards */}
+      {/* Summary cards - SCREEN ONLY */}
       {transactions.length > 0 && (
-        <div className="flex justify-end gap-8 p-4 bg-muted/50 rounded-md print-hidden">
+        <div className="screen-only flex justify-end gap-8 p-4 bg-muted/50 rounded-md">
           <div className="text-right">
             <div className="text-sm text-muted-foreground">Toplam Gelir</div>
             <div className="text-lg font-bold font-mono text-green-600 dark:text-green-400">
