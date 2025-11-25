@@ -784,18 +784,18 @@
     }
   }
   
-  /* Hide print-only elements on screen */
-  .print-only {
-    display: none !important;
-  }
-  
   /* Set exact page margins for print - 20mm all sides */
   @page {
     size: A4;
     margin: 20mm 15mm 20mm 15mm;
   }
+  
+  /* Set first page margins differently if needed */
+  @page :first {
+    margin: 20mm 15mm 20mm 15mm;
+  }
 
-  /* Print optimization */
+  /* Print optimization - auto page sizing */
   @media print {
     * {
       -webkit-print-color-adjust: exact !important;
@@ -805,60 +805,82 @@
     html, body {
       width: 100%;
       height: auto;
-      margin: 0 !important;
-      padding: 0 !important;
+      margin: 0;
+      padding: 0;
       background: white;
     }
     
-    /* Hide screen elements */
-    .print-hidden {
-      display: none !important;
-    }
-    
-    /* Print table container */
-    .print-table-container {
-      display: table !important;
-      width: 100% !important;
-      border-collapse: collapse !important;
+    /* Remove all default page spacing */
+    body {
       margin: 0 !important;
       padding: 0 !important;
-      border: none !important;
-      overflow: visible !important;
     }
     
-    .print-table-container table {
+    /* Main container - no margins */
+    .space-y-6,
+    .space-y-4,
+    .rounded-md,
+    .overflow-x-auto,
+    .bg-muted\/30 {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    
+    /* Table must use all available space */
+    table {
       width: 100% !important;
-      border-collapse: collapse !important;
+      table-layout: fixed !important;
       font-size: 9pt !important;
       margin: 0 !important;
       padding: 0 !important;
+      border-collapse: collapse !important;
     }
     
-    .print-table-container thead {
+    tbody, thead {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    
+    /* Table header repeats on each page */
+    thead {
       display: table-header-group;
-      page-break-inside: avoid !important;
+      margin: 0 !important;
+      padding: 0 !important;
     }
     
-    .print-table-container tbody tr {
+    th {
+      padding: 5px 6px !important;
+      font-weight: bold !important;
+      background-color: #f5f5f5 !important;
+      border-bottom: 1px solid #999 !important;
+      margin: 0 !important;
+    }
+    
+    /* All rows MUST not break across pages */
+    tr {
       page-break-inside: avoid !important;
-      break-inside: avoid !important;
       orphans: 1 !important;
       widows: 1 !important;
     }
     
-    .print-table-container th {
-      font-weight: bold !important;
-      background-color: #f5f5f5 !important;
-      border-bottom: 1px solid #999 !important;
-      padding: 5px 6px !important;
-      text-align: left;
-    }
-    
-    .print-table-container td {
-      border-bottom: 1px solid #e0e0e0 !important;
+    td {
       padding: 4px 6px !important;
       word-wrap: break-word !important;
       word-break: break-word !important;
+      border-bottom: 1px solid #e0e0e0 !important;
+      margin: 0 !important;
+    }
+    
+    /* Ensure amounts always print with TL on same line */
+    td.font-mono {
+      white-space: nowrap !important;
+      word-break: keep-all !important;
+      font-size: 8.5pt !important;
+    }
+    
+    /* Hide elements not meant for print */
+    .no-print {
+      display: none !important;
     }
   }
 
