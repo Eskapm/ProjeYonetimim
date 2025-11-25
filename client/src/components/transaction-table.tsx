@@ -43,10 +43,10 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
     });
   };
 
-  // Dynamic page break calculation
-  // A4 height: 297mm, Header area: ~140mm, Table header: ~10mm
-  // Remaining: ~147mm. Each row: ~8mm. Rows per page: ~18
-  const ROWS_PER_PAGE = 18;
+  // Dynamic page break calculation - A4 height: 297mm
+  // Header area: ~140mm, Table header: ~10mm, Carryover row: ~8mm
+  // Remaining: ~139mm. Each row: ~8mm. Rows per page: ~17
+  const ROWS_PER_PAGE = 17;
 
   const totalIncome = transactions
     .filter(t => t.type === "Gelir")
@@ -101,7 +101,8 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border overflow-x-auto">
+      {/* SCREEN VIEW - Normal table for viewing on screen */}
+      <div className="rounded-md border overflow-x-auto print-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -124,136 +125,153 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                 </TableCell>
               </TableRow>
             ) : (
-              <>
-                {/* Screen view - all transactions (visible only on screen) */}
-                {transactions.map((transaction) => (
-                  <TableRow 
-                    key={transaction.id} 
-                    data-testid={`row-transaction-${transaction.id}`}
-                    className="print-hidden"
-                  >
-                    <TableCell className="font-medium whitespace-nowrap">{formatDate(transaction.date)}</TableCell>
-                    <TableCell>{transaction.projectName}</TableCell>
-                    <TableCell>
-                      <Badge
-                        className={
-                          transaction.type === "Gelir"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                            : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                        }
+              transactions.map((transaction) => (
+                <TableRow key={transaction.id} data-testid={`row-transaction-${transaction.id}`}>
+                  <TableCell className="font-medium whitespace-nowrap">{formatDate(transaction.date)}</TableCell>
+                  <TableCell>{transaction.projectName}</TableCell>
+                  <TableCell>
+                    <Badge
+                      className={
+                        transaction.type === "Gelir"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                          : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                      }
+                    >
+                      {transaction.type}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-sm">{transaction.isGrubu}</TableCell>
+                  <TableCell className="text-sm">{transaction.rayicGrubu}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                    {transaction.description || '-'}
+                  </TableCell>
+                  <TableCell className="text-center" data-testid={`text-progress-payment-status-${transaction.id}`}>
+                    {transaction.progressPaymentId ? (
+                      <Check className="h-5 w-5 text-green-600 dark:text-green-400 mx-auto" />
+                    ) : (
+                      <X className="h-5 w-5 text-muted-foreground mx-auto" />
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right font-mono font-semibold">
+                    {formatCurrency(transaction.amount)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onEdit?.(transaction)}
+                        data-testid={`button-edit-transaction-${transaction.id}`}
                       >
-                        {transaction.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm">{transaction.isGrubu}</TableCell>
-                    <TableCell className="text-sm">{transaction.rayicGrubu}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
-                      {transaction.description || '-'}
-                    </TableCell>
-                    <TableCell className="text-center" data-testid={`text-progress-payment-status-${transaction.id}`}>
-                      {transaction.progressPaymentId ? (
-                        <Check className="h-5 w-5 text-green-600 dark:text-green-400 mx-auto" />
-                      ) : (
-                        <X className="h-5 w-5 text-muted-foreground mx-auto" />
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right font-mono font-semibold">
-                      {formatCurrency(transaction.amount)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onEdit?.(transaction)}
-                          data-testid={`button-edit-transaction-${transaction.id}`}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onDelete?.(transaction.id)}
-                          data-testid={`button-delete-transaction-${transaction.id}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onDelete?.(transaction.id)}
+                        data-testid={`button-delete-transaction-${transaction.id}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
-                {/* Print view - paginated (visible only on print) */}
+      {/* PRINT VIEW - Paginated table for printing */}
+      <div className="hidden print:block print-view-wrapper">
+        <Table className="print-table">
+          <TableHeader className="print-table-header">
+            <TableRow>
+              <TableHead className="w-[110px] min-w-[110px] text-xs p-2">Tarih</TableHead>
+              <TableHead className="text-xs p-2">Proje</TableHead>
+              <TableHead className="text-xs p-2">Tür</TableHead>
+              <TableHead className="text-xs p-2">İş Grubu</TableHead>
+              <TableHead className="text-xs p-2">Rayiç Grubu</TableHead>
+              <TableHead className="text-xs p-2">Açıklama</TableHead>
+              <TableHead className="text-center text-xs p-2">Hakedişe Dahil</TableHead>
+              <TableHead className="text-right text-xs p-2">Tutar</TableHead>
+              <TableHead className="text-right text-xs p-2"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {transactions.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                  Henüz işlem kaydı bulunmamaktadır
+                </TableCell>
+              </TableRow>
+            ) : (
+              <>
                 {pages.map((pageTransactions, pageIndex) => {
                   const cumulativeTotal = getCumulativeTotal(pageIndex);
                   const pageTotals = getPageTotals(pageTransactions);
+                  const isFirstPage = pageIndex === 0;
                   
                   return (
-                    <Fragment key={`page-${pageIndex}`}>
-                      {/* Page break before each page except first */}
-                      {pageIndex > 0 && (
-                        <TableRow className="print-only print-page-break">
-                          <TableCell colSpan={9} className="p-0 h-[3cm] border-none"></TableCell>
+                    <Fragment key={`print-page-${pageIndex}`}>
+                      {/* Page break - 3cm spacing before each page except first */}
+                      {!isFirstPage && (
+                        <TableRow className="print-page-break-row">
+                          <TableCell colSpan={9} className="p-0 border-none" style={{ height: '30mm' }}></TableCell>
                         </TableRow>
                       )}
 
-                      {/* "Bir Önceki Sayfadan Nakledilen Tutar" row for pages 2+ */}
-                      {pageIndex > 0 && (
-                        <TableRow className="print-only print-carryover-row">
-                          <TableCell colSpan={7} className="font-bold text-right pr-4">
+                      {/* Carryover row - "Bir Önceki Sayfadan Nakledilen Tutar" */}
+                      {!isFirstPage && (
+                        <TableRow className="print-carryover-row">
+                          <TableCell colSpan={7} className="text-right pr-2 p-1 text-xs font-bold border-b-2 border-black">
                             Bir Önceki Sayfadan Nakledilen Tutar:
                           </TableCell>
-                          <TableCell className="text-right font-mono font-bold">
+                          <TableCell className="text-right font-mono font-bold p-1 text-xs border-b-2 border-black">
                             {formatCurrency(cumulativeTotal)}
                           </TableCell>
-                          <TableCell></TableCell>
+                          <TableCell className="border-b-2 border-black"></TableCell>
                         </TableRow>
                       )}
 
                       {/* Page transactions */}
                       {pageTransactions.map((transaction) => (
                         <TableRow 
-                          key={`print-${transaction.id}`}
+                          key={`print-trans-${transaction.id}`}
+                          className="print-table-row"
                           data-testid={`row-transaction-${transaction.id}`}
-                          className="print-only"
                         >
-                          <TableCell className="font-medium whitespace-nowrap">{formatDate(transaction.date)}</TableCell>
-                          <TableCell>{transaction.projectName}</TableCell>
-                          <TableCell>
-                            <Badge
-                              className={
-                                transaction.type === "Gelir"
-                                  ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                                  : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                              }
-                            >
-                              {transaction.type}
-                            </Badge>
+                          <TableCell className="font-medium whitespace-nowrap text-xs p-1">
+                            {formatDate(transaction.date)}
                           </TableCell>
-                          <TableCell className="text-sm">{transaction.isGrubu}</TableCell>
-                          <TableCell className="text-sm">{transaction.rayicGrubu}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                          <TableCell className="text-xs p-1">{transaction.projectName}</TableCell>
+                          <TableCell className="text-xs p-1">
+                            {transaction.type}
+                          </TableCell>
+                          <TableCell className="text-xs p-1">{transaction.isGrubu}</TableCell>
+                          <TableCell className="text-xs p-1">{transaction.rayicGrubu}</TableCell>
+                          <TableCell className="text-xs p-1 max-w-[150px] truncate">
                             {transaction.description || '-'}
                           </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="text-center text-xs p-1">
                             {transaction.progressPaymentId ? "✓" : ""}
                           </TableCell>
-                          <TableCell className="text-right font-mono font-semibold">
+                          <TableCell className="text-right font-mono font-semibold text-xs p-1">
                             {formatCurrency(transaction.amount)}
                           </TableCell>
-                          <TableCell></TableCell>
+                          <TableCell className="text-xs p-1"></TableCell>
                         </TableRow>
                       ))}
 
                       {/* Page summary row */}
-                      <TableRow className="print-only print-page-summary">
-                        <TableCell colSpan={7} className="text-right font-bold pr-4">
+                      <TableRow className="print-page-summary-row">
+                        <TableCell colSpan={7} className="text-right pr-2 p-1 text-xs font-bold border-t-2 border-black">
                           Sayfa Toplamı:
                         </TableCell>
-                        <TableCell className="text-right font-mono font-bold">
+                        <TableCell className="text-right font-mono font-bold p-1 text-xs border-t-2 border-black">
                           {formatCurrency(pageTotals.income - pageTotals.expense)}
                         </TableCell>
-                        <TableCell></TableCell>
+                        <TableCell className="border-t-2 border-black"></TableCell>
                       </TableRow>
                     </Fragment>
                   );
@@ -263,9 +281,10 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
           </TableBody>
         </Table>
       </div>
-      
+
+      {/* Summary cards - screen only */}
       {transactions.length > 0 && (
-        <div className="flex justify-end gap-8 p-4 bg-muted/50 rounded-md">
+        <div className="flex justify-end gap-8 p-4 bg-muted/50 rounded-md print-hidden">
           <div className="text-right">
             <div className="text-sm text-muted-foreground">Toplam Gelir</div>
             <div className="text-lg font-bold font-mono text-green-600 dark:text-green-400">

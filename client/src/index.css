@@ -699,52 +699,67 @@
 
   /* Print view control */
   .print-hidden {
-    display: none !important;
+    display: block !important;
   }
   
-  .print-only {
-    display: table-row !important;
+  /* Print table styling */
+  .print-view-wrapper {
+    width: 100% !important;
   }
   
-  /* Dynamic page break with 3cm top margin */
-  .print-page-break {
+  .print-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 11px !important;
+  }
+  
+  .print-table thead {
+    display: table-header-group !important;
+    page-break-inside: avoid !important;
+  }
+  
+  .print-table-row {
+    page-break-inside: avoid !important;
+  }
+  
+  .print-table-row td {
+    border: 1px solid #ddd !important;
+    padding: 4px 6px !important;
+  }
+  
+  /* Page break row - 30mm (approx 3cm) spacing */
+  .print-page-break-row {
     page-break-before: always !important;
-    height: 3cm !important;
-    display: table-row !important;
+    page-break-inside: avoid !important;
   }
   
-  .print-page-break td {
+  .print-page-break-row td {
     border: none !important;
     padding: 0 !important;
-    height: 3cm !important;
+    height: 30mm !important;
   }
   
   /* Carryover row - "Bir Önceki Sayfadan Nakledilen Tutar" */
   .print-carryover-row {
-    background-color: #f0f0f0 !important;
-    font-weight: bold !important;
-    border-top: 2px solid #000 !important;
-    border-bottom: 2px solid #000 !important;
+    background-color: #fafafa !important;
     page-break-inside: avoid !important;
   }
   
   .print-carryover-row td {
-    padding: 8px 12px !important;
-    border: none !important;
+    padding: 6px 8px !important;
+    font-size: 11px !important;
   }
   
   /* Page summary row */
-  .print-page-summary {
-    background-color: #f9f9f9 !important;
-    font-weight: bold !important;
-    border-top: 2px solid #333 !important;
-    border-bottom: 2px solid #333 !important;
+  .print-page-summary-row {
+    background-color: #f5f5f5 !important;
     page-break-inside: avoid !important;
+    font-weight: bold !important;
   }
   
-  .print-page-summary td {
-    padding: 8px 12px !important;
-    border: none !important;
+  .print-page-summary-row td {
+    padding: 6px 8px !important;
+    font-size: 11px !important;
   }
 
   /* Hakediş Date Info - FULL WIDTH HORIZONTAL - PRINT MODE ONLY */
