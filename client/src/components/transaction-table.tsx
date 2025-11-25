@@ -56,65 +56,6 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
       return sum + amount;
     }, 0);
 
-  // Calculate cumulative total up to specific index
-  const getCumulativeTotal = (upToIndex: number) => {
-    let total = 0;
-    for (let i = 0; i < upToIndex; i++) {
-      const t = transactions[i];
-      const amount = parseFloat(t.amount);
-      total += t.type === "Gelir" ? amount : -amount;
-    }
-    return total;
-  };
-
-  // Calculate totals for a range
-  const getRangeTotals = (startIndex: number, endIndex: number) => {
-    let income = 0;
-    let expense = 0;
-    for (let i = startIndex; i < endIndex; i++) {
-      if (transactions[i]) {
-        const amount = parseFloat(transactions[i].amount);
-        if (transactions[i].type === "Gelir") {
-          income += amount;
-        } else {
-          expense += amount;
-        }
-      }
-    }
-    return { income, expense };
-  };
-
-  // Excel-like pagination: First page 9 rows, subsequent pages 30 rows
-  const FIRST_PAGE_ROWS = 9;
-  const SUBSEQUENT_PAGE_ROWS = 30;
-
-  const buildPages = () => {
-    const pages: Array<{ startIndex: number; endIndex: number; pageNumber: number }> = [];
-    let currentIndex = 0;
-    let pageNum = 1;
-
-    // First page
-    if (transactions.length > 0) {
-      const firstPageEnd = Math.min(FIRST_PAGE_ROWS, transactions.length);
-      pages.push({ startIndex: 0, endIndex: firstPageEnd, pageNumber: pageNum });
-      currentIndex = firstPageEnd;
-      pageNum++;
-    }
-
-    // Subsequent pages
-    while (currentIndex < transactions.length) {
-      const pageEnd = Math.min(currentIndex + SUBSEQUENT_PAGE_ROWS, transactions.length);
-      pages.push({ startIndex: currentIndex, endIndex: pageEnd, pageNumber: pageNum });
-      currentIndex = pageEnd;
-      pageNum++;
-    }
-
-    console.log('Pages built:', pages.map(p => `Page ${p.pageNumber}: rows ${p.startIndex}-${p.endIndex-1}`));
-    return pages;
-  };
-
-  const pages = buildPages();
-
   return (
     <div className="space-y-4">
       {/* SCREEN VIEW */}
@@ -200,79 +141,48 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
         </Table>
       </div>
 
-      {/* PRINT VIEW */}
-      <div className="hidden print:block">
+      {/* PRINT VIEW - Single optimized table */}
+      <div className="hidden print:block print-table-wrapper">
         {transactions.length === 0 ? (
           <div>Henüz işlem kaydı bulunmamaktadır</div>
         ) : (
-          <>
-            {pages.map((page, pageIndex) => {
-              const pageTransactions = transactions.slice(page.startIndex, page.endIndex);
-              const cumulativeTotal = getCumulativeTotal(page.startIndex);
-              const pageTotals = getRangeTotals(page.startIndex, page.endIndex);
-              const pageTotal = pageTotals.income - pageTotals.expense;
-
-              return (
-                <div key={`page-${pageIndex}`} style={{ pageBreakAfter: pageIndex < pages.length - 1 ? 'always' : 'avoid' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
-                    <thead>
-                      <tr style={{ display: 'table-header-group' }}>
-                        <th style={{ border: '1px solid #333', padding: '4px', textAlign: 'left', fontWeight: 'bold', backgroundColor: '#f0f0f0', fontSize: '10px' }}>Sıra No</th>
-                        <th style={{ border: '1px solid #333', padding: '4px', textAlign: 'left', fontWeight: 'bold', backgroundColor: '#f0f0f0', fontSize: '10px' }}>Tarih</th>
-                        <th style={{ border: '1px solid #333', padding: '4px', textAlign: 'left', fontWeight: 'bold', backgroundColor: '#f0f0f0', fontSize: '10px' }}>Proje</th>
-                        <th style={{ border: '1px solid #333', padding: '4px', textAlign: 'left', fontWeight: 'bold', backgroundColor: '#f0f0f0', fontSize: '10px' }}>Tür</th>
-                        <th style={{ border: '1px solid #333', padding: '4px', textAlign: 'left', fontWeight: 'bold', backgroundColor: '#f0f0f0', fontSize: '10px' }}>İş Grubu</th>
-                        <th style={{ border: '1px solid #333', padding: '4px', textAlign: 'left', fontWeight: 'bold', backgroundColor: '#f0f0f0', fontSize: '10px' }}>Rayiç Grubu</th>
-                        <th style={{ border: '1px solid #333', padding: '4px', textAlign: 'left', fontWeight: 'bold', backgroundColor: '#f0f0f0', fontSize: '10px' }}>Açıklama</th>
-                        <th style={{ border: '1px solid #333', padding: '4px', textAlign: 'center', fontWeight: 'bold', backgroundColor: '#f0f0f0', fontSize: '10px' }}>Hakedişe Dahil</th>
-                        <th style={{ border: '1px solid #333', padding: '4px', textAlign: 'right', fontWeight: 'bold', backgroundColor: '#f0f0f0', fontSize: '10px' }}>Tutar</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {/* Carryover row for page 2+ */}
-                      {pageIndex > 0 && (
-                        <tr style={{ backgroundColor: '#f5f5f5', borderTop: '2px solid #000', borderBottom: '2px solid #000' }}>
-                          <td colSpan={7} style={{ border: 'none', borderTop: '2px solid #000', borderBottom: '2px solid #000', padding: '4px', textAlign: 'right', fontWeight: 'bold', fontSize: '10px' }}>
-                            Bir Önceki Sayfadan Nakledilen Tutar:
-                          </td>
-                          <td style={{ border: 'none', borderTop: '2px solid #000', borderBottom: '2px solid #000', padding: '4px', textAlign: 'center', fontSize: '10px' }}></td>
-                          <td style={{ border: 'none', borderTop: '2px solid #000', borderBottom: '2px solid #000', padding: '4px', textAlign: 'right', fontWeight: 'bold', fontSize: '10px' }}>
-                            {formatCurrency(cumulativeTotal)}
-                          </td>
-                        </tr>
-                      )}
-
-                      {/* Data rows */}
-                      {pageTransactions.map((transaction, transIndex) => (
-                        <tr key={transaction.id} style={{ pageBreakInside: 'avoid' }}>
-                          <td style={{ border: '1px solid #ddd', padding: '4px', fontSize: '10px', textAlign: 'center' }}>{page.startIndex + transIndex + 1}</td>
-                          <td style={{ border: '1px solid #ddd', padding: '4px', fontSize: '10px' }}>{formatDate(transaction.date)}</td>
-                          <td style={{ border: '1px solid #ddd', padding: '4px', fontSize: '10px' }}>{transaction.projectName}</td>
-                          <td style={{ border: '1px solid #ddd', padding: '4px', fontSize: '10px' }}>{transaction.type}</td>
-                          <td style={{ border: '1px solid #ddd', padding: '4px', fontSize: '10px' }}>{transaction.isGrubu}</td>
-                          <td style={{ border: '1px solid #ddd', padding: '4px', fontSize: '10px' }}>{transaction.rayicGrubu}</td>
-                          <td style={{ border: '1px solid #ddd', padding: '4px', fontSize: '10px' }}>{transaction.description || '-'}</td>
-                          <td style={{ border: '1px solid #ddd', padding: '4px', fontSize: '10px', textAlign: 'center' }}>{transaction.progressPaymentId ? '✓' : ''}</td>
-                          <td style={{ border: '1px solid #ddd', padding: '4px', fontSize: '10px', textAlign: 'right' }}>{formatCurrency(transaction.amount)}</td>
-                        </tr>
-                      ))}
-
-                      {/* Page total row */}
-                      <tr style={{ backgroundColor: '#f5f5f5', borderTop: '2px solid #333', borderBottom: '2px solid #333' }}>
-                        <td colSpan={7} style={{ border: 'none', borderTop: '2px solid #333', borderBottom: '2px solid #333', padding: '4px', textAlign: 'right', fontWeight: 'bold', fontSize: '10px' }}>
-                          Sayfa Toplamı:
-                        </td>
-                        <td style={{ border: 'none', borderTop: '2px solid #333', borderBottom: '2px solid #333', padding: '4px', textAlign: 'center', fontSize: '10px' }}></td>
-                        <td style={{ border: 'none', borderTop: '2px solid #333', borderBottom: '2px solid #333', padding: '4px', textAlign: 'right', fontWeight: 'bold', fontSize: '10px' }}>
-                          {formatCurrency(pageTotal)}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              );
-            })}
-          </>
+          <table className="print-transactions-table">
+            <thead>
+              <tr>
+                <th>Sıra No</th>
+                <th>Tarih</th>
+                <th>Proje</th>
+                <th>Tür</th>
+                <th>İş Grubu</th>
+                <th>Rayiç Grubu</th>
+                <th>Açıklama</th>
+                <th>Hakedişe Dahil</th>
+                <th>Tutar</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.map((transaction, index) => (
+                <tr key={transaction.id}>
+                  <td className="text-center">{index + 1}</td>
+                  <td>{formatDate(transaction.date)}</td>
+                  <td>{transaction.projectName}</td>
+                  <td>{transaction.type}</td>
+                  <td>{transaction.isGrubu}</td>
+                  <td>{transaction.rayicGrubu}</td>
+                  <td>{transaction.description || '-'}</td>
+                  <td className="text-center">{transaction.progressPaymentId ? '✓' : ''}</td>
+                  <td className="text-right">{formatCurrency(transaction.amount)}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className="print-total-row">
+                <td colSpan={7} className="text-right">TOPLAM:</td>
+                <td></td>
+                <td className="text-right">{formatCurrency(totalIncome - totalExpense)}</td>
+              </tr>
+            </tfoot>
+          </table>
         )}
       </div>
 

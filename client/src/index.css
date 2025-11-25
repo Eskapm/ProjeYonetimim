@@ -692,93 +692,83 @@
     widows: 3;
   }
 
-  /* Landscape orientation for wide tables (optional - uncomment if needed) */
-  /* @page {
-    size: A4 landscape;
-  } */
+  /* PROFESSIONAL PRINT LAYOUT - A4 PAGE SETUP */
+  @page {
+    size: A4 portrait;
+    margin: 15mm 10mm;
+  }
 
   /* Print view control */
   .print-hidden {
     display: block !important;
   }
-  
-  /* Print page container - Excel-like manual pagination */
-  .print-page {
-    page-break-after: always !important;
-    page-break-inside: avoid !important;
+
+  /* Print table wrapper */
+  .print-table-wrapper {
     width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
   }
-  
-  .print-page:last-child {
-    page-break-after: auto !important;
-  }
-  
-  /* Manual page break */
-  .print-page-break {
-    page-break-after: always !important;
-    height: 0 !important;
-  }
-  
-  /* Main print table */
-  .print-table-main {
+
+  /* Professional transactions print table */
+  .print-transactions-table {
     width: 100% !important;
     border-collapse: collapse !important;
-    font-size: 11px !important;
-    page-break-inside: avoid !important;
+    font-family: Arial, sans-serif !important;
+    font-size: 10px !important;
+    line-height: 1.4 !important;
   }
-  
-  /* Table header */
-  .print-table-header-row {
+
+  .print-transactions-table thead {
     display: table-header-group !important;
+    background-color: #e8e8e8 !important;
   }
-  
-  .print-th {
+
+  .print-transactions-table thead tr {
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  .print-transactions-table th {
     border: 1px solid #333 !important;
-    padding: 6px 4px !important;
+    padding: 5px 4px !important;
     text-align: left !important;
     font-weight: bold !important;
-    background-color: #f0f0f0 !important;
-    font-size: 10px !important;
+    background-color: #e8e8e8 !important;
+    font-size: 9px !important;
+    line-height: 1.2 !important;
   }
-  
-  /* Table data row */
-  .print-table-data-row {
+
+  .print-transactions-table tbody tr {
     page-break-inside: avoid !important;
   }
-  
-  .print-td {
-    border: 1px solid #ddd !important;
-    padding: 4px 6px !important;
-    font-size: 10px !important;
+
+  .print-transactions-table td {
+    border: 1px solid #ccc !important;
+    padding: 4px 3px !important;
+    font-size: 9px !important;
+    line-height: 1.3 !important;
+    vertical-align: top !important;
   }
-  
-  /* Carryover row - "Bir Önceki Sayfadan Nakledilen Tutar" */
-  .print-carryover-row {
-    background-color: #f5f5f5 !important;
-    border-top: 2px solid #000 !important;
-    border-bottom: 2px solid #000 !important;
+
+  .print-transactions-table tbody tr:nth-child(odd) {
+    background-color: #ffffff !important;
   }
-  
-  .print-carryover-row .print-td {
-    border: none !important;
-    border-top: 2px solid #000 !important;
-    border-bottom: 2px solid #000 !important;
-    padding: 6px 4px !important;
-    font-size: 10px !important;
+
+  .print-transactions-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9 !important;
   }
-  
-  /* Page total row */
-  .print-page-total-row {
-    background-color: #f5f5f5 !important;
-    border-top: 2px solid #333 !important;
-    border-bottom: 2px solid #333 !important;
+
+  /* Footer total row */
+  .print-total-row {
+    background-color: #e8e8e8 !important;
     font-weight: bold !important;
-  }
-  
-  .print-page-total-row .print-td {
-    border: none !important;
+    page-break-inside: avoid !important;
     border-top: 2px solid #333 !important;
-    border-bottom: 2px solid #333 !important;
+  }
+
+  .print-total-row td {
+    border: 1px solid #333 !important;
     padding: 6px 4px !important;
     font-size: 10px !important;
     font-weight: bold !important;
