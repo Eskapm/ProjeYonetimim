@@ -709,35 +709,60 @@
     }
   }
 
-  /* Print only - hide on screen */
-  .print-only {
+  /* Print wrapper - dinamik sayfa break sistemi */
+  .print-only-wrapper {
     display: none !important;
   }
 
   @media print {
-    .print-only {
-      display: table !important;
+    .print-only-wrapper {
+      display: block !important;
+    }
+
+    /* Her sayfa tam A4 boyutu */
+    .print-page {
+      page-break-after: always !important;
+      page-break-inside: avoid !important;
+      width: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      height: 100vh !important;
+    }
+
+    .print-page:last-child {
+      page-break-after: auto !important;
+    }
+
+    /* Sayfa başlığı */
+    .print-page-header {
+      margin-bottom: 8px !important;
+    }
+
+    .print-page-title {
+      font-size: 12px !important;
+      font-weight: bold !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      color: #000 !important;
+    }
+
+    /* Sayfa tablosu */
+    .print-transactions-table {
       width: 100% !important;
       border-collapse: collapse !important;
       font-family: Arial, sans-serif !important;
       font-size: 8px !important;
       line-height: 1.1 !important;
       table-layout: fixed !important;
+      flex-grow: 1 !important;
     }
-  }
 
-  /* Print table header - repeat on every page */
-  @media print {
-    .print-only thead {
-      display: table-header-group !important;
+    .print-transactions-table thead {
       background-color: #e8e8e8 !important;
+      display: table-header-group !important;
     }
 
-    .print-only thead tr {
-      page-break-inside: avoid !important;
-    }
-
-    .print-only th {
+    .print-transactions-table th {
       border: 1px solid #333 !important;
       padding: 2px 2px !important;
       text-align: left !important;
@@ -745,51 +770,55 @@
       background-color: #e8e8e8 !important;
       font-size: 8px !important;
       line-height: 1.1 !important;
-      overflow: hidden !important;
       white-space: nowrap !important;
+      overflow: hidden !important;
       text-overflow: ellipsis !important;
     }
 
-    /* Print table body - auto page breaks */
-    .print-only tbody tr {
-      page-break-inside: auto !important;
-      height: auto !important;
+    .print-transactions-table tbody tr {
+      height: 16px !important;
     }
 
-    .print-only td {
+    .print-transactions-table td {
       border: 1px solid #ccc !important;
-      padding: 2px 2px !important;
+      padding: 1px 2px !important;
       font-size: 8px !important;
       line-height: 1.1 !important;
       vertical-align: middle !important;
       overflow: hidden !important;
-      white-space: normal !important;
-      word-wrap: break-word !important;
-      max-height: 18px !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
     }
 
-    .print-only tbody tr:nth-child(odd) {
+    .print-transactions-table tbody tr:nth-child(odd) {
       background-color: #ffffff !important;
     }
 
-    .print-only tbody tr:nth-child(even) {
+    .print-transactions-table tbody tr:nth-child(even) {
       background-color: #f9f9f9 !important;
     }
 
-    /* Print total row */
-    .print-total-row {
-      background-color: #e8e8e8 !important;
-      font-weight: bold !important;
-      page-break-inside: avoid !important;
-      border-top: 2px solid #333 !important;
+    /* Sayfa altı */
+    .print-page-footer {
+      margin-top: 8px !important;
+      border-top: 2px solid #000 !important;
+      padding-top: 4px !important;
     }
 
-    .print-total-row td {
-      border: 1px solid #333 !important;
-      padding: 3px 2px !important;
-      font-size: 8px !important;
+    .print-page-total {
+      font-size: 9px !important;
       font-weight: bold !important;
-      line-height: 1.1 !important;
+      text-align: right !important;
+      margin-bottom: 4px !important;
+    }
+
+    .print-grand-total {
+      font-size: 10px !important;
+      font-weight: bold !important;
+      text-align: right !important;
+      padding: 4px 0 !important;
+      border-top: 1px solid #000 !important;
+      margin-top: 4px !important;
     }
   }
 

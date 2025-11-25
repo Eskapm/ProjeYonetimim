@@ -56,6 +56,38 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
       return sum + amount;
     }, 0);
 
+  // Dinamik sayfa break sistemi: A4 portrait (210×297mm)
+  // Margin: 15mm top/bottom, 10mm left/right
+  // Header height: ~20mm, Footer height: ~10mm
+  // Kalan: 297 - 15 - 15 - 20 - 10 = 237mm
+  // Satır yüksekliği: ~4.5mm (8px font + padding)
+  // Satır sayısı: 237 / 4.5 ≈ 52-53 satır/sayfa
+  const ROWS_PER_PAGE = 52;
+
+  // Sayfaları böl
+  const pages = Math.ceil(transactions.length / ROWS_PER_PAGE);
+  const paginatedTransactions = Array.from({ length: pages }, (_, pageIndex) => {
+    const start = pageIndex * ROWS_PER_PAGE;
+    const end = start + ROWS_PER_PAGE;
+    return {
+      pageIndex,
+      rows: transactions.slice(start, end),
+      startIndex: start,
+      endIndex: Math.min(end, transactions.length),
+    };
+  });
+
+  // Sayfa toplamları
+  const pageSubtotals = paginatedTransactions.map((page) => {
+    const pageIncome = page.rows
+      .filter(t => t.type === "Gelir")
+      .reduce((sum, t) => sum + (typeof t.amount === 'string' ? parseFloat(t.amount) : t.amount), 0);
+    const pageExpense = page.rows
+      .filter(t => t.type === "Gider")
+      .reduce((sum, t) => sum + (typeof t.amount === 'string' ? parseFloat(t.amount) : t.amount), 0);
+    return pageIncome - pageExpense;
+  });
+
   return (
     <div className="space-y-4">
       {/* SCREEN VIEW ONLY */}
@@ -141,50 +173,65 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
         </Table>
       </div>
 
-      {/* PRINT VIEW ONLY - Auto page breaks by browser */}
-      <table className="print-only">
-        <thead>
-          <tr>
-            <th>Sıra No</th>
-            <th>Tarih</th>
-            <th>Proje</th>
-            <th>Tür</th>
-            <th>İş Grubu</th>
-            <th>Rayiç Grubu</th>
-            <th>Açıklama</th>
-            <th>Hakedişe Dahil</th>
-            <th>Tutar</th>
-          </tr>
-        </thead>
-        <tbody>
-          {transactions.length === 0 ? (
-            <tr>
-              <td colSpan={9}>Henüz işlem kaydı bulunmamaktadır</td>
-            </tr>
-          ) : (
-            transactions.map((transaction, index) => (
-              <tr key={transaction.id}>
-                <td>{index + 1}</td>
-                <td>{formatDate(transaction.date)}</td>
-                <td>{transaction.projectName}</td>
-                <td>{transaction.type}</td>
-                <td>{transaction.isGrubu}</td>
-                <td>{transaction.rayicGrubu}</td>
-                <td>{transaction.description || '-'}</td>
-                <td>{transaction.progressPaymentId ? '✓' : ''}</td>
-                <td>{formatCurrency(transaction.amount)}</td>
-              </tr>
-            ))
-          )}
-        </tbody>
-        <tfoot>
-          <tr className="print-total-row">
-            <td colSpan={7} className="text-right">TOPLAM:</td>
-            <td></td>
-            <td>{formatCurrency(totalIncome - totalExpense)}</td>
-          </tr>
-        </tfoot>
-      </table>
+      {/* PRINT VIEW ONLY - Dinamik Sayfa Break Sistemi */}
+      <div className="print-only-wrapper">
+        {transactions.length === 0 ? (
+          <div className="print-page">Henüz işlem kaydı bulunmamaktadır</div>
+        ) : (
+          paginatedTransactions.map((page) => (
+            <div key={page.pageIndex} className="print-page">
+              {/* Sayfa başlığı */}
+              <div className="print-page-header">
+                <h3 className="print-page-title">İşlem Listesi - Sayfa {page.pageIndex + 1} / {pages}</h3>
+              </div>
+
+              {/* Sayfa tablosu */}
+              <table className="print-transactions-table">
+                <thead>
+                  <tr>
+                    <th>Sıra No</th>
+                    <th>Tarih</th>
+                    <th>Proje</th>
+                    <th>Tür</th>
+                    <th>İş Grubu</th>
+                    <th>Rayiç Grubu</th>
+                    <th>Açıklama</th>
+                    <th>Hakedişe Dahil</th>
+                    <th>Tutar</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {page.rows.map((transaction, rowIndex) => (
+                    <tr key={transaction.id}>
+                      <td className="text-center">{rowIndex + 1}</td>
+                      <td>{formatDate(transaction.date)}</td>
+                      <td>{transaction.projectName}</td>
+                      <td>{transaction.type}</td>
+                      <td>{transaction.isGrubu}</td>
+                      <td>{transaction.rayicGrubu}</td>
+                      <td>{transaction.description || '-'}</td>
+                      <td className="text-center">{transaction.progressPaymentId ? '✓' : ''}</td>
+                      <td className="text-right">{formatCurrency(transaction.amount)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Sayfa altı - Sayfa toplamı */}
+              <div className="print-page-footer">
+                <div className="print-page-total">
+                  <strong>Sayfa Toplamı:</strong> {formatCurrency(pageSubtotals[page.pageIndex])}
+                </div>
+                {page.pageIndex === pages - 1 && (
+                  <div className="print-grand-total">
+                    <strong>GENEL TOPLAM:</strong> {formatCurrency(totalIncome - totalExpense)}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
 
       {/* Summary cards - SCREEN ONLY */}
       {transactions.length > 0 && (
