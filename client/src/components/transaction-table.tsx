@@ -255,7 +255,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                       <TableRow className="print-only print-page-summary">
                         <TableCell></TableCell>
                         <TableCell colSpan={7} className="text-right font-bold pr-4">
-                          Sayfa Toplamı:
+                          Toplam Tutar:
                         </TableCell>
                         <TableCell className="text-right font-mono font-bold">
                           {formatCurrency(pageTotals.income - pageTotals.expense)}
