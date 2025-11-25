@@ -504,11 +504,11 @@ export default function Invoices() {
                     <TableHead>Tarih</TableHead>
                     <TableHead>Müşteri/Taşeron</TableHead>
                     <TableHead>Proje</TableHead>
-                    <TableHead className="text-right">Tutar</TableHead>
-                    <TableHead className="text-right">KDV</TableHead>
-                    <TableHead className="text-right">Toplam</TableHead>
-                    <TableHead className="text-right">Ödenen</TableHead>
-                    <TableHead className="text-right">Kalan</TableHead>
+                    <TableHead className="text-right w-[200px] min-w-[200px]">Tutar</TableHead>
+                    <TableHead className="text-right w-[200px] min-w-[200px]">KDV</TableHead>
+                    <TableHead className="text-right w-[200px] min-w-[200px]">Toplam</TableHead>
+                    <TableHead className="text-right w-[200px] min-w-[200px]">Ödenen</TableHead>
+                    <TableHead className="text-right w-[200px] min-w-[200px]">Kalan</TableHead>
                     <TableHead>Durum</TableHead>
                     <TableHead className="text-right">İşlemler</TableHead>
                   </TableRow>

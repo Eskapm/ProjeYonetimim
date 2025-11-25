@@ -1140,9 +1140,9 @@ export default function Reports() {
                         <TableRow>
                           <TableHead>Proje Adı</TableHead>
                           <TableHead className="text-right">Hakediş Sayısı</TableHead>
-                          <TableHead className="text-right">Toplam Tutar</TableHead>
-                          <TableHead className="text-right">Alınan</TableHead>
-                          <TableHead className="text-right">Kalan</TableHead>
+                          <TableHead className="text-right w-[200px] min-w-[200px]">Toplam Tutar</TableHead>
+                          <TableHead className="text-right w-[200px] min-w-[200px]">Alınan</TableHead>
+                          <TableHead className="text-right w-[200px] min-w-[200px]">Kalan</TableHead>
                           <TableHead className="text-right">Tamamlanma</TableHead>
                         </TableRow>
                       </TableHeader>

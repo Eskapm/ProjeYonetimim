@@ -503,13 +503,13 @@ export default function Hakedis() {
                     <TableHead>Hakediş No</TableHead>
                     <TableHead>Proje</TableHead>
                     <TableHead>Tarih</TableHead>
-                    <TableHead className="text-right">Tutar</TableHead>
+                    <TableHead className="text-right w-[200px] min-w-[200px]">Tutar</TableHead>
                     <TableHead className="text-right">Müt. %</TableHead>
-                    <TableHead className="text-right">Brüt Tutar</TableHead>
-                    <TableHead className="text-right">Avans Kesinti</TableHead>
-                    <TableHead className="text-right">Net Ödeme</TableHead>
-                    <TableHead className="text-right">Tahsil</TableHead>
-                    <TableHead className="text-right">Bakiye</TableHead>
+                    <TableHead className="text-right w-[200px] min-w-[200px]">Brüt Tutar</TableHead>
+                    <TableHead className="text-right w-[200px] min-w-[200px]">Avans Kesinti</TableHead>
+                    <TableHead className="text-right w-[200px] min-w-[200px]">Net Ödeme</TableHead>
+                    <TableHead className="text-right w-[200px] min-w-[200px]">Tahsil</TableHead>
+                    <TableHead className="text-right w-[200px] min-w-[200px]">Bakiye</TableHead>
                     <TableHead>Durum</TableHead>
                     <TableHead className="text-right no-print">İşlemler</TableHead>
                   </TableRow>

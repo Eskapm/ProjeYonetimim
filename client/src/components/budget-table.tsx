@@ -52,10 +52,10 @@ export function BudgetTable({ items, onEdit, onDelete }: BudgetTableProps) {
               <TableHead>Kalem Adı</TableHead>
               <TableHead className="text-right">Miktar</TableHead>
               <TableHead>Birim</TableHead>
-              <TableHead className="text-right">Birim Fiyat</TableHead>
-              <TableHead className="text-right">Bütçe Tutarı</TableHead>
-              <TableHead className="text-right">Gerçekleşen Tutar</TableHead>
-              <TableHead className="text-right">Artı/Eksi</TableHead>
+              <TableHead className="text-right w-[200px] min-w-[200px]">Birim Fiyat</TableHead>
+              <TableHead className="text-right w-[200px] min-w-[200px]">Bütçe Tutarı</TableHead>
+              <TableHead className="text-right w-[200px] min-w-[200px]">Gerçekleşen Tutar</TableHead>
+              <TableHead className="text-right w-[200px] min-w-[200px]">Artı/Eksi</TableHead>
               <TableHead>İş Grubu</TableHead>
               <TableHead>Rayiç Grubu</TableHead>
               <TableHead className="text-right">İşlemler</TableHead>
