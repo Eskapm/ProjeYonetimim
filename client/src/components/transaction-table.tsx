@@ -113,21 +113,21 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
   };
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-md border overflow-x-auto w-full">
-        <Table className="w-full">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[60px] min-w-[60px] text-center">Sıra No</TableHead>
-              <TableHead className="w-[110px] min-w-[110px]">Tarih</TableHead>
-              <TableHead>Proje</TableHead>
-              <TableHead>Tür</TableHead>
-              <TableHead>İş Grubu</TableHead>
-              <TableHead>Rayiç Grubu</TableHead>
-              <TableHead>Açıklama</TableHead>
-              <TableHead className="text-center">Hakedişe Dahil</TableHead>
-              <TableHead className="text-right w-[200px] min-w-[200px]">Tutar</TableHead>
-              <TableHead className="text-right">İşlemler</TableHead>
+    <div className="space-y-4 print:space-y-0 print:m-0 print:p-0">
+      <div className="rounded-md border overflow-x-auto w-full print:border-0 print:rounded-none print:overflow-visible print:space-y-0 print:m-0 print:p-0">
+        <Table className="w-full print:w-full print:m-0 print:p-0">
+          <TableHeader className="print:display-table-header-group">
+            <TableRow className="print:page-break-inside-avoid">
+              <TableHead className="w-[60px] min-w-[60px] text-center print:w-[50px] print:min-w-[50px]">Sıra No</TableHead>
+              <TableHead className="w-[110px] min-w-[110px] print:w-[80px] print:min-w-[80px]">Tarih</TableHead>
+              <TableHead className="print:w-[80px] print:min-w-[80px]">Proje</TableHead>
+              <TableHead className="print:w-[60px] print:min-w-[60px]">Tür</TableHead>
+              <TableHead className="print:w-[70px] print:min-w-[70px]">İş Grubu</TableHead>
+              <TableHead className="print:w-[70px] print:min-w-[70px]">Rayiç Grubu</TableHead>
+              <TableHead className="print:w-[100px] print:min-w-[100px]">Açıklama</TableHead>
+              <TableHead className="text-center print:w-[50px] print:min-w-[50px]">Hakedişe Dahil</TableHead>
+              <TableHead className="text-right w-[200px] min-w-[200px] print:w-[90px] print:min-w-[90px]">Tutar</TableHead>
+              <TableHead className="text-right print-hidden">İşlemler</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
