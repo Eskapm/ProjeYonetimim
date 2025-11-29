@@ -1,44 +1,72 @@
+import { useRef, useState } from "react";
+import { createRoot } from "react-dom/client";
 import { Button } from "@/components/ui/button";
-import { FileText } from "lucide-react";
+import { FileText, Loader2 } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { PrintableTransactionsReport } from "./printable-transactions-report";
+
+interface TransactionData {
+  id: string;
+  date: string;
+  projectName: string;
+  type: string;
+  amount: string;
+  isGrubu: string;
+  rayicGrubu: string;
+  description: string | null;
+  progressPaymentId: string | null;
+}
 
 interface PDFExportButtonProps {
   className?: string;
   documentTitle?: string;
+  transactions: TransactionData[];
+  filterInfo?: string;
 }
 
-export function PDFExportButton({ className, documentTitle = "Rapor" }: PDFExportButtonProps) {
+export function PDFExportButton({ className, documentTitle = "Rapor", transactions, filterInfo }: PDFExportButtonProps) {
+  const [isExporting, setIsExporting] = useState(false);
+
   const handlePDFExport = async () => {
+    if (transactions.length === 0) {
+      console.log("No transactions to export");
+      return;
+    }
+
+    setIsExporting(true);
+
     try {
-      // Find table or card container
-      const table = document.querySelector("table") as HTMLElement;
-      if (!table) {
-        console.error("Table not found");
-        return;
-      }
+      // Create offscreen container
+      const container = document.createElement("div");
+      container.style.position = "absolute";
+      container.style.left = "-9999px";
+      container.style.top = "0";
+      container.style.width = "210mm";
+      container.style.backgroundColor = "white";
+      document.body.appendChild(container);
 
-      // Create a temporary clone to capture
-      const clone = table.cloneNode(true) as HTMLElement;
-      clone.style.display = "block";
-      clone.style.position = "absolute";
-      clone.style.left = "-9999px";
-      clone.style.width = "1000px";
-      clone.style.backgroundColor = "white";
+      // Render the report component
+      const root = createRoot(container);
       
-      document.body.appendChild(clone);
-
-      // Capture the table as image
-      const canvas = await html2canvas(clone, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-        allowTaint: true,
+      await new Promise<void>((resolve) => {
+        root.render(
+          <PrintableTransactionsReport
+            transactions={transactions}
+            documentTitle={documentTitle}
+            filterInfo={filterInfo}
+          />
+        );
+        // Wait for render
+        setTimeout(resolve, 500);
       });
 
-      // Remove clone
-      document.body.removeChild(clone);
+      // Find all pages
+      const pages = container.querySelectorAll(".pdf-page");
+      
+      if (pages.length === 0) {
+        throw new Error("No pages found to export");
+      }
 
       // Create PDF
       const pdf = new jsPDF({
@@ -49,48 +77,41 @@ export function PDFExportButton({ className, documentTitle = "Rapor" }: PDFExpor
 
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10;
-      const contentWidth = pageWidth - 2 * margin;
-      
-      // Calculate image dimensions
-      const imgHeight = (canvas.height * contentWidth) / canvas.width;
-      
-      const imgData = canvas.toDataURL("image/png");
-      
-      let position = margin;
-      let remainingHeight = imgHeight;
-      let isFirstPage = true;
 
-      while (remainingHeight > 0) {
-        if (!isFirstPage) {
-          pdf.addPage();
-          position = margin;
-        }
-
-        const availableHeight = pageHeight - 2 * margin;
-        const heightToPrint = Math.min(remainingHeight, availableHeight);
+      // Capture each page
+      for (let i = 0; i < pages.length; i++) {
+        const page = pages[i] as HTMLElement;
         
-        pdf.addImage(
-          imgData,
-          "PNG",
-          margin,
-          position,
-          contentWidth,
-          heightToPrint
-        );
+        const canvas = await html2canvas(page, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: "#ffffff",
+          allowTaint: true,
+          width: page.offsetWidth,
+          height: page.offsetHeight,
+        });
 
-        remainingHeight -= heightToPrint;
-        isFirstPage = false;
-
-        if (remainingHeight > 0) {
-          position = margin;
+        const imgData = canvas.toDataURL("image/png");
+        
+        if (i > 0) {
+          pdf.addPage();
         }
+
+        // Add image to cover full page
+        pdf.addImage(imgData, "PNG", 0, 0, pageWidth, pageHeight);
       }
 
+      // Cleanup
+      root.unmount();
+      document.body.removeChild(container);
+
       // Save PDF
-      pdf.save(`${documentTitle}.pdf`);
+      pdf.save(`${documentTitle.replace(/\s+/g, '_')}.pdf`);
     } catch (error) {
       console.error("PDF export failed:", error);
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -100,10 +121,20 @@ export function PDFExportButton({ className, documentTitle = "Rapor" }: PDFExpor
       variant="outline"
       size="sm"
       className={className}
+      disabled={isExporting || transactions.length === 0}
       data-testid="button-export-pdf"
     >
-      <FileText className="h-4 w-4 mr-2" />
-      PDF İndir
+      {isExporting ? (
+        <>
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          Hazırlanıyor...
+        </>
+      ) : (
+        <>
+          <FileText className="h-4 w-4 mr-2" />
+          PDF İndir
+        </>
+      )}
     </Button>
   );
 }

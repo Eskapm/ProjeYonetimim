@@ -276,7 +276,11 @@ export default function Transactions() {
             documentTitle="GELİR & GİDER İŞLEMLERİ"
           />
           <PrintButton />
-          <PDFExportButton documentTitle="islemler-raporu" />
+          <PDFExportButton 
+            documentTitle="GELİR GİDER İŞLEMLERİ RAPORU" 
+            transactions={filteredTransactions}
+            filterInfo={typeFilter !== "all" ? `Filtre: ${typeFilter}` : undefined}
+          />
           <Button onClick={handleAddTransaction} data-testid="button-add-transaction">
             <Plus className="h-4 w-4 mr-2" />
             Yeni İşlem Ekle
