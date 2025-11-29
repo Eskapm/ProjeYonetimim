@@ -4,6 +4,7 @@ import { TransactionTable } from "@/components/transaction-table";
 import { TaxSummaryPanel } from "@/components/tax-summary-panel";
 import { PrintButton } from "@/components/print-button";
 import { ExportToExcel } from "@/components/export-to-excel";
+import { PDFExportButton } from "@/components/pdf-export-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -275,6 +276,7 @@ export default function Transactions() {
             documentTitle="GELİR & GİDER İŞLEMLERİ"
           />
           <PrintButton />
+          <PDFExportButton documentTitle="islemler-raporu" />
           <Button onClick={handleAddTransaction} data-testid="button-add-transaction">
             <Plus className="h-4 w-4 mr-2" />
             Yeni İşlem Ekle
