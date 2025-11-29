@@ -882,22 +882,6 @@
     .no-print {
       display: none !important;
     }
-    
-    /* PDF-style page layout for printing */
-    .pdf-page {
-      width: 100% !important;
-      min-height: auto !important;
-      padding: 0 !important;
-      margin: 0 !important;
-      box-sizing: border-box !important;
-      background: white !important;
-      page-break-after: always !important;
-      page-break-inside: avoid !important;
-    }
-    
-    .pdf-page:last-child {
-      page-break-after: auto !important;
-    }
   }
 
   /* Hakediş Date Info - FULL WIDTH HORIZONTAL - PRINT MODE ONLY */

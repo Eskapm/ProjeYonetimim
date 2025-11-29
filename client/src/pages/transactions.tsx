@@ -275,11 +275,7 @@ export default function Transactions() {
             sheetName="İşlemler"
             documentTitle="GELİR & GİDER İŞLEMLERİ"
           />
-          <PrintButton 
-            documentTitle="GELİR GİDER İŞLEMLERİ RAPORU" 
-            transactions={filteredTransactions}
-            filterInfo={typeFilter !== "all" ? `Filtre: ${typeFilter}` : undefined}
-          />
+          <PrintButton />
           <PDFExportButton 
             documentTitle="GELİR GİDER İŞLEMLERİ RAPORU" 
             transactions={filteredTransactions}
