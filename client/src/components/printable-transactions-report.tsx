@@ -83,8 +83,8 @@ export const PrintableTransactionsReport = forwardRef<HTMLDivElement, PrintableT
       const descColWidth = parseInt(columnWidths.description) || 80;
       const charsPerLine = Math.floor(descColWidth / 4);
       const lines = Math.ceil(descLength / charsPerLine) || 1;
-      const baseHeight = 18;
-      const lineHeight = 10;
+      const baseHeight = 24;
+      const lineHeight = 11;
       return Math.max(baseHeight, baseHeight + (lines - 1) * lineHeight);
     };
 
@@ -275,24 +275,24 @@ export const PrintableTransactionsReport = forwardRef<HTMLDivElement, PrintableT
                 }}>
                   <thead>
                     <tr style={{ backgroundColor: '#f5f5f5' }}>
-                      <th style={{ width: columnWidths.no, minWidth: columnWidths.no, padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'center', fontWeight: 'bold' }}>No</th>
-                      <th style={{ width: columnWidths.date, minWidth: columnWidths.date, padding: '4px 3px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>Tarih</th>
-                      <th style={{ width: columnWidths.project, minWidth: columnWidths.project, padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>Proje</th>
-                      <th style={{ width: columnWidths.type, minWidth: columnWidths.type, padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'center', fontWeight: 'bold' }}>Tür</th>
-                      <th style={{ width: columnWidths.isGrubu, minWidth: columnWidths.isGrubu, padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>İş Grubu</th>
-                      <th style={{ width: columnWidths.rayicGrubu, minWidth: columnWidths.rayicGrubu, padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>Rayiç Grubu</th>
-                      <th style={{ width: columnWidths.description, minWidth: '40px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>Açıklama</th>
-                      <th style={{ width: columnWidths.hakedis, minWidth: columnWidths.hakedis, padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'center', fontWeight: 'bold' }}>Hakediş</th>
-                      <th style={{ width: columnWidths.amount, minWidth: columnWidths.amount, padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'right', fontWeight: 'bold', whiteSpace: 'nowrap' }}>Tutar</th>
+                      <th style={{ width: columnWidths.no, minWidth: columnWidths.no, padding: '8px 3px', borderBottom: '2px solid #999', textAlign: 'center', fontWeight: 'bold', verticalAlign: 'middle' }}>No</th>
+                      <th style={{ width: columnWidths.date, minWidth: columnWidths.date, padding: '8px 4px', borderBottom: '2px solid #999', textAlign: 'left', fontWeight: 'bold', verticalAlign: 'middle' }}>Tarih</th>
+                      <th style={{ width: columnWidths.project, minWidth: columnWidths.project, padding: '8px 3px', borderBottom: '2px solid #999', textAlign: 'left', fontWeight: 'bold', verticalAlign: 'middle' }}>Proje</th>
+                      <th style={{ width: columnWidths.type, minWidth: columnWidths.type, padding: '8px 3px', borderBottom: '2px solid #999', textAlign: 'center', fontWeight: 'bold', verticalAlign: 'middle' }}>Tür</th>
+                      <th style={{ width: columnWidths.isGrubu, minWidth: columnWidths.isGrubu, padding: '8px 3px', borderBottom: '2px solid #999', textAlign: 'left', fontWeight: 'bold', verticalAlign: 'middle' }}>İş Grubu</th>
+                      <th style={{ width: columnWidths.rayicGrubu, minWidth: columnWidths.rayicGrubu, padding: '8px 3px', borderBottom: '2px solid #999', textAlign: 'left', fontWeight: 'bold', verticalAlign: 'middle' }}>Rayiç Grubu</th>
+                      <th style={{ width: columnWidths.description, minWidth: '40px', padding: '8px 3px', borderBottom: '2px solid #999', textAlign: 'left', fontWeight: 'bold', verticalAlign: 'middle' }}>Açıklama</th>
+                      <th style={{ width: columnWidths.hakedis, minWidth: columnWidths.hakedis, padding: '8px 3px', borderBottom: '2px solid #999', textAlign: 'center', fontWeight: 'bold', verticalAlign: 'middle' }}>Hakediş</th>
+                      <th style={{ width: columnWidths.amount, minWidth: columnWidths.amount, padding: '8px 3px', borderBottom: '2px solid #999', textAlign: 'right', fontWeight: 'bold', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>Tutar</th>
                     </tr>
                   </thead>
                   <tbody>
                     {pageIndex > 0 && (
                       <tr style={{ backgroundColor: '#e8f4e8', fontWeight: 'bold' }}>
-                        <td colSpan={8} style={{ padding: '5px 4px', borderBottom: '2px solid #333', textAlign: 'right' }}>
+                        <td colSpan={8} style={{ padding: '8px 4px', borderBottom: '2px solid #333', textAlign: 'right', verticalAlign: 'middle' }}>
                           Bir Önceki Sayfadan Nakledilen Tutar:
                         </td>
-                        <td style={{ padding: '5px 4px', borderBottom: '2px solid #333', textAlign: 'right', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '8px 4px', borderBottom: '2px solid #333', textAlign: 'right', fontFamily: 'monospace', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>
                           {formatCurrency(cumulativeTotal)}
                         </td>
                       </tr>
@@ -300,45 +300,45 @@ export const PrintableTransactionsReport = forwardRef<HTMLDivElement, PrintableT
                     
                     {pageTransactions.map((transaction, indexInPage) => (
                       <tr key={transaction.id} style={{ backgroundColor: indexInPage % 2 === 0 ? 'white' : '#fafafa' }}>
-                        <td style={{ width: columnWidths.no, padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'center', verticalAlign: 'top' }}>{startRowNumber + indexInPage}</td>
-                        <td style={{ width: columnWidths.date, padding: '3px 3px', borderBottom: '1px solid #eee', textAlign: 'left', whiteSpace: 'nowrap', fontSize: '8pt', verticalAlign: 'top' }}>{formatDate(transaction.date)}</td>
-                        <td style={{ width: columnWidths.project, padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'left', fontSize: '8pt', verticalAlign: 'top', wordBreak: 'break-word' }}>{transaction.projectName}</td>
+                        <td style={{ width: columnWidths.no, padding: '6px 3px', borderBottom: '1px solid #eee', textAlign: 'center', verticalAlign: 'middle' }}>{startRowNumber + indexInPage}</td>
+                        <td style={{ width: columnWidths.date, padding: '6px 4px', borderBottom: '1px solid #eee', textAlign: 'left', whiteSpace: 'nowrap', fontSize: '8pt', verticalAlign: 'middle' }}>{formatDate(transaction.date)}</td>
+                        <td style={{ width: columnWidths.project, padding: '6px 3px', borderBottom: '1px solid #eee', textAlign: 'left', fontSize: '8pt', verticalAlign: 'middle', wordBreak: 'break-word' }}>{transaction.projectName}</td>
                         <td style={{ 
                           width: columnWidths.type,
-                          padding: '3px 2px', 
+                          padding: '6px 3px', 
                           borderBottom: '1px solid #eee', 
                           textAlign: 'center',
                           color: transaction.type === "Gelir" ? '#16a34a' : '#dc2626',
                           fontWeight: '600',
-                          verticalAlign: 'top'
+                          verticalAlign: 'middle'
                         }}>{transaction.type}</td>
-                        <td style={{ width: columnWidths.isGrubu, padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'left', fontSize: '7pt', verticalAlign: 'top', wordBreak: 'break-word' }}>{transaction.isGrubu}</td>
-                        <td style={{ width: columnWidths.rayicGrubu, padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'left', fontSize: '7pt', verticalAlign: 'top', wordBreak: 'break-word' }}>{transaction.rayicGrubu}</td>
+                        <td style={{ width: columnWidths.isGrubu, padding: '6px 3px', borderBottom: '1px solid #eee', textAlign: 'left', fontSize: '7pt', verticalAlign: 'middle', wordBreak: 'break-word' }}>{transaction.isGrubu}</td>
+                        <td style={{ width: columnWidths.rayicGrubu, padding: '6px 3px', borderBottom: '1px solid #eee', textAlign: 'left', fontSize: '7pt', verticalAlign: 'middle', wordBreak: 'break-word' }}>{transaction.rayicGrubu}</td>
                         <td style={{ 
                           width: columnWidths.description, 
-                          padding: '3px 2px', 
+                          padding: '6px 3px', 
                           borderBottom: '1px solid #eee', 
                           textAlign: 'left', 
                           fontSize: '7pt', 
-                          verticalAlign: 'top',
+                          verticalAlign: 'middle',
                           wordBreak: 'break-word',
                           whiteSpace: 'pre-wrap',
-                          lineHeight: '1.3'
+                          lineHeight: '1.4'
                         }}>{transaction.description || '-'}</td>
-                        <td style={{ width: columnWidths.hakedis, padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'center', fontSize: '8pt', fontWeight: '600', color: transaction.progressPaymentId ? '#16a34a' : '#999', verticalAlign: 'top' }}>
+                        <td style={{ width: columnWidths.hakedis, padding: '6px 3px', borderBottom: '1px solid #eee', textAlign: 'center', fontSize: '8pt', fontWeight: '600', color: transaction.progressPaymentId ? '#16a34a' : '#999', verticalAlign: 'middle' }}>
                           {transaction.progressPaymentId ? '✓' : '-'}
                         </td>
-                        <td style={{ width: columnWidths.amount, padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'right', fontFamily: 'monospace', fontWeight: '600', whiteSpace: 'nowrap', verticalAlign: 'top' }}>
+                        <td style={{ width: columnWidths.amount, padding: '6px 3px', borderBottom: '1px solid #eee', textAlign: 'right', fontFamily: 'monospace', fontWeight: '600', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>
                           {formatCurrency(transaction.amount)}
                         </td>
                       </tr>
                     ))}
 
                     <tr style={{ backgroundColor: '#f0f0f0', fontWeight: 'bold' }}>
-                      <td colSpan={8} style={{ padding: '5px 4px', borderTop: '2px solid #333', borderBottom: '2px solid #333', textAlign: 'right' }}>
+                      <td colSpan={8} style={{ padding: '8px 4px', borderTop: '2px solid #333', borderBottom: '2px solid #333', textAlign: 'right', verticalAlign: 'middle' }}>
                         Toplam Tutar:
                       </td>
-                      <td style={{ padding: '5px 4px', borderTop: '2px solid #333', borderBottom: '2px solid #333', textAlign: 'right', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '8px 4px', borderTop: '2px solid #333', borderBottom: '2px solid #333', textAlign: 'right', fontFamily: 'monospace', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>
                         {formatCurrency(cumulativeTotal + (pageTotals.income - pageTotals.expense))}
                       </td>
                     </tr>
