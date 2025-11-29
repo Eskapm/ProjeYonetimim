@@ -89,7 +89,15 @@ export const PrintableTransactionsReport = forwardRef<HTMLDivElement, PrintableT
     const totalPages = pages.length;
 
     return (
-      <div ref={ref} style={{ width: '210mm', backgroundColor: 'white', fontFamily: 'Arial, sans-serif' }}>
+      <div ref={ref} style={{ 
+        width: '210mm', 
+        backgroundColor: 'white', 
+        fontFamily: 'Arial, Helvetica, sans-serif',
+        WebkitFontSmoothing: 'antialiased',
+        MozOsxFontSmoothing: 'grayscale',
+        textRendering: 'optimizeLegibility',
+        color: '#000000'
+      }}>
         {pages.map((pageTransactions, pageIndex) => {
           const cumulativeTotal = getCumulativeTotal(pageIndex);
           const pageTotals = getPageTotals(pageTransactions);
@@ -176,28 +184,31 @@ export const PrintableTransactionsReport = forwardRef<HTMLDivElement, PrintableT
                 <table style={{ 
                   width: '100%', 
                   borderCollapse: 'collapse', 
-                  fontSize: '8pt',
-                  tableLayout: 'fixed'
+                  fontSize: '9pt',
+                  tableLayout: 'fixed',
+                  fontWeight: '500',
+                  color: '#000000'
                 }}>
                   <thead>
                     <tr style={{ backgroundColor: '#f5f5f5' }}>
-                      <th style={{ width: '25px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'center', fontWeight: 'bold' }}>No</th>
-                      <th style={{ width: '55px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>Tarih</th>
-                      <th style={{ width: '70px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>Proje</th>
-                      <th style={{ width: '40px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'center', fontWeight: 'bold' }}>Tür</th>
-                      <th style={{ width: '70px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>İş Grubu</th>
-                      <th style={{ width: '70px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>Rayiç Grubu</th>
+                      <th style={{ width: '22px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'center', fontWeight: 'bold' }}>No</th>
+                      <th style={{ width: '52px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>Tarih</th>
+                      <th style={{ width: '60px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>Proje</th>
+                      <th style={{ width: '35px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'center', fontWeight: 'bold' }}>Tür</th>
+                      <th style={{ width: '60px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>İş Grubu</th>
+                      <th style={{ width: '60px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>Rayiç Grubu</th>
                       <th style={{ padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>Açıklama</th>
-                      <th style={{ width: '80px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'right', fontWeight: 'bold' }}>Tutar</th>
+                      <th style={{ width: '35px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'center', fontWeight: 'bold' }}>Hakediş</th>
+                      <th style={{ width: '95px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'right', fontWeight: 'bold', whiteSpace: 'nowrap' }}>Tutar</th>
                     </tr>
                   </thead>
                   <tbody>
                     {pageIndex > 0 && (
                       <tr style={{ backgroundColor: '#e8f4e8', fontWeight: 'bold' }}>
-                        <td colSpan={7} style={{ padding: '5px 4px', borderBottom: '2px solid #333', textAlign: 'right' }}>
+                        <td colSpan={8} style={{ padding: '5px 4px', borderBottom: '2px solid #333', textAlign: 'right' }}>
                           Bir Önceki Sayfadan Nakledilen Tutar:
                         </td>
-                        <td style={{ padding: '5px 4px', borderBottom: '2px solid #333', textAlign: 'right', fontFamily: 'monospace' }}>
+                        <td style={{ padding: '5px 4px', borderBottom: '2px solid #333', textAlign: 'right', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
                           {formatCurrency(cumulativeTotal)}
                         </td>
                       </tr>
@@ -218,6 +229,9 @@ export const PrintableTransactionsReport = forwardRef<HTMLDivElement, PrintableT
                         <td style={{ padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'left', fontSize: '7pt', overflow: 'hidden', textOverflow: 'ellipsis' }}>{transaction.isGrubu}</td>
                         <td style={{ padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'left', fontSize: '7pt', overflow: 'hidden', textOverflow: 'ellipsis' }}>{transaction.rayicGrubu}</td>
                         <td style={{ padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'left', fontSize: '7pt', overflow: 'hidden', textOverflow: 'ellipsis' }}>{transaction.description || '-'}</td>
+                        <td style={{ padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'center', fontSize: '8pt', fontWeight: '600', color: transaction.progressPaymentId ? '#16a34a' : '#999' }}>
+                          {transaction.progressPaymentId ? '✓' : '-'}
+                        </td>
                         <td style={{ padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'right', fontFamily: 'monospace', fontWeight: '600', whiteSpace: 'nowrap' }}>
                           {formatCurrency(transaction.amount)}
                         </td>
@@ -225,10 +239,10 @@ export const PrintableTransactionsReport = forwardRef<HTMLDivElement, PrintableT
                     ))}
 
                     <tr style={{ backgroundColor: '#f0f0f0', fontWeight: 'bold' }}>
-                      <td colSpan={7} style={{ padding: '5px 4px', borderTop: '2px solid #333', borderBottom: '2px solid #333', textAlign: 'right' }}>
+                      <td colSpan={8} style={{ padding: '5px 4px', borderTop: '2px solid #333', borderBottom: '2px solid #333', textAlign: 'right' }}>
                         Toplam Tutar:
                       </td>
-                      <td style={{ padding: '5px 4px', borderTop: '2px solid #333', borderBottom: '2px solid #333', textAlign: 'right', fontFamily: 'monospace' }}>
+                      <td style={{ padding: '5px 4px', borderTop: '2px solid #333', borderBottom: '2px solid #333', textAlign: 'right', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
                         {formatCurrency(cumulativeTotal + (pageTotals.income - pageTotals.expense))}
                       </td>
                     </tr>

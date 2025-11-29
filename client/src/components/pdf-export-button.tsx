@@ -83,16 +83,18 @@ export function PDFExportButton({ className, documentTitle = "Rapor", transactio
         const page = pages[i] as HTMLElement;
         
         const canvas = await html2canvas(page, {
-          scale: 2,
+          scale: 4,
           useCORS: true,
           logging: false,
           backgroundColor: "#ffffff",
           allowTaint: true,
           width: page.offsetWidth,
           height: page.offsetHeight,
+          imageTimeout: 0,
+          removeContainer: true,
         });
 
-        const imgData = canvas.toDataURL("image/png");
+        const imgData = canvas.toDataURL("image/jpeg", 1.0);
         
         if (i > 0) {
           pdf.addPage();
