@@ -229,7 +229,7 @@ export const PrintableTransactionsReport = forwardRef<HTMLDivElement, PrintableT
                         Toplam Tutar:
                       </td>
                       <td style={{ padding: '5px 4px', borderTop: '2px solid #333', borderBottom: '2px solid #333', textAlign: 'right', fontFamily: 'monospace' }}>
-                        {formatCurrency(pageTotals.income - pageTotals.expense)}
+                        {formatCurrency(cumulativeTotal + (pageTotals.income - pageTotals.expense))}
                       </td>
                     </tr>
                   </tbody>
