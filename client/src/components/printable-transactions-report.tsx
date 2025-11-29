@@ -191,15 +191,15 @@ export const PrintableTransactionsReport = forwardRef<HTMLDivElement, PrintableT
                 }}>
                   <thead>
                     <tr style={{ backgroundColor: '#f5f5f5' }}>
-                      <th style={{ width: '22px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'center', fontWeight: 'bold' }}>No</th>
-                      <th style={{ width: '52px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>Tarih</th>
-                      <th style={{ width: '60px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>Proje</th>
-                      <th style={{ width: '35px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'center', fontWeight: 'bold' }}>Tür</th>
-                      <th style={{ width: '60px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>İş Grubu</th>
-                      <th style={{ width: '60px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>Rayiç Grubu</th>
+                      <th style={{ width: '20px', padding: '4px 3px', borderBottom: '1px solid #999', textAlign: 'center', fontWeight: 'bold' }}>No</th>
+                      <th style={{ width: '58px', padding: '4px 4px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>Tarih</th>
+                      <th style={{ width: '75px', padding: '4px 4px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>Proje</th>
+                      <th style={{ width: '32px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'center', fontWeight: 'bold' }}>Tür</th>
+                      <th style={{ width: '55px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>İş Grubu</th>
+                      <th style={{ width: '55px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>Rayiç Grubu</th>
                       <th style={{ padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>Açıklama</th>
-                      <th style={{ width: '35px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'center', fontWeight: 'bold' }}>Hakediş</th>
-                      <th style={{ width: '95px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'right', fontWeight: 'bold', whiteSpace: 'nowrap' }}>Tutar</th>
+                      <th style={{ width: '28px', padding: '4px 1px', borderBottom: '1px solid #999', textAlign: 'center', fontWeight: 'bold', fontSize: '7pt' }}>Hak.</th>
+                      <th style={{ width: '90px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'right', fontWeight: 'bold', whiteSpace: 'nowrap' }}>Tutar</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -216,9 +216,9 @@ export const PrintableTransactionsReport = forwardRef<HTMLDivElement, PrintableT
                     
                     {pageTransactions.map((transaction, indexInPage) => (
                       <tr key={transaction.id} style={{ backgroundColor: indexInPage % 2 === 0 ? 'white' : '#fafafa' }}>
-                        <td style={{ padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'center' }}>{startRowNumber + indexInPage}</td>
-                        <td style={{ padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'left', whiteSpace: 'nowrap' }}>{formatDate(transaction.date)}</td>
-                        <td style={{ padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis' }}>{transaction.projectName}</td>
+                        <td style={{ padding: '3px 3px', borderBottom: '1px solid #eee', textAlign: 'center' }}>{startRowNumber + indexInPage}</td>
+                        <td style={{ padding: '3px 4px', borderBottom: '1px solid #eee', textAlign: 'left', whiteSpace: 'nowrap' }}>{formatDate(transaction.date)}</td>
+                        <td style={{ padding: '3px 4px', borderBottom: '1px solid #eee', textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{transaction.projectName}</td>
                         <td style={{ 
                           padding: '3px 2px', 
                           borderBottom: '1px solid #eee', 
@@ -226,10 +226,10 @@ export const PrintableTransactionsReport = forwardRef<HTMLDivElement, PrintableT
                           color: transaction.type === "Gelir" ? '#16a34a' : '#dc2626',
                           fontWeight: '600'
                         }}>{transaction.type}</td>
-                        <td style={{ padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'left', fontSize: '7pt', overflow: 'hidden', textOverflow: 'ellipsis' }}>{transaction.isGrubu}</td>
-                        <td style={{ padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'left', fontSize: '7pt', overflow: 'hidden', textOverflow: 'ellipsis' }}>{transaction.rayicGrubu}</td>
-                        <td style={{ padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'left', fontSize: '7pt', overflow: 'hidden', textOverflow: 'ellipsis' }}>{transaction.description || '-'}</td>
-                        <td style={{ padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'center', fontSize: '8pt', fontWeight: '600', color: transaction.progressPaymentId ? '#16a34a' : '#999' }}>
+                        <td style={{ padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'left', fontSize: '7pt', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{transaction.isGrubu}</td>
+                        <td style={{ padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'left', fontSize: '7pt', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{transaction.rayicGrubu}</td>
+                        <td style={{ padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'left', fontSize: '8pt', overflow: 'hidden', textOverflow: 'ellipsis' }}>{transaction.description || '-'}</td>
+                        <td style={{ padding: '3px 1px', borderBottom: '1px solid #eee', textAlign: 'center', fontSize: '8pt', fontWeight: '600', color: transaction.progressPaymentId ? '#16a34a' : '#999' }}>
                           {transaction.progressPaymentId ? '✓' : '-'}
                         </td>
                         <td style={{ padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'right', fontFamily: 'monospace', fontWeight: '600', whiteSpace: 'nowrap' }}>
