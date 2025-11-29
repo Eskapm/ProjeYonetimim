@@ -191,9 +191,9 @@ export const PrintableTransactionsReport = forwardRef<HTMLDivElement, PrintableT
                 }}>
                   <thead>
                     <tr style={{ backgroundColor: '#f5f5f5' }}>
-                      <th style={{ width: '22px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'center', fontWeight: 'bold' }}>No</th>
-                      <th style={{ width: '52px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>Tarih</th>
-                      <th style={{ width: '60px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>Proje</th>
+                      <th style={{ width: '20px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'center', fontWeight: 'bold' }}>No</th>
+                      <th style={{ width: '62px', padding: '4px 3px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>Tarih</th>
+                      <th style={{ width: '55px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>Proje</th>
                       <th style={{ width: '35px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'center', fontWeight: 'bold' }}>Tür</th>
                       <th style={{ width: '60px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>İş Grubu</th>
                       <th style={{ width: '60px', padding: '4px 2px', borderBottom: '1px solid #999', textAlign: 'left', fontWeight: 'bold' }}>Rayiç Grubu</th>
@@ -217,8 +217,8 @@ export const PrintableTransactionsReport = forwardRef<HTMLDivElement, PrintableT
                     {pageTransactions.map((transaction, indexInPage) => (
                       <tr key={transaction.id} style={{ backgroundColor: indexInPage % 2 === 0 ? 'white' : '#fafafa' }}>
                         <td style={{ padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'center' }}>{startRowNumber + indexInPage}</td>
-                        <td style={{ padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'left', whiteSpace: 'nowrap' }}>{formatDate(transaction.date)}</td>
-                        <td style={{ padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis' }}>{transaction.projectName}</td>
+                        <td style={{ padding: '3px 3px', borderBottom: '1px solid #eee', textAlign: 'left', whiteSpace: 'nowrap', fontSize: '8pt' }}>{formatDate(transaction.date)}</td>
+                        <td style={{ padding: '3px 2px', borderBottom: '1px solid #eee', textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '8pt' }}>{transaction.projectName}</td>
                         <td style={{ 
                           padding: '3px 2px', 
                           borderBottom: '1px solid #eee', 
