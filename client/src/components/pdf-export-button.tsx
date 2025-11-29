@@ -11,61 +11,82 @@ interface PDFExportButtonProps {
 export function PDFExportButton({ className, documentTitle = "Rapor" }: PDFExportButtonProps) {
   const handlePDFExport = async () => {
     try {
-      // Get the print-ready table
-      const printContent = (document.querySelector(".print-content") || document.body) as HTMLElement;
+      // Find table or card container
+      const table = document.querySelector("table") as HTMLElement;
+      if (!table) {
+        console.error("Table not found");
+        return;
+      }
+
+      // Create a temporary clone to capture
+      const clone = table.cloneNode(true) as HTMLElement;
+      clone.style.display = "block";
+      clone.style.position = "absolute";
+      clone.style.left = "-9999px";
+      clone.style.width = "1000px";
+      clone.style.backgroundColor = "white";
       
-      // Create canvas from HTML
-      const canvas = await html2canvas(printContent, {
+      document.body.appendChild(clone);
+
+      // Capture the table as image
+      const canvas = await html2canvas(clone, {
         scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
+        allowTaint: true,
       });
-      
-      // Calculate PDF dimensions
-      const imgWidth = 190; // A4 width in mm minus margins
-      const pageHeight = 277; // A4 height in mm minus margins
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
+
+      // Remove clone
+      document.body.removeChild(clone);
+
       // Create PDF
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
         format: "a4",
-        compress: true,
       });
-      
-      let heightLeft = imgHeight;
-      let position = 0;
-      
-      // Add image to PDF pages
+
       const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight_ = pdf.internal.pageSize.getHeight();
+      const pageHeight = pdf.internal.pageSize.getHeight();
       const margin = 10;
+      const contentWidth = pageWidth - 2 * margin;
+      
+      // Calculate image dimensions
+      const imgHeight = (canvas.height * contentWidth) / canvas.width;
       
       const imgData = canvas.toDataURL("image/png");
       
-      // First page
-      pdf.addImage(
-        imgData,
-        "PNG",
-        margin,
-        margin,
-        pageWidth - 2 * margin,
-        (pageWidth - 2 * margin) * (canvas.height / canvas.width)
-      );
-      
-      heightLeft -= pageHeight;
-      position = pageHeight_;
-      
-      // Additional pages
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight + margin;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", margin, position, pageWidth - 2 * margin, (pageWidth - 2 * margin) * (canvas.height / canvas.width));
-        heightLeft -= pageHeight;
+      let position = margin;
+      let remainingHeight = imgHeight;
+      let isFirstPage = true;
+
+      while (remainingHeight > 0) {
+        if (!isFirstPage) {
+          pdf.addPage();
+          position = margin;
+        }
+
+        const availableHeight = pageHeight - 2 * margin;
+        const heightToPrint = Math.min(remainingHeight, availableHeight);
+        
+        pdf.addImage(
+          imgData,
+          "PNG",
+          margin,
+          position,
+          contentWidth,
+          heightToPrint
+        );
+
+        remainingHeight -= heightToPrint;
+        isFirstPage = false;
+
+        if (remainingHeight > 0) {
+          position = margin;
+        }
       }
-      
+
       // Save PDF
       pdf.save(`${documentTitle}.pdf`);
     } catch (error) {
