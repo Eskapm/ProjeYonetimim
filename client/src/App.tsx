@@ -27,6 +27,7 @@ import Hakedis from "@/pages/hakedis";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
 import logoUrl from "@assets/ESKA LOGO TASARIMI_1761497797352.png";
+import { supabase } from "./supabaseClient";
 
 function ThemeToggle() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -63,7 +64,7 @@ function ThemeToggle() {
 
 function LogoutButton() {
   const { logoutMutation } = useAuth();
-  
+
   return (
     <Button
       variant="ghost"
@@ -122,12 +123,14 @@ function AppContent() {
               <div className="flex items-center gap-3">
                 <SidebarTrigger data-testid="button-sidebar-toggle" />
                 <div className="flex items-center gap-2">
-                  <img 
-                    src={logoUrl} 
-                    alt="ESKA" 
+                  <img
+                    src={logoUrl}
+                    alt="ESKA"
                     className="h-10 w-auto object-contain"
                   />
-                  <span className="text-xs font-medium">İnşaat Proje Yönetim Sistemi</span>
+                  <span className="text-xs font-medium">
+                    İnşaat Proje Yönetim Sistemi
+                  </span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -147,6 +150,19 @@ function AppContent() {
 }
 
 export default function App() {
+  useEffect(() => {
+    const test = async () => {
+      const { data, error } = await supabase
+        .from("daily_logs")
+        .select("*")
+        .limit(1);
+
+      console.log("SUPABASE TEST", { data, error });
+    };
+
+    test();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
