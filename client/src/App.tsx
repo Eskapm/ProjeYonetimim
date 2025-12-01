@@ -106,12 +106,10 @@ function AppContent() {
     "--sidebar-width-icon": "4rem",
   };
 
-  // If not authenticated, show router (which will redirect to /auth)
   if (!user) {
     return <Router />;
   }
 
-  // If authenticated, show the full app with sidebar
   return (
     <TooltipProvider>
       <SidebarProvider style={style as React.CSSProperties}>
