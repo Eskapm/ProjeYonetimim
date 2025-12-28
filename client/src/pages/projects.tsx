@@ -548,26 +548,28 @@ export default function Projects() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="contractAmount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Sözleşme Tutarı (TL)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          value={field.value ?? ""} 
-                          type="number" 
-                          step="0.01" 
-                          placeholder="0.00" 
-                          data-testid="input-contract-amount" 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {form.watch("contractType") === "Anahtar Teslim" && (
+                  <FormField
+                    control={form.control}
+                    name="contractAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Sözleşme Tutarı (TL)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            value={field.value ?? ""} 
+                            type="number" 
+                            step="0.01" 
+                            placeholder="0.00" 
+                            data-testid="input-contract-amount" 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <FormField
                   control={form.control}
