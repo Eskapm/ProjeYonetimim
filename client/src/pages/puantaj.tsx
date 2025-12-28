@@ -210,11 +210,12 @@ export default function Puantaj() {
     }
 
     const subcontractor = subcontractors.find(s => s.id === currentSubcontractorId);
+    const actualSubcontractorId = currentSubcontractorId && currentSubcontractorId !== "none" ? currentSubcontractorId : null;
     
     const newEntry: PendingEntry = {
       id: `pending-${Date.now()}-${Math.random()}`,
       isGrubu: currentIsGrubu,
-      subcontractorId: currentSubcontractorId || null,
+      subcontractorId: actualSubcontractorId,
       subcontractorName: subcontractor?.name || "Belirtilmedi",
       workerCount: parseInt(currentWorkerCount),
       hours: currentHours,
@@ -401,7 +402,7 @@ export default function Puantaj() {
           <PrintButton />
           <Button onClick={handleAddEntry} data-testid="button-add-timesheet">
             <Plus className="h-4 w-4 mr-2" />
-            Toplu Puantaj Girişi
+            Yeni Puantaj Ekle
           </Button>
         </div>
       </div>
@@ -612,7 +613,7 @@ export default function Puantaj() {
       <Dialog open={isDialogOpen && !editingEntry} onOpenChange={(open) => { if (!open) setIsDialogOpen(false); }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Toplu Puantaj Girişi</DialogTitle>
+            <DialogTitle>Yeni Puantaj Ekle</DialogTitle>
             <DialogDescription>
               {activeProject ? (
                 <span>Proje: <strong>{activeProject.name}</strong> - Birden fazla ekip için puantaj girişi yapabilirsiniz.</span>
@@ -688,7 +689,7 @@ export default function Puantaj() {
                         <SelectValue placeholder="Seçin" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Belirtilmedi</SelectItem>
+                        <SelectItem value="none">Belirtilmedi</SelectItem>
                         {subcontractors.map((sub) => (
                           <SelectItem key={sub.id} value={sub.id}>
                             {sub.name}
@@ -944,14 +945,14 @@ export default function Puantaj() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Taşeron</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <Select onValueChange={(val) => field.onChange(val === "none" ? null : val)} value={field.value || "none"}>
                         <FormControl>
                           <SelectTrigger data-testid="select-subcontractor-edit">
                             <SelectValue placeholder="Taşeron seçin" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">Belirtilmedi</SelectItem>
+                          <SelectItem value="none">Belirtilmedi</SelectItem>
                           {subcontractors.map((sub) => (
                             <SelectItem key={sub.id} value={sub.id}>
                               {sub.name}
