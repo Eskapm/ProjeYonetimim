@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useProjectContext } from "@/hooks/use-project-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function BudgetPage() {
   const { toast } = useToast();
+  const { activeProjectId } = useProjectContext();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -101,7 +103,7 @@ export default function BudgetPage() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      projectId: "",
+      projectId: activeProjectId || "",
       name: "",
       description: "",
       quantity: "",
@@ -111,7 +113,7 @@ export default function BudgetPage() {
       rayicGrubu: "",
       status: "Başlamadı",
       progress: 0,
-      startDate: "",
+      startDate: new Date().toISOString().split("T")[0],
       endDate: "",
       actualQuantity: "",
       actualUnitPrice: "",
@@ -123,7 +125,7 @@ export default function BudgetPage() {
       setIsDialogOpen(false);
       setEditingItem(null);
       form.reset({
-        projectId: "",
+        projectId: activeProjectId || "",
         name: "",
         description: "",
         quantity: "",
@@ -133,7 +135,7 @@ export default function BudgetPage() {
         rayicGrubu: "",
         status: "Başlamadı",
         progress: 0,
-        startDate: "",
+        startDate: new Date().toISOString().split("T")[0],
         endDate: "",
         actualQuantity: "",
         actualUnitPrice: "",

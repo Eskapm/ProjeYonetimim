@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useProjectContext } from "@/hooks/use-project-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertTaskSchema, type Task, type InsertTask, type Project } from "@shared/schema";
@@ -99,6 +100,7 @@ const statusIcons: Record<string, typeof Clock> = {
 
 export default function WorkSchedule() {
   const { toast } = useToast();
+  const { activeProjectId } = useProjectContext();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -120,11 +122,11 @@ export default function WorkSchedule() {
     defaultValues: {
       title: "",
       description: "",
-      projectId: "",
+      projectId: activeProjectId || "",
       status: "Beklemede",
       priority: "Orta",
       progress: 0,
-      startDate: "",
+      startDate: new Date().toISOString().split("T")[0],
       dueDate: "",
       assignedTo: "",
       checklist: [],
@@ -241,7 +243,18 @@ export default function WorkSchedule() {
     setIsDialogOpen(open);
     if (!open) {
       setEditingTask(null);
-      form.reset();
+      form.reset({
+        title: "",
+        description: "",
+        projectId: activeProjectId || "",
+        status: "Beklemede",
+        priority: "Orta",
+        progress: 0,
+        startDate: new Date().toISOString().split("T")[0],
+        dueDate: "",
+        assignedTo: "",
+        checklist: [],
+      });
     }
   };
 
@@ -355,7 +368,18 @@ export default function WorkSchedule() {
                   size="default"
                   onClick={() => {
                     setEditingTask(null);
-                    form.reset();
+                    form.reset({
+                      title: "",
+                      description: "",
+                      projectId: activeProjectId || "",
+                      status: "Beklemede",
+                      priority: "Orta",
+                      progress: 0,
+                      startDate: new Date().toISOString().split("T")[0],
+                      dueDate: "",
+                      assignedTo: "",
+                      checklist: [],
+                    });
                     setIsDialogOpen(true);
                   }}
                   data-testid="button-new-task"
