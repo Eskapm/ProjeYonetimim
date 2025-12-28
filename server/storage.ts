@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, and, sum } from "drizzle-orm";
 import { db } from "./db";
 import {
   type User,
@@ -85,6 +85,7 @@ export interface IStorage {
   // Timesheet methods
   getTimesheets(): Promise<Timesheet[]>;
   getTimesheet(id: string): Promise<Timesheet | undefined>;
+  getTimesheetWorkerCount(projectId: string, date: string): Promise<number>;
   createTimesheet(timesheet: InsertTimesheet): Promise<Timesheet>;
   updateTimesheet(id: string, timesheet: Partial<InsertTimesheet>): Promise<Timesheet | undefined>;
   deleteTimesheet(id: string): Promise<boolean>;
@@ -283,6 +284,14 @@ export class DatabaseStorage implements IStorage {
   async getTimesheet(id: string): Promise<Timesheet | undefined> {
     const [timesheet] = await db.select().from(timesheets).where(eq(timesheets.id, id)).limit(1);
     return timesheet;
+  }
+
+  async getTimesheetWorkerCount(projectId: string, date: string): Promise<number> {
+    const result = await db
+      .select({ total: sum(timesheets.workerCount) })
+      .from(timesheets)
+      .where(and(eq(timesheets.projectId, projectId), eq(timesheets.date, date)));
+    return Number(result[0]?.total || 0);
   }
 
   async createTimesheet(timesheet: InsertTimesheet): Promise<Timesheet> {

@@ -335,6 +335,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get worker count from timesheets for a specific project and date
+  app.get("/api/timesheets/worker-count", requireAuth, async (req, res) => {
+    try {
+      const { projectId, date } = req.query;
+      if (!projectId || !date) {
+        return res.status(400).send("Proje ID ve tarih gereklidir");
+      }
+      const workerCount = await storage.getTimesheetWorkerCount(
+        projectId as string,
+        date as string
+      );
+      res.json({ workerCount });
+    } catch (error) {
+      res.status(500).send("İşçi sayısı alınırken hata oluştu");
+    }
+  });
+
   // Invoice routes
   app.get("/api/invoices", requireAuth, async (req, res) => {
     try {

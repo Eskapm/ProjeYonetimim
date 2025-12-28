@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { PrintButton } from "@/components/print-button";
 import { PrintHeader } from "@/components/print-header";
 import { useProjectContext } from "@/hooks/use-project-context";
@@ -76,6 +77,7 @@ export default function Puantaj() {
   const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null);
   const { toast } = useToast();
   const { activeProjectId } = useProjectContext();
+  const [, setLocation] = useLocation();
 
   // Batch entry state
   const [pendingEntries, setPendingEntries] = useState<PendingEntry[]>([]);
@@ -288,10 +290,16 @@ export default function Puantaj() {
         description: `${pendingEntries.length} puantaj kaydı başarıyla oluşturuldu`,
       });
 
+      // Store the date for redirect
+      const savedDate = batchDate;
+      
       // Reset all
       setPendingEntries([]);
       setBatchDate(new Date().toISOString().split("T")[0]);
       setIsDialogOpen(false);
+      
+      // Redirect to site diary with date parameter
+      setLocation(`/site-diary?date=${savedDate}&fromPuantaj=true`);
     } catch (error) {
       toast({
         title: "Hata",

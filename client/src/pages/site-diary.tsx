@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation, useSearch } from "wouter";
 import { SiteDiaryCard } from "@/components/site-diary-card";
 import { PrintButton } from "@/components/print-button";
 import { PrintHeader } from "@/components/print-header";
@@ -59,11 +60,91 @@ export default function SiteDiary() {
   const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null);
   const { toast } = useToast();
   const { activeProjectId, activeProject } = useProjectContext();
+  const [, setLocation] = useLocation();
+  const searchString = useSearch();
+  
+  // State for puantaj worker count
+  const [puantajWorkerCount, setPuantajWorkerCount] = useState<number | null>(null);
+  const [isLoadingWorkerCount, setIsLoadingWorkerCount] = useState(false);
+  const [urlParamsProcessed, setUrlParamsProcessed] = useState(false);
+
+  // Form setup - must be before useEffects that use it
+  const form = useForm<InsertSiteDiary>({
+    resolver: zodResolver(insertSiteDiarySchema),
+    defaultValues: {
+      projectId: "",
+      date: new Date().toISOString().split("T")[0],
+      weather: "",
+      workDone: "",
+      materialsUsed: "",
+      totalWorkers: undefined,
+      issues: "",
+      notes: "",
+    },
+  });
 
   // Sync filter with active project
   useEffect(() => {
     setSelectedProject(activeProjectId || "all");
   }, [activeProjectId]);
+  
+  // Parse URL parameters and handle redirect from puantaj
+  useEffect(() => {
+    if (urlParamsProcessed) return;
+    
+    const params = new URLSearchParams(searchString);
+    const dateParam = params.get("date");
+    const fromPuantaj = params.get("fromPuantaj");
+    
+    if (dateParam && fromPuantaj === "true" && activeProjectId) {
+      setUrlParamsProcessed(true);
+      // Clear URL params
+      setLocation("/site-diary", { replace: true });
+      
+      // Open dialog with date pre-filled
+      form.reset({
+        projectId: activeProjectId,
+        date: dateParam,
+        weather: "",
+        workDone: "",
+        materialsUsed: "",
+        totalWorkers: undefined,
+        issues: "",
+        notes: "",
+      });
+      setIsDialogOpen(true);
+      
+      // Fetch worker count from puantaj
+      fetchWorkerCount(activeProjectId, dateParam);
+      
+      toast({
+        title: "Puantaj Kaydedildi",
+        description: "Şimdi şantiye defteri kaydını tamamlayabilirsiniz. İşçi sayısı puantajdan otomatik alınacak.",
+      });
+    }
+  }, [searchString, activeProjectId, urlParamsProcessed]);
+
+  // Function to fetch worker count from puantaj
+  const fetchWorkerCount = useCallback(async (projectId: string, date: string) => {
+    setIsLoadingWorkerCount(true);
+    try {
+      const response = await fetch(`/api/timesheets/worker-count?projectId=${projectId}&date=${date}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.workerCount > 0) {
+          setPuantajWorkerCount(data.workerCount);
+          form.setValue("totalWorkers", data.workerCount);
+        } else {
+          setPuantajWorkerCount(null);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching worker count:", error);
+      setPuantajWorkerCount(null);
+    } finally {
+      setIsLoadingWorkerCount(false);
+    }
+  }, []);
 
   // Fetch site diary entries
   const { data: diaryEntries = [], isLoading: isLoadingDiary, error: diaryError } = useQuery<SiteDiary[]>({
@@ -146,21 +227,6 @@ export default function SiteDiary() {
     },
   });
 
-  // Form setup
-  const form = useForm<InsertSiteDiary>({
-    resolver: zodResolver(insertSiteDiarySchema),
-    defaultValues: {
-      projectId: "",
-      date: new Date().toISOString().split("T")[0],
-      weather: "",
-      workDone: "",
-      materialsUsed: "",
-      totalWorkers: undefined,
-      issues: "",
-      notes: "",
-    },
-  });
-
   const onSubmit = (data: InsertSiteDiary) => {
     // Convert empty strings to null for optional fields
     const cleanedData = {
@@ -181,9 +247,11 @@ export default function SiteDiary() {
 
   const handleAddEntry = () => {
     setEditingEntry(null);
+    setPuantajWorkerCount(null);
+    const today = new Date().toISOString().split("T")[0];
     form.reset({
       projectId: activeProjectId || "",
-      date: new Date().toISOString().split("T")[0],
+      date: today,
       weather: "",
       workDone: "",
       materialsUsed: "",
@@ -192,10 +260,16 @@ export default function SiteDiary() {
       notes: "",
     });
     setIsDialogOpen(true);
+    
+    // Fetch worker count for today if project is selected
+    if (activeProjectId) {
+      fetchWorkerCount(activeProjectId, today);
+    }
   };
 
   const handleEditEntry = (entry: SiteDiary) => {
     setEditingEntry(entry);
+    setPuantajWorkerCount(null); // Don't show puantaj hint when editing
     form.reset({
       projectId: entry.projectId,
       date: entry.date,
@@ -410,7 +484,13 @@ export default function SiteDiary() {
                             selected={field.value ? new Date(field.value) : undefined}
                             onSelect={(date) => {
                               if (date) {
-                                field.onChange(format(date, "yyyy-MM-dd"));
+                                const dateStr = format(date, "yyyy-MM-dd");
+                                field.onChange(dateStr);
+                                // Fetch worker count for the new date
+                                const projectId = form.getValues("projectId");
+                                if (projectId && !editingEntry) {
+                                  fetchWorkerCount(projectId, dateStr);
+                                }
                               }
                             }}
                             locale={tr}
@@ -455,20 +535,39 @@ export default function SiteDiary() {
                   name="totalWorkers"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Toplam İşçi Sayısı</FormLabel>
+                      <FormLabel className="flex items-center gap-2">
+                        Toplam İşçi Sayısı
+                        {isLoadingWorkerCount && (
+                          <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                        )}
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="number"
-                          placeholder="0"
+                          placeholder={puantajWorkerCount === null ? "Manuel girin" : "0"}
                           {...field}
                           value={field.value ?? ""}
                           onChange={(e) => {
                             const value = e.target.value;
                             field.onChange(value === "" ? undefined : parseInt(value));
+                            // Clear puantaj indicator if user manually changes
+                            if (value !== String(puantajWorkerCount)) {
+                              setPuantajWorkerCount(null);
+                            }
                           }}
                           data-testid="input-total-workers"
                         />
                       </FormControl>
+                      {puantajWorkerCount !== null && !editingEntry && (
+                        <p className="text-xs text-muted-foreground">
+                          Puantajdan otomatik alındı ({puantajWorkerCount} işçi)
+                        </p>
+                      )}
+                      {puantajWorkerCount === null && !editingEntry && !isLoadingWorkerCount && (
+                        <p className="text-xs text-muted-foreground">
+                          Bu tarihte puantaj kaydı yok, manuel girebilirsiniz
+                        </p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
