@@ -5,7 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Building2, Lock, User } from "lucide-react";
+import { Building2, Lock, User, Mail } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import logoUrl from "@assets/ESKA LOGO TASARIMI_1761497797352.png";
 
 export default function AuthPage() {
@@ -92,6 +100,41 @@ export default function AuthPage() {
                   {loginMutation.isPending ? "Giriş yapılıyor..." : "Giriş Yap"}
                 </Button>
               </form>
+              
+              <div className="mt-4 text-center">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      className="text-sm text-muted-foreground hover:text-primary h-auto p-0 font-normal underline-offset-4 hover:underline"
+                      data-testid="button-forgot-password"
+                    >
+                      Şifremi Unuttum
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2">
+                        <Mail className="h-5 w-5" />
+                        Şifre Sıfırlama
+                      </DialogTitle>
+                      <DialogDescription className="pt-4 space-y-4">
+                        <p>
+                          Şifrenizi sıfırlamak için sistem yöneticisi ile iletişime geçin.
+                        </p>
+                        <div className="bg-muted p-4 rounded-lg space-y-2">
+                          <p className="font-medium text-foreground">İletişim Bilgileri:</p>
+                          <p className="text-sm">E-posta: info@eskayapi.com</p>
+                          <p className="text-sm">Telefon: +90 XXX XXX XX XX</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          E-posta ile otomatik şifre sıfırlama özelliği yakında eklenecektir.
+                        </p>
+                      </DialogDescription>
+                    </DialogHeader>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </CardContent>
           </Card>
         </div>

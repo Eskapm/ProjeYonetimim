@@ -89,3 +89,14 @@ Preferred communication style: Simple, everyday language.
 *   **Replit plugins**: For development experience enhancements.
 *   **tsx**: TypeScript execution for dev server.
 *   **esbuild**: Fast JavaScript bundler.
+
+## TODO / Future Enhancements
+
+### Şifre Sıfırlama (Password Reset) - E-posta Entegrasyonu
+- Şu an "Şifremi Unuttum" linki sadece admin iletişim bilgilerini gösteriyor
+- İleride Resend entegrasyonu ile otomatik e-posta ile şifre sıfırlama eklenecek
+- Gerekli adımlar:
+  1. Resend API anahtarı alınacak (resend.com)
+  2. `passwordResetTokens` tablosu oluşturulacak
+  3. `/api/auth/forgot-password` ve `/api/auth/reset-password` endpoint'leri eklenecek
+  4. Şifre sıfırlama sayfası oluşturulacak
