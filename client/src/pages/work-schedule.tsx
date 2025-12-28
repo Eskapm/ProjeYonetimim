@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useProjectContext } from "@/hooks/use-project-context";
@@ -108,6 +108,11 @@ export default function WorkSchedule() {
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [projectFilter, setProjectFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("dueDate");
+
+  // Sync filter with active project
+  useEffect(() => {
+    setProjectFilter(activeProjectId || "all");
+  }, [activeProjectId]);
 
   const { data: tasks, isLoading: isLoadingTasks } = useQuery<Task[]>({
     queryKey: ["/api/tasks"],

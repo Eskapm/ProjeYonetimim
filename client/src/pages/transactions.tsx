@@ -69,6 +69,11 @@ export default function Transactions() {
   const { toast } = useToast();
   const { activeProjectId, activeProject } = useProjectContext();
 
+  // Sync filter with active project
+  useEffect(() => {
+    setSelectedProject(activeProjectId || "all");
+  }, [activeProjectId]);
+
   const { data: transactions = [], isLoading: isLoadingTransactions, error: transactionsError } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
   });

@@ -79,6 +79,11 @@ export default function Invoices() {
   const { toast } = useToast();
   const { activeProjectId } = useProjectContext();
 
+  // Sync filter with active project
+  useEffect(() => {
+    setSelectedProject(activeProjectId || "all");
+  }, [activeProjectId]);
+
   // Fetch invoices
   const { data: invoices = [], isLoading: isLoadingInvoices, error: invoicesError } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],

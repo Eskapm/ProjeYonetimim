@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useProjectContext } from "@/hooks/use-project-context";
@@ -48,6 +48,11 @@ export default function BudgetPage() {
   const [selectedIsGrubu, setSelectedIsGrubu] = useState<string>("all");
   const [selectedRayicGrubu, setSelectedRayicGrubu] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
+
+  // Sync filter with active project
+  useEffect(() => {
+    setSelectedProject(activeProjectId || "all");
+  }, [activeProjectId]);
 
   const { data: items = [], isLoading: itemsLoading } = useQuery<BudgetItem[]>({
     queryKey: ["/api/budget-items"],

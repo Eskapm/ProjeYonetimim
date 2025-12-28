@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PrintButton } from "@/components/print-button";
 import { PrintHeader } from "@/components/print-header";
@@ -66,6 +66,11 @@ export default function Puantaj() {
   const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null);
   const { toast } = useToast();
   const { activeProjectId } = useProjectContext();
+
+  // Sync filter with active project
+  useEffect(() => {
+    setSelectedProject(activeProjectId || "all");
+  }, [activeProjectId]);
 
   // Fetch timesheet entries
   const { data: timesheets = [], isLoading: isLoadingTimesheets, error: timesheetsError } = useQuery<Timesheet[]>({

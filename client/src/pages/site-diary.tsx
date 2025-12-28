@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { SiteDiaryCard } from "@/components/site-diary-card";
 import { PrintButton } from "@/components/print-button";
@@ -59,6 +59,11 @@ export default function SiteDiary() {
   const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null);
   const { toast } = useToast();
   const { activeProjectId, activeProject } = useProjectContext();
+
+  // Sync filter with active project
+  useEffect(() => {
+    setSelectedProject(activeProjectId || "all");
+  }, [activeProjectId]);
 
   // Fetch site diary entries
   const { data: diaryEntries = [], isLoading: isLoadingDiary, error: diaryError } = useQuery<SiteDiary[]>({

@@ -79,6 +79,11 @@ export default function Hakedis() {
   const { toast} = useToast();
   const { activeProjectId, activeProject } = useProjectContext();
 
+  // Sync filter with active project
+  useEffect(() => {
+    setSelectedProject(activeProjectId || "all");
+  }, [activeProjectId]);
+
   // Fetch progress payments
   const { data: payments = [], isLoading: isLoadingPayments, error: paymentsError } = useQuery<ProgressPayment[]>({
     queryKey: ["/api/progress-payments"],
