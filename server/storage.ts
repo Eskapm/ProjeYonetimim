@@ -180,12 +180,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCustomer(customer: InsertCustomer): Promise<Customer> {
-    const [newCustomer] = await db.insert(customers).values(customer).returning();
+    const [newCustomer] = await db.insert(customers).values(customer as any).returning();
     return newCustomer;
   }
 
   async updateCustomer(id: string, customer: Partial<InsertCustomer>): Promise<Customer | undefined> {
-    const [updated] = await db.update(customers).set(customer).where(eq(customers.id, id)).returning();
+    const [updated] = await db.update(customers).set(customer as any).where(eq(customers.id, id)).returning();
     return updated;
   }
 
@@ -205,12 +205,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createSubcontractor(subcontractor: InsertSubcontractor): Promise<Subcontractor> {
-    const [newSubcontractor] = await db.insert(subcontractors).values(subcontractor).returning();
+    const [newSubcontractor] = await db.insert(subcontractors).values(subcontractor as any).returning();
     return newSubcontractor;
   }
 
   async updateSubcontractor(id: string, subcontractor: Partial<InsertSubcontractor>): Promise<Subcontractor | undefined> {
-    const [updated] = await db.update(subcontractors).set(subcontractor).where(eq(subcontractors.id, id)).returning();
+    const [updated] = await db.update(subcontractors).set(subcontractor as any).where(eq(subcontractors.id, id)).returning();
     return updated;
   }
 

@@ -94,9 +94,18 @@ export const customers = pgTable("customers", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertCustomerSchema = createInsertSchema(customers).omit({
+const baseInsertCustomerSchema = createInsertSchema(customers).omit({
   id: true,
   createdAt: true,
+});
+
+export const insertCustomerSchema = baseInsertCustomerSchema.extend({
+  contacts: z.array(z.object({
+    name: z.string(),
+    phone: z.string().optional(),
+    email: z.string().optional(),
+    title: z.string().optional(),
+  })).optional().default([]),
 });
 
 export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
@@ -119,9 +128,19 @@ export const subcontractors = pgTable("subcontractors", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertSubcontractorSchema = createInsertSchema(subcontractors).omit({
+const baseInsertSubcontractorSchema = createInsertSchema(subcontractors).omit({
   id: true,
   createdAt: true,
+});
+
+export const insertSubcontractorSchema = baseInsertSubcontractorSchema.extend({
+  type: z.string().optional().default("Taşeron"),
+  contacts: z.array(z.object({
+    name: z.string(),
+    phone: z.string().optional(),
+    email: z.string().optional(),
+    title: z.string().optional(),
+  })).optional().default([]),
 });
 
 export type InsertSubcontractor = z.infer<typeof insertSubcontractorSchema>;

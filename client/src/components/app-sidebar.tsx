@@ -36,7 +36,7 @@ const menuItems = [
   { title: "Hakediş", url: "/hakedis", icon: Receipt },
   { title: "İş Programı", url: "/is-programi", icon: CalendarDays },
   { title: "Bütçe & Keşif", url: "/butce", icon: Calculator },
-  { title: "Taşeronlar", url: "/taseronlar", icon: Users },
+  { title: "Taşeron/Tedarikçi", url: "/taseronlar", icon: Users },
   { title: "Müşteriler", url: "/musteriler", icon: UserCircle },
   { title: "Raporlar", url: "/raporlar", icon: BarChart3 },
 ];

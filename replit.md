@@ -57,6 +57,8 @@ Preferred communication style: Simple, everyday language.
 *   **Invoices Module - Partial Payment Tracking**: Added "Ödenen" (Paid Amount) and "Kalan" (Remaining Amount) columns to invoice table, displaying partial payment status with color-coded formatting.
 *   **Print Optimization**: Global print CSS with overflow-hidden, fixed table layouts, and 95% zoom to ensure all tables fit on A4 pages without scrollbars.
 *   **Project Edit Flow**: Query parameter-based navigation from project detail page to projects page with auto-opening edit dialog.
+*   **Multi-Contact Person Support**: Both Customers and Subcontractors modules support adding multiple contact persons per record. Features dynamic "Kişi Ekle" button to add contacts before saving, with full CRUD for name, phone, email, and title (Ünvan) fields. ContactCard component displays up to 3 contacts with collapsible view showing "+X kişi daha" for additional contacts.
+*   **Taşeron/Tedarikçi Module**: Renamed from "Taşeronlar" to "Taşeron/Tedarikçi" to support both subcontractors and suppliers. Added type field (Taşeron/Tedarikçi) with tab-based filtering (Tümü, Taşeron, Tedarikçi).
 
 ## External Dependencies
 

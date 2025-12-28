@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { ContactCard } from "@/components/contact-card";
 import { PrintButton } from "@/components/print-button";
@@ -72,6 +72,28 @@ export default function Customers() {
       address: "",
     },
   });
+
+  useEffect(() => {
+    if (isDialogOpen && editingCustomer) {
+      form.reset({
+        name: editingCustomer.name,
+        contactPerson: editingCustomer.contactPerson ?? "",
+        phone: editingCustomer.phone ?? "",
+        email: editingCustomer.email ?? "",
+        address: editingCustomer.address ?? "",
+      });
+      setContacts((editingCustomer.contacts as ContactPerson[]) || []);
+    } else if (isDialogOpen && !editingCustomer) {
+      form.reset({
+        name: "",
+        contactPerson: "",
+        phone: "",
+        email: "",
+        address: "",
+      });
+      setContacts([]);
+    }
+  }, [isDialogOpen, editingCustomer, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertCustomer) => {
