@@ -149,12 +149,15 @@ export default function SiteDiary() {
           setPuantajWorkerCount(data.workerCount);
           form.setValue("totalWorkers", data.workerCount);
         } else {
-          setPuantajWorkerCount(null);
+          // No puantaj record - set to 0 and show warning
+          setPuantajWorkerCount(0);
+          form.setValue("totalWorkers", 0);
         }
       }
     } catch (error) {
       console.error("Error fetching worker count:", error);
-      setPuantajWorkerCount(null);
+      setPuantajWorkerCount(0);
+      form.setValue("totalWorkers", 0);
     } finally {
       setIsLoadingWorkerCount(false);
     }
@@ -649,7 +652,7 @@ export default function SiteDiary() {
                       <FormControl>
                         <Input
                           type="number"
-                          placeholder={puantajWorkerCount === null ? "Manuel girin" : "0"}
+                          placeholder="0"
                           {...field}
                           value={field.value ?? ""}
                           onChange={(e) => {
@@ -663,14 +666,14 @@ export default function SiteDiary() {
                           data-testid="input-total-workers"
                         />
                       </FormControl>
-                      {puantajWorkerCount !== null && !editingEntry && (
-                        <p className="text-xs text-muted-foreground">
+                      {puantajWorkerCount !== null && puantajWorkerCount > 0 && !editingEntry && (
+                        <p className="text-xs text-green-600 dark:text-green-400">
                           Puantajdan otomatik alındı ({puantajWorkerCount} işçi)
                         </p>
                       )}
-                      {puantajWorkerCount === null && !editingEntry && !isLoadingWorkerCount && (
-                        <p className="text-xs text-muted-foreground">
-                          Bu tarihte puantaj kaydı yok, manuel girebilirsiniz
+                      {(puantajWorkerCount === null || puantajWorkerCount === 0) && !editingEntry && !isLoadingWorkerCount && (
+                        <p className="text-xs text-red-600 dark:text-red-400 font-medium">
+                          Bu tarihte puantaj kaydı oluşturulmamış!
                         </p>
                       )}
                       <FormMessage />

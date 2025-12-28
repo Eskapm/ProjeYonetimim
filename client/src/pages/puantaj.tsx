@@ -299,7 +299,7 @@ export default function Puantaj() {
       setIsDialogOpen(false);
       
       // Redirect to site diary with date parameter
-      setLocation(`/site-diary?date=${savedDate}&fromPuantaj=true`);
+      setLocation(`/santiye-defteri?date=${savedDate}&fromPuantaj=true`);
     } catch (error) {
       toast({
         title: "Hata",
