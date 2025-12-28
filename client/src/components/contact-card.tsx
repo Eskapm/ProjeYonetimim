@@ -1,7 +1,9 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Mail, Phone, MapPin, Edit, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Mail, Phone, MapPin, Edit, Trash2, User, Users } from "lucide-react";
+import type { ContactPerson } from "@shared/schema";
 
 interface ContactCardProps {
   id: string;
@@ -11,6 +13,8 @@ interface ContactCardProps {
   email?: string;
   address?: string;
   specialty?: string;
+  supplierType?: string;
+  contacts?: ContactPerson[];
   type: "subcontractor" | "customer";
   onEdit?: () => void;
   onDelete?: () => void;
@@ -24,6 +28,8 @@ export function ContactCard({
   email,
   address,
   specialty,
+  supplierType,
+  contacts = [],
   type,
   onEdit,
   onDelete,
@@ -35,6 +41,8 @@ export function ContactCard({
     .toUpperCase()
     .slice(0, 2);
 
+  const hasContacts = contacts && contacts.length > 0;
+
   return (
     <Card className="hover-elevate" data-testid={`card-${type}-${id}`}>
       <CardHeader>
@@ -45,8 +53,15 @@ export function ContactCard({
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg truncate">{name}</CardTitle>
-            {contactPerson && (
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-lg truncate">{name}</CardTitle>
+              {supplierType && (
+                <Badge variant="secondary" className="text-xs">
+                  {supplierType}
+                </Badge>
+              )}
+            </div>
+            {contactPerson && !hasContacts && (
               <p className="text-sm text-muted-foreground truncate">{contactPerson}</p>
             )}
             {specialty && (
@@ -55,7 +70,7 @@ export function ContactCard({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-3">
         {phone && (
           <div className="flex items-center gap-2 text-sm">
             <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -72,6 +87,31 @@ export function ContactCard({
           <div className="flex items-center gap-2 text-sm">
             <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <span className="truncate">{address}</span>
+          </div>
+        )}
+
+        {hasContacts && (
+          <div className="pt-2 border-t">
+            <div className="flex items-center gap-2 mb-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">İletişim Kişileri ({contacts.length})</span>
+            </div>
+            <div className="space-y-2">
+              {contacts.slice(0, 3).map((contact, index) => (
+                <div key={index} className="flex items-center gap-2 text-sm pl-6">
+                  <User className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                  <span className="truncate">
+                    {contact.name}
+                    {contact.title && <span className="text-muted-foreground"> - {contact.title}</span>}
+                  </span>
+                </div>
+              ))}
+              {contacts.length > 3 && (
+                <p className="text-xs text-muted-foreground pl-6">
+                  +{contacts.length - 3} kişi daha...
+                </p>
+              )}
+            </div>
           </div>
         )}
       </CardContent>
