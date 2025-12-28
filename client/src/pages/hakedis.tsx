@@ -477,7 +477,7 @@ export default function Hakedis() {
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold font-mono" data-testid="text-total-amount">
+              <div className="text-2xl font-bold font-mono whitespace-nowrap" data-testid="text-total-amount">
                 {summary.totalAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -492,7 +492,7 @@ export default function Hakedis() {
               <TrendingUp className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold font-mono text-green-600" data-testid="text-total-received">
+              <div className="text-2xl font-bold font-mono text-green-600 whitespace-nowrap" data-testid="text-total-received">
                 {summary.totalReceived.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -507,7 +507,7 @@ export default function Hakedis() {
               <TrendingDown className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold font-mono text-orange-600" data-testid="text-pending-amount">
+              <div className="text-2xl font-bold font-mono text-orange-600 whitespace-nowrap" data-testid="text-pending-amount">
                 {summary.pendingAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -658,19 +658,19 @@ export default function Hakedis() {
                   <div className="grid grid-cols-3 gap-6 max-w-3xl ml-auto">
                     <div className="text-right">
                       <div className="text-sm text-muted-foreground mb-1">Toplam Hakediş</div>
-                      <div className="text-2xl font-bold">
+                      <div className="text-2xl font-bold whitespace-nowrap">
                         {summary.totalAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="text-sm text-muted-foreground mb-1">Tahsil Edilen</div>
-                      <div className="text-2xl font-bold text-green-600">
+                      <div className="text-2xl font-bold text-green-600 whitespace-nowrap">
                         {summary.totalReceived.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="text-sm text-muted-foreground mb-1">Bekleyen Ödeme</div>
-                      <div className="text-2xl font-bold text-orange-600">
+                      <div className="text-2xl font-bold text-orange-600 whitespace-nowrap">
                         {summary.pendingAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
                       </div>
                     </div>

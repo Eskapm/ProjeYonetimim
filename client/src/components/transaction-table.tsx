@@ -172,7 +172,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                         <X className="h-5 w-5 text-muted-foreground mx-auto" />
                       )}
                     </TableCell>
-                    <TableCell className="text-right font-mono font-semibold">
+                    <TableCell className="text-right font-mono font-semibold whitespace-nowrap">
                       {formatCurrency(transaction.amount)}
                     </TableCell>
                     <TableCell className="text-right">
@@ -226,7 +226,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                           <TableCell colSpan={7} className="font-bold text-right pr-4">
                             Bir Önceki Sayfadan Nakledilen Tutar:
                           </TableCell>
-                          <TableCell className="text-right font-mono font-bold">
+                          <TableCell className="text-right font-mono font-bold whitespace-nowrap">
                             {formatCurrency(cumulativeTotal)}
                           </TableCell>
                           <TableCell></TableCell>
@@ -262,7 +262,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                           <TableCell className="text-center">
                             {transaction.progressPaymentId ? "✓" : ""}
                           </TableCell>
-                          <TableCell className="text-right font-mono font-semibold">
+                          <TableCell className="text-right font-mono font-semibold whitespace-nowrap">
                             {formatCurrency(transaction.amount)}
                           </TableCell>
                           <TableCell></TableCell>
@@ -275,7 +275,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                         <TableCell colSpan={7} className="text-right font-bold pr-4">
                           Toplam Tutar:
                         </TableCell>
-                        <TableCell className="text-right font-mono font-bold">
+                        <TableCell className="text-right font-mono font-bold whitespace-nowrap">
                           {formatCurrency(pageTotals.income - pageTotals.expense)}
                         </TableCell>
                         <TableCell></TableCell>
@@ -293,19 +293,19 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
         <div className="flex justify-end gap-8 p-4 bg-muted/50 rounded-md">
           <div className="text-right">
             <div className="text-sm text-muted-foreground">Toplam Gelir</div>
-            <div className="text-lg font-bold font-mono text-green-600 dark:text-green-400">
+            <div className="text-lg font-bold font-mono text-green-600 dark:text-green-400 whitespace-nowrap">
               {formatCurrency(totalIncome)}
             </div>
           </div>
           <div className="text-right">
             <div className="text-sm text-muted-foreground">Toplam Gider</div>
-            <div className="text-lg font-bold font-mono text-red-600 dark:text-red-400">
+            <div className="text-lg font-bold font-mono text-red-600 dark:text-red-400 whitespace-nowrap">
               {formatCurrency(totalExpense)}
             </div>
           </div>
           <div className="text-right">
             <div className="text-sm text-muted-foreground">Net</div>
-            <div className={`text-lg font-bold font-mono ${totalIncome - totalExpense >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+            <div className={`text-lg font-bold font-mono whitespace-nowrap ${totalIncome - totalExpense >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
               {formatCurrency(totalIncome - totalExpense)}
             </div>
           </div>

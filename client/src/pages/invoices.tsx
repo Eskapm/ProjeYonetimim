@@ -458,7 +458,7 @@ export default function Invoices() {
             <TrendingUp className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-mono" data-testid="text-total-sales">
+            <div className="text-2xl font-bold font-mono whitespace-nowrap" data-testid="text-total-sales">
               {totalSales.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
             </div>
             <p className="text-xs text-muted-foreground">
@@ -472,7 +472,7 @@ export default function Invoices() {
             <TrendingDown className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-mono" data-testid="text-total-purchases">
+            <div className="text-2xl font-bold font-mono whitespace-nowrap" data-testid="text-total-purchases">
               {totalPurchases.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
             </div>
             <p className="text-xs text-muted-foreground">
@@ -554,19 +554,19 @@ export default function Invoices() {
                       <TableCell className="text-muted-foreground">
                         {invoice.projectName || "-"}
                       </TableCell>
-                      <TableCell className="text-right font-mono">
+                      <TableCell className="text-right font-mono whitespace-nowrap">
                         {parseFloat(invoice.subtotal).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                       </TableCell>
-                      <TableCell className="text-right font-mono">
+                      <TableCell className="text-right font-mono whitespace-nowrap">
                         {parseFloat(invoice.taxAmount).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                       </TableCell>
-                      <TableCell className="text-right font-mono font-semibold">
+                      <TableCell className="text-right font-mono font-semibold whitespace-nowrap">
                         {parseFloat(invoice.total).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                       </TableCell>
-                      <TableCell className="text-right font-mono text-green-600 dark:text-green-400">
+                      <TableCell className="text-right font-mono text-green-600 dark:text-green-400 whitespace-nowrap">
                         {parseFloat(invoice.paidAmount || "0").toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                       </TableCell>
-                      <TableCell className="text-right font-mono text-orange-600 dark:text-orange-400">
+                      <TableCell className="text-right font-mono text-orange-600 dark:text-orange-400 whitespace-nowrap">
                         {(parseFloat(invoice.total) - parseFloat(invoice.paidAmount || "0")).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                       </TableCell>
                       <TableCell>

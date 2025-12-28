@@ -592,7 +592,7 @@ export default function BudgetPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold" data-testid="text-total-budget">{formatCurrency(summary.totalBudget)}</div>
+            <div className="text-2xl font-bold whitespace-nowrap" data-testid="text-total-budget">{formatCurrency(summary.totalBudget)}</div>
             <p className="text-xs text-muted-foreground">{summary.totalItems} kalem</p>
           </CardContent>
         </Card>
@@ -603,7 +603,7 @@ export default function BudgetPage() {
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold" data-testid="text-total-actual">{formatCurrency(summary.totalActual)}</div>
+            <div className="text-2xl font-bold whitespace-nowrap" data-testid="text-total-actual">{formatCurrency(summary.totalActual)}</div>
             <p className="text-xs text-muted-foreground">Toplam harcama</p>
           </CardContent>
         </Card>
@@ -618,7 +618,7 @@ export default function BudgetPage() {
             )}
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${summary.variance >= 0 ? 'text-red-500' : 'text-green-500'}`} data-testid="text-variance">
+            <div className={`text-2xl font-bold whitespace-nowrap ${summary.variance >= 0 ? 'text-red-500' : 'text-green-500'}`} data-testid="text-variance">
               {formatCurrency(Math.abs(summary.variance))}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -781,13 +781,13 @@ export default function BudgetPage() {
                         <TableCell className="text-right font-mono">
                           {parseFloat(item.quantity).toLocaleString('tr-TR')} {item.unit}
                         </TableCell>
-                        <TableCell className="text-right font-mono">
+                        <TableCell className="text-right font-mono whitespace-nowrap">
                           {formatCurrency(parseFloat(item.unitPrice))}
                         </TableCell>
-                        <TableCell className="text-right font-mono font-semibold">
+                        <TableCell className="text-right font-mono font-semibold whitespace-nowrap">
                           {formatCurrency(budgetTotal)}
                         </TableCell>
-                        <TableCell className="text-right font-mono">
+                        <TableCell className="text-right font-mono whitespace-nowrap">
                           {actualTotal > 0 ? formatCurrency(actualTotal) : "-"}
                         </TableCell>
                         <TableCell>
@@ -831,20 +831,20 @@ export default function BudgetPage() {
                   <div className="grid grid-cols-3 gap-6 max-w-3xl ml-auto">
                     <div className="text-right">
                       <div className="text-sm text-muted-foreground mb-1">Toplam Bütçe</div>
-                      <div className="text-2xl font-bold">
+                      <div className="text-2xl font-bold whitespace-nowrap">
                         {summary.totalBudget.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="text-sm text-muted-foreground mb-1">Gerçekleşen Tutar</div>
-                      <div className="text-2xl font-bold text-blue-600">
+                      <div className="text-2xl font-bold text-blue-600 whitespace-nowrap">
                         {summary.totalActual.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="text-sm text-muted-foreground mb-1">Fark</div>
                       <div className={cn(
-                        "text-2xl font-bold",
+                        "text-2xl font-bold whitespace-nowrap",
                         summary.variance >= 0 ? "text-green-600" : "text-red-600"
                       )}>
                         {summary.variance >= 0 ? "+" : ""}{summary.variance.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
