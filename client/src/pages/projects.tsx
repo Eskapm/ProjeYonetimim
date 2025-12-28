@@ -179,6 +179,11 @@ export default function Projects() {
       description: "",
       notes: "",
       customerId: "none",
+      contractType: "",
+      contractAmount: "",
+      profitMargin: "",
+      advancePayment: "",
+      advanceDeductionRate: "",
     });
     setIsDialogOpen(true);
   };
@@ -195,6 +200,11 @@ export default function Projects() {
       description: project.description ?? "",
       notes: project.notes ?? "",
       customerId: project.customerId ?? "none",
+      contractType: project.contractType ?? "",
+      contractAmount: project.contractAmount ?? "",
+      profitMargin: project.profitMargin ?? "",
+      advancePayment: project.advancePayment ?? "",
+      advanceDeductionRate: project.advanceDeductionRate ?? "",
     });
     setIsDialogOpen(true);
   }, [form]);
@@ -573,6 +583,27 @@ export default function Projects() {
                           step="0.01" 
                           placeholder="0.00" 
                           data-testid="input-advance-payment" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="advanceDeductionRate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Avans Kesinti Oranı (%)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          value={field.value ?? ""} 
+                          type="number" 
+                          step="0.01" 
+                          placeholder="10" 
+                          data-testid="input-advance-deduction-rate" 
                         />
                       </FormControl>
                       <FormMessage />

@@ -62,6 +62,7 @@ export const projects = pgTable("projects", {
   contractAmount: decimal("contract_amount", { precision: 15, scale: 2 }),
   profitMargin: decimal("profit_margin", { precision: 5, scale: 2 }),
   advancePayment: decimal("advance_payment", { precision: 15, scale: 2 }).default("0"),
+  advanceDeductionRate: decimal("advance_deduction_rate", { precision: 5, scale: 2 }).default("0"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

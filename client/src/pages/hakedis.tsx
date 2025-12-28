@@ -172,6 +172,26 @@ export default function Hakedis() {
     form.setValue("receivedAmount", incomeTotal.toFixed(2));
   }, [selectedTransactionIds, allTransactions, form]);
 
+  // Watch projectId for auto-fill when project changes in the form
+  const watchedProjectId = form.watch("projectId");
+
+  // Auto-fill rates and payment number when project changes (only for new payments)
+  useEffect(() => {
+    if (!editingPayment && watchedProjectId && isDialogOpen) {
+      const project = projects.find(p => p.id === watchedProjectId);
+      if (project) {
+        // Auto-fill rates from project settings
+        form.setValue("contractorFeeRate", project.profitMargin || "0");
+        form.setValue("advanceDeductionRate", project.advanceDeductionRate || "0");
+        
+        // Auto-increment payment number - calculate inline
+        const projectPayments = payments.filter(p => p.projectId === watchedProjectId);
+        const nextPaymentNumber = projectPayments.length === 0 ? 1 : Math.max(...projectPayments.map(p => p.paymentNumber)) + 1;
+        form.setValue("paymentNumber", nextPaymentNumber);
+      }
+    }
+  }, [watchedProjectId, projects, payments, editingPayment, isDialogOpen]);
+
   // Auto-set advance deduction rate to 0 if no remaining advance
   useEffect(() => {
     if (remainingAdvance.remaining <= 0) {
@@ -291,17 +311,36 @@ export default function Hakedis() {
     return { totalAmount, totalReceived, pendingAmount };
   }, [filteredPayments]);
 
+  // Calculate next payment number for a project
+  const getNextPaymentNumber = (projectId: string): number => {
+    if (!projectId) return 1;
+    const projectPayments = payments.filter(p => p.projectId === projectId);
+    if (projectPayments.length === 0) return 1;
+    const maxNumber = Math.max(...projectPayments.map(p => p.paymentNumber));
+    return maxNumber + 1;
+  };
+
   // Handlers
   const handleAddPayment = () => {
+    const projectId = activeProjectId || "";
+    const project = projectId ? projects.find(p => p.id === projectId) : null;
+    const nextPaymentNumber = getNextPaymentNumber(projectId);
+    
+    // Auto-fill rates from project settings
+    const contractorFeeRate = project?.profitMargin || "0";
+    const advanceDeductionRate = project?.advanceDeductionRate || "0";
+    
     form.reset({
-      projectId: activeProjectId || "",
-      paymentNumber: 1,
+      projectId: projectId,
+      paymentNumber: nextPaymentNumber,
       date: new Date().toISOString().split("T")[0],
       description: "",
       amount: "0",
       receivedAmount: "0",
       status: "Bekliyor",
       transactionIds: [],
+      contractorFeeRate: contractorFeeRate,
+      advanceDeductionRate: advanceDeductionRate,
     });
     setSelectedTransactionIds([]);
     setEditingPayment(null);
