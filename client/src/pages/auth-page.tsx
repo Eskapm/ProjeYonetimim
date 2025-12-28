@@ -256,7 +256,7 @@ export default function AuthPage() {
                         className="text-sm text-muted-foreground hover:text-primary h-auto p-0 font-normal underline-offset-4 hover:underline"
                         data-testid="button-forgot-password"
                       >
-                        Şifremi Unuttum
+                        Şifremi Unuttum?
                       </Button>
                     </DialogTrigger>
                     <DialogContent>

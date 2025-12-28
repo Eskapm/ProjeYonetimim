@@ -340,6 +340,7 @@ export const siteDiary = pgTable("site_diary", {
   totalWorkers: integer("total_workers"),
   issues: text("issues"),
   notes: text("notes"),
+  photos: text("photos").array(), // Yapılan işlerin fotoğrafları (URL'ler)
   createdAt: timestamp("created_at").defaultNow(),
 });
 

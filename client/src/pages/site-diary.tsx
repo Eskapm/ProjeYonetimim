@@ -38,7 +38,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Search, Calendar as CalendarIcon, Loader2 } from "lucide-react";
+import { Plus, Search, Calendar as CalendarIcon, Loader2, Image, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertSiteDiarySchema, type InsertSiteDiary, type SiteDiary, type Project } from "@shared/schema";
@@ -46,9 +46,10 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { format } from "date-fns";
+import { format, startOfDay, endOfDay } from "date-fns";
 import { tr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
 
 const weatherOptions = ["Güneşli", "Bulutlu", "Yağmurlu", "Karlı"] as const;
 
@@ -67,6 +68,14 @@ export default function SiteDiary() {
   const [puantajWorkerCount, setPuantajWorkerCount] = useState<number | null>(null);
   const [isLoadingWorkerCount, setIsLoadingWorkerCount] = useState(false);
   const [urlParamsProcessed, setUrlParamsProcessed] = useState(false);
+  
+  // Date range filter states
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  
+  // Photo upload states
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   // Form setup - must be before useEffects that use it
   const form = useForm<InsertSiteDiary>({
@@ -80,6 +89,7 @@ export default function SiteDiary() {
       totalWorkers: undefined,
       issues: "",
       notes: "",
+      photos: [],
     },
   });
 
@@ -101,6 +111,9 @@ export default function SiteDiary() {
       // Clear URL params
       setLocation("/site-diary", { replace: true });
       
+      // Reset photos
+      setPhotos([]);
+      
       // Open dialog with date pre-filled
       form.reset({
         projectId: activeProjectId,
@@ -111,6 +124,7 @@ export default function SiteDiary() {
         totalWorkers: undefined,
         issues: "",
         notes: "",
+        photos: [],
       });
       setIsDialogOpen(true);
       
@@ -228,7 +242,7 @@ export default function SiteDiary() {
   });
 
   const onSubmit = (data: InsertSiteDiary) => {
-    // Convert empty strings to null for optional fields
+    // Convert empty strings to null for optional fields, keep photos as array
     const cleanedData = {
       ...data,
       weather: data.weather || null,
@@ -236,6 +250,7 @@ export default function SiteDiary() {
       totalWorkers: data.totalWorkers || null,
       issues: data.issues || null,
       notes: data.notes || null,
+      photos: photos, // Always send as array (empty or with items)
     };
 
     if (editingEntry) {
@@ -248,6 +263,7 @@ export default function SiteDiary() {
   const handleAddEntry = () => {
     setEditingEntry(null);
     setPuantajWorkerCount(null);
+    setPhotos([]);
     const today = new Date().toISOString().split("T")[0];
     form.reset({
       projectId: activeProjectId || "",
@@ -258,6 +274,7 @@ export default function SiteDiary() {
       totalWorkers: undefined,
       issues: "",
       notes: "",
+      photos: [],
     });
     setIsDialogOpen(true);
     
@@ -270,6 +287,7 @@ export default function SiteDiary() {
   const handleEditEntry = (entry: SiteDiary) => {
     setEditingEntry(entry);
     setPuantajWorkerCount(null); // Don't show puantaj hint when editing
+    setPhotos(entry.photos || []);
     form.reset({
       projectId: entry.projectId,
       date: entry.date,
@@ -279,6 +297,7 @@ export default function SiteDiary() {
       totalWorkers: entry.totalWorkers || undefined,
       issues: entry.issues || "",
       notes: entry.notes || "",
+      photos: entry.photos || [],
     });
     setIsDialogOpen(true);
   };
@@ -308,7 +327,26 @@ export default function SiteDiary() {
       entry.workDone.toLowerCase().includes(searchTerm.toLowerCase()) ||
       entry.projectName?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesProject = selectedProject === "all" || entry.projectId === selectedProject;
-    return matchesSearch && matchesProject;
+    
+    // Date range filtering - use local date parsing to avoid timezone issues
+    let matchesDateRange = true;
+    if (startDate || endDate) {
+      // Parse entry.date as local date to avoid UTC offset issues
+      const entryDate = new Date(`${entry.date}T00:00:00`);
+      if (startDate && endDate) {
+        const normalizedStart = startOfDay(startDate);
+        const normalizedEnd = endOfDay(endDate);
+        matchesDateRange = entryDate >= normalizedStart && entryDate <= normalizedEnd;
+      } else if (startDate) {
+        const normalizedStart = startOfDay(startDate);
+        matchesDateRange = entryDate >= normalizedStart;
+      } else if (endDate) {
+        const normalizedEnd = endOfDay(endDate);
+        matchesDateRange = entryDate <= normalizedEnd;
+      }
+    }
+    
+    return matchesSearch && matchesProject && matchesDateRange;
   });
 
   const isPending = createEntryMutation.isPending || updateEntryMutation.isPending;
@@ -331,30 +369,97 @@ export default function SiteDiary() {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 no-print">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Yapılan işlerde ara..."
-            className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            data-testid="input-search-diary"
-          />
+      <div className="flex flex-col gap-4 no-print">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Yapılan işlerde ara..."
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              data-testid="input-search-diary"
+            />
+          </div>
+          <Select value={selectedProject} onValueChange={setSelectedProject}>
+            <SelectTrigger className="w-full sm:w-[250px]" data-testid="select-project-filter">
+              <SelectValue placeholder="Proje seç" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tüm Projeler</SelectItem>
+              {projects.map((project) => (
+                <SelectItem key={project.id} value={project.id}>
+                  {project.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={selectedProject} onValueChange={setSelectedProject}>
-          <SelectTrigger className="w-full sm:w-[250px]" data-testid="select-project-filter">
-            <SelectValue placeholder="Proje seç" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tüm Projeler</SelectItem>
-            {projects.map((project) => (
-              <SelectItem key={project.id} value={project.id}>
-                {project.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full sm:w-[250px] justify-start text-left font-normal",
+                  !startDate && "text-muted-foreground"
+                )}
+                data-testid="button-start-date-filter"
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {startDate ? format(startDate, "PPP", { locale: tr }) : "Başlangıç tarihi"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={startDate}
+                onSelect={setStartDate}
+                locale={tr}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full sm:w-[250px] justify-start text-left font-normal",
+                  !endDate && "text-muted-foreground"
+                )}
+                data-testid="button-end-date-filter"
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {endDate ? format(endDate, "PPP", { locale: tr }) : "Bitiş tarihi"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={endDate}
+                onSelect={setEndDate}
+                locale={tr}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+
+          {(startDate || endDate) && (
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setStartDate(undefined);
+                setEndDate(undefined);
+              }}
+              data-testid="button-clear-date-filters"
+            >
+              Tarihleri Temizle
+            </Button>
+          )}
+        </div>
       </div>
 
       {isLoadingDiary ? (
@@ -593,6 +698,82 @@ export default function SiteDiary() {
                   </FormItem>
                 )}
               />
+
+              {/* Photos Section */}
+              <div className="space-y-2">
+                <Label>Fotoğraflar</Label>
+                <div className="flex flex-wrap gap-2">
+                  {photos.map((photo, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={photo}
+                        alt={`Fotoğraf ${index + 1}`}
+                        className="w-20 h-20 object-cover rounded-md border"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newPhotos = photos.filter((_, i) => i !== index);
+                          setPhotos(newPhotos);
+                        }}
+                        className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        data-testid={`button-remove-photo-${index}`}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <label
+                    className={cn(
+                      "w-20 h-20 flex flex-col items-center justify-center border-2 border-dashed rounded-md cursor-pointer",
+                      "hover:border-primary hover:bg-muted/50 transition-colors",
+                      isUploadingPhoto && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={isUploadingPhoto}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        
+                        setIsUploadingPhoto(true);
+                        try {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            const base64 = reader.result as string;
+                            setPhotos([...photos, base64]);
+                            setIsUploadingPhoto(false);
+                          };
+                          reader.readAsDataURL(file);
+                        } catch (error) {
+                          toast({
+                            title: "Hata",
+                            description: "Fotoğraf yüklenirken bir hata oluştu",
+                            variant: "destructive",
+                          });
+                          setIsUploadingPhoto(false);
+                        }
+                        e.target.value = "";
+                      }}
+                      data-testid="input-photo-upload"
+                    />
+                    {isUploadingPhoto ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    ) : (
+                      <>
+                        <Image className="h-5 w-5 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground mt-1">Ekle</span>
+                      </>
+                    )}
+                  </label>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Yapılan işlere ait fotoğrafları ekleyebilirsiniz
+                </p>
+              </div>
 
               {/* Materials Used */}
               <FormField
