@@ -200,6 +200,8 @@ export default function Invoices() {
   // Watch subtotal and taxRate to calculate taxAmount and total automatically
   const subtotal = form.watch("subtotal");
   const taxRate = form.watch("taxRate");
+  const watchedType = form.watch("type");
+  const watchedProjectId = form.watch("projectId");
 
   // Update calculations when subtotal or taxRate changes
   useEffect(() => {
@@ -211,6 +213,16 @@ export default function Invoices() {
     form.setValue("taxAmount", tax.toFixed(2));
     form.setValue("total", tot.toFixed(2));
   }, [subtotal, taxRate, form]);
+
+  // Auto-select customer when project is selected for sales invoices
+  useEffect(() => {
+    if (watchedType === "Satış" && watchedProjectId) {
+      const selectedProject = projects.find(p => p.id === watchedProjectId);
+      if (selectedProject?.customerId) {
+        form.setValue("customerId", selectedProject.customerId);
+      }
+    }
+  }, [watchedType, watchedProjectId, projects, form]);
 
   const onSubmit = (data: InsertInvoice) => {
     // Convert empty strings to null for optional fields
@@ -242,11 +254,15 @@ export default function Invoices() {
 
   const handleAddInvoice = () => {
     setEditingInvoice(null);
+    // Find customer for active project if exists
+    const activeProject = activeProjectId ? projects.find(p => p.id === activeProjectId) : null;
+    const autoCustomerId = activeProject?.customerId || null;
+    
     form.reset({
       invoiceNumber: "",
       type: "",
       projectId: activeProjectId || null,
-      customerId: null,
+      customerId: autoCustomerId,
       subcontractorId: null,
       date: new Date().toISOString().split("T")[0],
       dueDate: null,
