@@ -441,7 +441,7 @@ export default function Projects() {
                     <FormItem>
                       <FormLabel>Alan (m²)</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value ?? ""} type="number" step="0.01" placeholder="2500" data-testid="input-project-area" />
+                        <Input {...field} value={field.value ?? ""} type="number" step="0.01" placeholder="0,00" data-testid="input-project-area" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -566,7 +566,7 @@ export default function Projects() {
                             value={field.value ?? ""} 
                             type="number" 
                             step="0.01" 
-                            placeholder="0.00" 
+                            placeholder="0,00 TL" 
                             data-testid="input-contract-amount" 
                           />
                         </FormControl>
@@ -588,7 +588,7 @@ export default function Projects() {
                           value={field.value ?? ""} 
                           type="number" 
                           step="0.01" 
-                          placeholder="0.00" 
+                          placeholder="0,00 TL" 
                           data-testid="input-advance-payment" 
                         />
                       </FormControl>
@@ -609,7 +609,7 @@ export default function Projects() {
                           value={field.value ?? ""} 
                           type="number" 
                           step="0.01" 
-                          placeholder="10" 
+                          placeholder="0" 
                           data-testid="input-advance-deduction-rate" 
                         />
                       </FormControl>
@@ -631,7 +631,7 @@ export default function Projects() {
                             value={field.value ?? ""} 
                             type="number" 
                             step="0.01" 
-                            placeholder="15" 
+                            placeholder="0" 
                             data-testid="input-profit-margin" 
                           />
                         </FormControl>

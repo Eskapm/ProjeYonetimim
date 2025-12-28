@@ -882,7 +882,7 @@ export default function Invoices() {
                         <Input
                           type="number"
                           step="0.01"
-                          placeholder="0.00"
+                          placeholder="0,00 TL"
                           {...field}
                           onChange={(e) => {
                             field.onChange(e.target.value);
@@ -913,7 +913,7 @@ export default function Invoices() {
                         <Input
                           type="number"
                           step="0.01"
-                          placeholder="20"
+                          placeholder="0"
                           {...field}
                           onChange={(e) => {
                             field.onChange(e.target.value);
@@ -984,7 +984,7 @@ export default function Invoices() {
                         <Input
                           type="number"
                           step="0.01"
-                          placeholder="0.00"
+                          placeholder="0,00 TL"
                           {...field}
                           value={field.value || "0"}
                           data-testid="input-paid-amount"

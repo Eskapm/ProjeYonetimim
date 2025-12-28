@@ -576,7 +576,7 @@ export default function Transactions() {
                           {...field}
                           type="number"
                           step="0.01"
-                          placeholder="0.00"
+                          placeholder="0,00 TL"
                           data-testid="input-transaction-amount"
                         />
                       </FormControl>

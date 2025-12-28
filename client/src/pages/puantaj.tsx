@@ -723,7 +723,7 @@ export default function Puantaj() {
                     <Input
                       type="number"
                       step="0.5"
-                      placeholder="8"
+                      placeholder="0,00"
                       value={currentHours}
                       onChange={(e) => setCurrentHours(e.target.value)}
                       data-testid="input-hours"
@@ -1006,7 +1006,7 @@ export default function Puantaj() {
                         <Input
                           type="number"
                           step="0.5"
-                          placeholder="8"
+                          placeholder="0,00"
                           {...field}
                           data-testid="input-hours-edit"
                         />

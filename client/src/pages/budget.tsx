@@ -422,7 +422,7 @@ export default function BudgetPage() {
                       <FormItem>
                         <FormLabel>Miktar *</FormLabel>
                         <FormControl>
-                          <Input {...field} type="number" step="0.01" placeholder="100" data-testid="input-quantity" />
+                          <Input {...field} type="number" step="0.01" placeholder="0,00" data-testid="input-quantity" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -450,7 +450,7 @@ export default function BudgetPage() {
                       <FormItem>
                         <FormLabel>Birim Fiyat *</FormLabel>
                         <FormControl>
-                          <Input {...field} type="number" step="0.01" placeholder="1500" data-testid="input-unit-price" />
+                          <Input {...field} type="number" step="0.01" placeholder="0,00 TL" data-testid="input-unit-price" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -546,7 +546,7 @@ export default function BudgetPage() {
                         <FormItem>
                           <FormLabel>Gerçekleşen Miktar</FormLabel>
                           <FormControl>
-                            <Input {...field} value={field.value || ""} type="number" step="0.01" placeholder="85" data-testid="input-actual-quantity" />
+                            <Input {...field} value={field.value || ""} type="number" step="0.01" placeholder="0,00" data-testid="input-actual-quantity" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -560,7 +560,7 @@ export default function BudgetPage() {
                         <FormItem>
                           <FormLabel>Gerçekleşen Birim Fiyat</FormLabel>
                           <FormControl>
-                            <Input {...field} value={field.value || ""} type="number" step="0.01" placeholder="1650" data-testid="input-actual-unit-price" />
+                            <Input {...field} value={field.value || ""} type="number" step="0.01" placeholder="0,00 TL" data-testid="input-actual-unit-price" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

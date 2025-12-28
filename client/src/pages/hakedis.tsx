@@ -733,7 +733,7 @@ export default function Hakedis() {
                       <FormControl>
                         <Input
                           type="number"
-                          placeholder="1"
+                          placeholder="0"
                           {...field}
                           onChange={(e) => field.onChange(parseInt(e.target.value))}
                           data-testid="input-payment-number"
@@ -843,7 +843,7 @@ export default function Hakedis() {
                         <Input
                           type="number"
                           step="0.01"
-                          placeholder="0.00"
+                          placeholder="0"
                           {...field}
                           value={field.value || ""}
                           data-testid="input-contractor-fee-rate"
@@ -897,7 +897,7 @@ export default function Hakedis() {
                         <Input
                           type="number"
                           step="0.01"
-                          placeholder="0.00"
+                          placeholder="0"
                           {...field}
                           value={field.value || ""}
                           disabled={remainingAdvance.remaining <= 0}
