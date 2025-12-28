@@ -38,7 +38,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Search, Calendar as CalendarIcon, Loader2, Image, X } from "lucide-react";
+import { Plus, Search, Calendar as CalendarIcon, Loader2, Image, X, Camera } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertSiteDiarySchema, type InsertSiteDiary, type SiteDiary, type Project } from "@shared/schema";
@@ -736,6 +736,7 @@ export default function SiteDiary() {
                     <input
                       type="file"
                       accept="image/*"
+                      capture="environment"
                       className="hidden"
                       disabled={isUploadingPhoto}
                       onChange={async (e) => {
@@ -767,8 +768,8 @@ export default function SiteDiary() {
                       <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                     ) : (
                       <>
-                        <Image className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground mt-1">Ekle</span>
+                        <Camera className="h-5 w-5 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground mt-1">Çek/Ekle</span>
                       </>
                     )}
                   </label>
