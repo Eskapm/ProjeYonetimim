@@ -38,7 +38,7 @@ export const invoiceTypeEnum = ["Alış", "Satış"] as const;
 export const invoiceStatusEnum = ["Ödenmedi", "Kısmi Ödendi", "Ödendi"] as const;
 
 // Sözleşme tipleri
-export const contractTypeEnum = ["Anahtar Teslim", "Maliyet + Kar Marjı"] as const;
+export const contractTypeEnum = ["Anahtar Teslim", "Maliyet + Kar"] as const;
 
 // Hakediş durumları
 export const progressPaymentStatusEnum = ["Bekliyor", "Kısmi Ödendi", "Ödendi"] as const;

@@ -613,7 +613,7 @@ export default function Projects() {
                   )}
                 />
 
-                {form.watch("contractType") === "Maliyet + Kar Marjı" && (
+                {form.watch("contractType") === "Maliyet + Kar" && (
                   <FormField
                     control={form.control}
                     name="profitMargin"
