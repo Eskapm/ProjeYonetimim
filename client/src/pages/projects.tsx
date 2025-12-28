@@ -158,6 +158,11 @@ export default function Projects() {
       notes: data.notes || null,
       // Explicitly convert empty string, "none", or undefined to null
       customerId: (data.customerId === "" || data.customerId === "none" || !data.customerId) ? null : data.customerId,
+      contractType: (data.contractType === "" || data.contractType === "none" || !data.contractType) ? null : data.contractType,
+      contractAmount: data.contractAmount || null,
+      profitMargin: data.profitMargin || null,
+      advancePayment: data.advancePayment || null,
+      advanceDeductionRate: data.advanceDeductionRate || null,
     };
 
     if (editingProject) {
