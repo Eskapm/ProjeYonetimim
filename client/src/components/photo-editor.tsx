@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { Pencil, Type, Undo2, RotateCcw, Check, X } from "lucide-react";
+import { Pencil, Type, Undo2, RotateCcw, Check, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PhotoEditorProps {
@@ -172,6 +172,7 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
   };
 
   const handleStart = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
     if (tool === "draw") {
       setIsDrawing(true);
       const coords = getCanvasCoordinates(e);
@@ -201,7 +202,7 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
   };
 
   const handleCanvasClick = (e: React.MouseEvent) => {
-    if (tool === "text" && isAddingText && textInput.trim()) {
+    if (tool === "text" && textInput.trim()) {
       const coords = getCanvasCoordinates(e);
       setActions((prev) => [
         ...prev,
@@ -209,6 +210,8 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
       ]);
       setTextInput("");
       setIsAddingText(false);
+    } else if (tool === "text") {
+      setIsAddingText(true);
     }
   };
 
@@ -228,10 +231,13 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()} modal={true}>
+      <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto z-[100]">
         <DialogHeader>
           <DialogTitle>Fotoğraf Düzenle</DialogTitle>
+          <DialogDescription>
+            Fotoğraf üzerine çizim yapabilir veya yazı ekleyebilirsiniz
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -325,30 +331,42 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
                 />
                 <span className="text-sm text-muted-foreground">{fontSize}px</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Input
                   placeholder="Eklenecek yazıyı girin..."
                   value={textInput}
                   onChange={(e) => setTextInput(e.target.value)}
-                  className="flex-1"
+                  className="flex-1 min-w-[200px]"
                   data-testid="input-text-content"
                 />
-                {isAddingText && textInput && (
-                  <span className="text-sm text-muted-foreground">
-                    Resme tıklayarak yazıyı yerleştirin
-                  </span>
-                )}
+                <span className={cn(
+                  "text-sm",
+                  textInput.trim() ? "text-primary font-medium" : "text-muted-foreground"
+                )}>
+                  {textInput.trim() 
+                    ? "Resme tıklayarak yazıyı yerleştirin" 
+                    : "Önce yazınızı girin"
+                  }
+                </span>
               </div>
             </div>
           )}
 
           <div 
             ref={containerRef}
-            className="border rounded-lg overflow-hidden bg-muted flex justify-center"
+            className="border rounded-lg overflow-hidden bg-muted flex justify-center items-center min-h-[200px] relative"
           >
+            {!imageLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center bg-muted">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            )}
             <canvas
               ref={canvasRef}
-              className="cursor-crosshair touch-none"
+              className={cn(
+                "cursor-crosshair touch-none",
+                !imageLoaded && "opacity-0"
+              )}
               onMouseDown={handleStart}
               onMouseMove={handleMove}
               onMouseUp={handleEnd}
