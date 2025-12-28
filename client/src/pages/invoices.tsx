@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { PrintButton } from "@/components/print-button";
 import { PrintHeader } from "@/components/print-header";
 import { ExportToExcel } from "@/components/export-to-excel";
+import { useProjectContext } from "@/hooks/use-project-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -76,6 +77,7 @@ export default function Invoices() {
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [deleteInvoiceId, setDeleteInvoiceId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { activeProjectId } = useProjectContext();
 
   // Fetch invoices
   const { data: invoices = [], isLoading: isLoadingInvoices, error: invoicesError } = useQuery<Invoice[]>({
@@ -177,7 +179,7 @@ export default function Invoices() {
       projectId: null,
       customerId: null,
       subcontractorId: null,
-      date: "",
+      date: new Date().toISOString().split("T")[0],
       dueDate: null,
       subtotal: "0",
       taxRate: "20",
@@ -238,10 +240,10 @@ export default function Invoices() {
     form.reset({
       invoiceNumber: "",
       type: "",
-      projectId: null,
+      projectId: activeProjectId || null,
       customerId: null,
       subcontractorId: null,
-      date: "",
+      date: new Date().toISOString().split("T")[0],
       dueDate: null,
       subtotal: "0",
       taxRate: "20",

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { PrintButton } from "@/components/print-button";
 import { PrintHeader } from "@/components/print-header";
+import { useProjectContext } from "@/hooks/use-project-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -64,6 +65,7 @@ export default function Puantaj() {
   const [editingEntry, setEditingEntry] = useState<Timesheet | null>(null);
   const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { activeProjectId } = useProjectContext();
 
   // Fetch timesheet entries
   const { data: timesheets = [], isLoading: isLoadingTimesheets, error: timesheetsError } = useQuery<Timesheet[]>({
@@ -151,7 +153,7 @@ export default function Puantaj() {
     resolver: zodResolver(insertTimesheetSchema),
     defaultValues: {
       projectId: "",
-      date: "",
+      date: new Date().toISOString().split("T")[0],
       isGrubu: "",
       workerCount: 0,
       hours: "",
@@ -176,8 +178,8 @@ export default function Puantaj() {
   const handleAddEntry = () => {
     setEditingEntry(null);
     form.reset({
-      projectId: "",
-      date: "",
+      projectId: activeProjectId || "",
+      date: new Date().toISOString().split("T")[0],
       isGrubu: "",
       workerCount: 0,
       hours: "",

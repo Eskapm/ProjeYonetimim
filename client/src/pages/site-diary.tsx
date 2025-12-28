@@ -146,7 +146,7 @@ export default function SiteDiary() {
     resolver: zodResolver(insertSiteDiarySchema),
     defaultValues: {
       projectId: "",
-      date: "",
+      date: new Date().toISOString().split("T")[0],
       weather: "",
       workDone: "",
       materialsUsed: "",
@@ -178,7 +178,7 @@ export default function SiteDiary() {
     setEditingEntry(null);
     form.reset({
       projectId: activeProjectId || "",
-      date: "",
+      date: new Date().toISOString().split("T")[0],
       weather: "",
       workDone: "",
       materialsUsed: "",

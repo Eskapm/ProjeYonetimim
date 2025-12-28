@@ -28,7 +28,6 @@ import Hakedis from "@/pages/hakedis";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
 import logoUrl from "@assets/ESKA LOGO TASARIMI_1761497797352.png";
-import { supabase } from "./supabaseClient";
 
 function ThemeToggle() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -151,19 +150,6 @@ function AppContent() {
 }
 
 export default function App() {
-  useEffect(() => {
-    const test = async () => {
-      const { data, error } = await supabase
-        .from("daily_logs")
-        .select("*")
-        .limit(1);
-
-      console.log("SUPABASE TEST", { data, error });
-    };
-
-    test();
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
