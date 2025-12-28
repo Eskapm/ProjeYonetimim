@@ -133,13 +133,7 @@ export default function AuthPage() {
 
           {!isRegistering ? (
             <Card>
-              <CardHeader>
-                <CardTitle>Giriş Yap</CardTitle>
-                <CardDescription>
-                  Hesabınıza giriş yapmak için kullanıcı bilgilerinizi girin
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="login-username">Kullanıcı Adı</Label>
@@ -165,17 +159,15 @@ export default function AuthPage() {
                         id="login-password"
                         type={showLoginPassword ? "text" : "password"}
                         placeholder="Şifrenizi girin"
-                        className="pl-10 pr-10"
+                        className="pl-10 pr-12"
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
                         required
                         data-testid="input-login-password"
                       />
-                      <Button
+                      <button
                         type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                        className="absolute right-3 top-1/2 -translate-y-1/2"
                         onClick={() => setShowLoginPassword(!showLoginPassword)}
                         data-testid="button-toggle-login-password"
                       >
@@ -184,7 +176,7 @@ export default function AuthPage() {
                         ) : (
                           <Eye className="h-4 w-4 text-muted-foreground" />
                         )}
-                      </Button>
+                      </button>
                     </div>
                   </div>
                   <Button
@@ -300,18 +292,16 @@ export default function AuthPage() {
                         id="register-password"
                         type={showRegisterPassword ? "text" : "password"}
                         placeholder="Şifrenizi girin"
-                        className="pl-10 pr-10"
+                        className="pl-10 pr-12"
                         value={registerPassword}
                         onChange={(e) => setRegisterPassword(e.target.value)}
                         required
                         minLength={6}
                         data-testid="input-register-password"
                       />
-                      <Button
+                      <button
                         type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                        className="absolute right-3 top-1/2 -translate-y-1/2"
                         onClick={() => setShowRegisterPassword(!showRegisterPassword)}
                         data-testid="button-toggle-register-password"
                       >
@@ -320,7 +310,7 @@ export default function AuthPage() {
                         ) : (
                           <Eye className="h-4 w-4 text-muted-foreground" />
                         )}
-                      </Button>
+                      </button>
                     </div>
                   </div>
                   
@@ -334,18 +324,16 @@ export default function AuthPage() {
                         id="register-confirm-password"
                         type={showRegisterConfirmPassword ? "text" : "password"}
                         placeholder="Şifrenizi tekrar girin"
-                        className="pl-10 pr-10"
+                        className="pl-10 pr-12"
                         value={registerConfirmPassword}
                         onChange={(e) => setRegisterConfirmPassword(e.target.value)}
                         required
                         minLength={6}
                         data-testid="input-register-confirm-password"
                       />
-                      <Button
+                      <button
                         type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                        className="absolute right-3 top-1/2 -translate-y-1/2"
                         onClick={() => setShowRegisterConfirmPassword(!showRegisterConfirmPassword)}
                         data-testid="button-toggle-register-confirm-password"
                       >
@@ -354,7 +342,7 @@ export default function AuthPage() {
                         ) : (
                           <Eye className="h-4 w-4 text-muted-foreground" />
                         )}
-                      </Button>
+                      </button>
                     </div>
                   </div>
                   
