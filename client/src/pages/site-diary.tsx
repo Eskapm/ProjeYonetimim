@@ -4,6 +4,7 @@ import { useLocation, useSearch } from "wouter";
 import { SiteDiaryCard } from "@/components/site-diary-card";
 import { PrintButton } from "@/components/print-button";
 import { PrintHeader } from "@/components/print-header";
+import { PhotoEditor } from "@/components/photo-editor";
 import { useProjectContext } from "@/hooks/use-project-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,6 +77,8 @@ export default function SiteDiary() {
   // Photo upload states
   const [photos, setPhotos] = useState<string[]>([]);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [photoToEdit, setPhotoToEdit] = useState<string | null>(null);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
 
   // Form setup - must be before useEffects that use it
   const form = useForm<InsertSiteDiary>({
@@ -748,7 +751,8 @@ export default function SiteDiary() {
                           const reader = new FileReader();
                           reader.onloadend = () => {
                             const base64 = reader.result as string;
-                            setPhotos([...photos, base64]);
+                            setPhotoToEdit(base64);
+                            setIsEditorOpen(true);
                             setIsUploadingPhoto(false);
                           };
                           reader.readAsDataURL(file);
@@ -883,6 +887,27 @@ export default function SiteDiary() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Photo Editor Dialog */}
+      {photoToEdit && (
+        <PhotoEditor
+          imageData={photoToEdit}
+          isOpen={isEditorOpen}
+          onClose={() => {
+            setIsEditorOpen(false);
+            setPhotoToEdit(null);
+          }}
+          onSave={(editedImage) => {
+            setPhotos([...photos, editedImage]);
+            setIsEditorOpen(false);
+            setPhotoToEdit(null);
+            toast({
+              title: "Fotoğraf eklendi",
+              description: "Düzenlenen fotoğraf başarıyla eklendi",
+            });
+          }}
+        />
+      )}
     </div>
   );
 }
