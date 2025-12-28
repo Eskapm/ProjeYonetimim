@@ -74,14 +74,23 @@ export const insertProjectSchema = createInsertSchema(projects).omit({
 export type InsertProject = z.infer<typeof insertProjectSchema>;
 export type Project = typeof projects.$inferSelect;
 
+// İletişim kişisi tipi
+export interface ContactPerson {
+  name: string;
+  phone?: string;
+  email?: string;
+  title?: string; // Ünvan (Müdür, Şef, vb.)
+}
+
 // Müşteriler tablosu
 export const customers = pgTable("customers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
-  contactPerson: text("contact_person"),
+  contactPerson: text("contact_person"), // Geriye uyumluluk için tutuldu
   phone: text("phone"),
   email: text("email"),
   address: text("address"),
+  contacts: jsonb("contacts").$type<ContactPerson[]>().default([]),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -93,15 +102,20 @@ export const insertCustomerSchema = createInsertSchema(customers).omit({
 export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
 export type Customer = typeof customers.$inferSelect;
 
-// Taşeronlar tablosu
+// Taşeron/Tedarikçi türleri
+export const supplierTypeEnum = ["Taşeron", "Tedarikçi"] as const;
+
+// Taşeronlar ve Tedarikçiler tablosu
 export const subcontractors = pgTable("subcontractors", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
-  contactPerson: text("contact_person"),
+  type: text("type").default("Taşeron"), // Taşeron veya Tedarikçi
+  contactPerson: text("contact_person"), // Geriye uyumluluk için tutuldu
   phone: text("phone"),
   email: text("email"),
   address: text("address"),
   specialty: text("specialty"),
+  contacts: jsonb("contacts").$type<ContactPerson[]>().default([]),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
