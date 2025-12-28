@@ -268,11 +268,22 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  fullName: text("full_name"),
+  email: text("email").unique(),
+  companyName: text("company_name"),
+  country: text("country"),
+  city: text("city"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+  fullName: true,
+  email: true,
+  companyName: true,
+  country: true,
+  city: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -280,6 +291,22 @@ export type User = typeof users.$inferSelect;
 
 // Public user type (without password) - safe to send to client
 export type PublicUser = Omit<User, "password">;
+
+// Kayıt formu için genişletilmiş şema
+export const registerUserSchema = z.object({
+  fullName: z.string().min(2, "Ad Soyad en az 2 karakter olmalıdır"),
+  email: z.string().email("Geçerli bir e-posta adresi girin"),
+  password: z.string().min(6, "Şifre en az 6 karakter olmalıdır"),
+  confirmPassword: z.string(),
+  companyName: z.string().optional(),
+  country: z.string().min(1, "Ülke seçimi zorunludur"),
+  city: z.string().min(1, "Şehir girilmesi zorunludur"),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Şifreler eşleşmiyor",
+  path: ["confirmPassword"],
+});
+
+export type RegisterUser = z.infer<typeof registerUserSchema>;
 
 // Puantaj (Günlük işçi çalışma kayıtları) tablosu
 export const timesheets = pgTable("timesheets", {
