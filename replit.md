@@ -59,6 +59,7 @@ Preferred communication style: Simple, everyday language.
 *   **Project Edit Flow**: Query parameter-based navigation from project detail page to projects page with auto-opening edit dialog.
 *   **Multi-Contact Person Support**: Both Customers and Subcontractors modules support adding multiple contact persons per record. Features dynamic "Kişi Ekle" button to add contacts before saving, with full CRUD for name, phone, email, and title (Ünvan) fields. ContactCard component displays up to 3 contacts with collapsible view showing "+X kişi daha" for additional contacts.
 *   **Taşeron/Tedarikçi Module**: Renamed from "Taşeronlar" to "Taşeron/Tedarikçi" to support both subcontractors and suppliers. Added type field (Taşeron/Tedarikçi) with tab-based filtering (Tümü, Taşeron, Tedarikçi).
+*   **User Registration System**: Full user registration with fields for Ad Soyad (fullName), E-Posta (email), Şifre (password with visibility toggle), Şifre Tekrar (confirmPassword), Firma Adı (companyName - optional), Ülke (country), Şehir (city). Password visibility toggle (eye icon) on both login and registration forms. Backend validation with Zod schema, email uniqueness check, and password hashing.
 
 ## External Dependencies
 
