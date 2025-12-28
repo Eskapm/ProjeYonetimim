@@ -1,10 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { TransactionTable } from "@/components/transaction-table";
 import { TaxSummaryPanel } from "@/components/tax-summary-panel";
 import { PrintButton } from "@/components/print-button";
 import { ExportToExcel } from "@/components/export-to-excel";
 import { PDFExportButton } from "@/components/pdf-export-button";
+import { useProjectContext } from "@/hooks/use-project-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -66,6 +67,7 @@ export default function Transactions() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deleteTransactionId, setDeleteTransactionId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { activeProjectId, activeProject } = useProjectContext();
 
   const { data: transactions = [], isLoading: isLoadingTransactions, error: transactionsError } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
@@ -177,7 +179,7 @@ export default function Transactions() {
   const handleAddTransaction = () => {
     setEditingTransaction(null);
     form.reset({
-      projectId: "",
+      projectId: activeProjectId || "",
       type: "Gider",
       amount: "",
       date: "",

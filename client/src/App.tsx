@@ -10,6 +10,7 @@ import { Moon, Sun, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { ProjectProvider } from "@/hooks/use-project-context";
 import { ProtectedRoute } from "@/lib/protected-route";
 import Dashboard from "@/pages/dashboard";
 import Projects from "@/pages/projects";
@@ -111,39 +112,41 @@ function AppContent() {
   }
 
   return (
-    <TooltipProvider>
-      <SidebarProvider style={style as React.CSSProperties}>
-        <PrintHeaderFooter />
-        <div className="flex h-screen w-full">
-          <AppSidebar />
-          <div className="flex flex-col flex-1 overflow-hidden">
-            <header className="flex items-center justify-between p-4 border-b border-border">
-              <div className="flex items-center gap-3">
-                <SidebarTrigger data-testid="button-sidebar-toggle" />
-                <div className="flex items-center gap-2">
-                  <img
-                    src={logoUrl}
-                    alt="ESKA"
-                    className="h-10 w-auto object-contain"
-                  />
-                  <span className="text-xs font-medium">
-                    İnşaat Proje Yönetim Sistemi
-                  </span>
+    <ProjectProvider>
+      <TooltipProvider>
+        <SidebarProvider style={style as React.CSSProperties}>
+          <PrintHeaderFooter />
+          <div className="flex h-screen w-full">
+            <AppSidebar />
+            <div className="flex flex-col flex-1 overflow-hidden">
+              <header className="flex items-center justify-between p-4 border-b border-border">
+                <div className="flex items-center gap-3">
+                  <SidebarTrigger data-testid="button-sidebar-toggle" />
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={logoUrl}
+                      alt="ESKA"
+                      className="h-10 w-auto object-contain"
+                    />
+                    <span className="text-xs font-medium">
+                      İnşaat Proje Yönetim Sistemi
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <ThemeToggle />
-                <LogoutButton />
-              </div>
-            </header>
-            <main className="flex-1 overflow-auto p-6 bg-background print:pt-28 print:pb-20">
-              <Router />
-            </main>
+                <div className="flex items-center gap-2">
+                  <ThemeToggle />
+                  <LogoutButton />
+                </div>
+              </header>
+              <main className="flex-1 overflow-auto p-6 bg-background print:pt-28 print:pb-20">
+                <Router />
+              </main>
+            </div>
           </div>
-        </div>
-      </SidebarProvider>
-      <Toaster />
-    </TooltipProvider>
+        </SidebarProvider>
+        <Toaster />
+      </TooltipProvider>
+    </ProjectProvider>
   );
 }
 

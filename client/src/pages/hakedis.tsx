@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useProjectContext } from "@/hooks/use-project-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -76,6 +77,7 @@ export default function Hakedis() {
   const [selectedTransactionIds, setSelectedTransactionIds] = useState<string[]>([]);
   const [viewingPaymentDetail, setViewingPaymentDetail] = useState<ProgressPayment | null>(null);
   const { toast} = useToast();
+  const { activeProjectId, activeProject } = useProjectContext();
 
   // Fetch progress payments
   const { data: payments = [], isLoading: isLoadingPayments, error: paymentsError } = useQuery<ProgressPayment[]>({
@@ -287,7 +289,7 @@ export default function Hakedis() {
   // Handlers
   const handleAddPayment = () => {
     form.reset({
-      projectId: "",
+      projectId: activeProjectId || "",
       paymentNumber: 1,
       date: new Date().toISOString().split("T")[0],
       description: "",

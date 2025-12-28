@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { SiteDiaryCard } from "@/components/site-diary-card";
 import { PrintButton } from "@/components/print-button";
 import { PrintHeader } from "@/components/print-header";
+import { useProjectContext } from "@/hooks/use-project-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -57,6 +58,7 @@ export default function SiteDiary() {
   const [editingEntry, setEditingEntry] = useState<SiteDiary | null>(null);
   const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { activeProjectId, activeProject } = useProjectContext();
 
   // Fetch site diary entries
   const { data: diaryEntries = [], isLoading: isLoadingDiary, error: diaryError } = useQuery<SiteDiary[]>({
@@ -175,7 +177,7 @@ export default function SiteDiary() {
   const handleAddEntry = () => {
     setEditingEntry(null);
     form.reset({
-      projectId: "",
+      projectId: activeProjectId || "",
       date: "",
       weather: "",
       workDone: "",

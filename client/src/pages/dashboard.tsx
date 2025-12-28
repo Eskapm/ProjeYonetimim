@@ -5,7 +5,8 @@ import { ProjectCard } from "@/components/project-card";
 import { TransactionTable } from "@/components/transaction-table";
 import { PrintButton } from "@/components/print-button";
 import { PrintHeader } from "@/components/print-header";
-import { FolderKanban, Plus, Loader2 } from "lucide-react";
+import { useProjectContext } from "@/hooks/use-project-context";
+import { FolderKanban, Plus, Loader2, Building2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -47,6 +48,7 @@ export default function Dashboard() {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deleteProjectId, setDeleteProjectId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { activeProject, activeProjectId, setActiveProjectId, clearActiveProject, projects: contextProjects } = useProjectContext();
 
   // Fetch projects from API
   const { data: projects = [], isLoading: projectsLoading } = useQuery<Project[]>({
@@ -231,8 +233,59 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       <PrintHeader documentTitle="ANA SAYFA ÖZETİ" />
+
+      {/* Aktif Proje Seçici */}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="py-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Building2 className="h-6 w-6 text-primary" />
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Aktif Proje</p>
+                {activeProject ? (
+                  <p className="text-lg font-semibold">{activeProject.name}</p>
+                ) : (
+                  <p className="text-lg font-medium text-muted-foreground">Proje seçilmedi</p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Select 
+                value={activeProjectId || ""} 
+                onValueChange={(value) => setActiveProjectId(value || null)}
+              >
+                <SelectTrigger className="w-full sm:w-[280px]" data-testid="select-active-project">
+                  <SelectValue placeholder="Proje seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name} ({project.status})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {activeProject && (
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={clearActiveProject}
+                  data-testid="button-clear-active-project"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+          {activeProject && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              Tüm modüllerde (Gelir/Gider, Şantiye Defteri, Hakediş) bu proje otomatik olarak seçili olacak.
+            </p>
+          )}
+        </CardContent>
+      </Card>
       
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold">Ana Sayfa</h1>
           <p className="text-muted-foreground mt-1">Proje genel görünümü ve özet bilgiler</p>
