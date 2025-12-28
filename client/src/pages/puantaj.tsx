@@ -36,10 +36,10 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Plus, Search, Calendar as CalendarIcon, Loader2, Edit2, Trash2, Users, Clock } from "lucide-react";
+import { Plus, Search, Calendar as CalendarIcon, Loader2, Edit2, Trash2, Users, Clock, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertTimesheetSchema, isGrubuEnum, type InsertTimesheet, type Timesheet, type Project } from "@shared/schema";
+import { insertTimesheetSchema, isGrubuEnum, type InsertTimesheet, type Timesheet, type Project, type Subcontractor } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -56,6 +56,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+interface PendingEntry {
+  id: string;
+  isGrubu: string;
+  subcontractorId: string | null;
+  subcontractorName: string;
+  workerCount: number;
+  hours: string;
+  notes: string;
+}
+
 export default function Puantaj() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProject, setSelectedProject] = useState("all");
@@ -66,6 +76,16 @@ export default function Puantaj() {
   const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null);
   const { toast } = useToast();
   const { activeProjectId } = useProjectContext();
+
+  // Batch entry state
+  const [pendingEntries, setPendingEntries] = useState<PendingEntry[]>([]);
+  const [batchDate, setBatchDate] = useState<string>(new Date().toISOString().split("T")[0]);
+  const [currentIsGrubu, setCurrentIsGrubu] = useState("");
+  const [currentSubcontractorId, setCurrentSubcontractorId] = useState("");
+  const [currentWorkerCount, setCurrentWorkerCount] = useState("");
+  const [currentHours, setCurrentHours] = useState("");
+  const [currentNotes, setCurrentNotes] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   // Sync filter with active project
   useEffect(() => {
@@ -82,6 +102,11 @@ export default function Puantaj() {
     queryKey: ["/api/projects"],
   });
 
+  // Fetch subcontractors for the dropdown
+  const { data: subcontractors = [] } = useQuery<Subcontractor[]>({
+    queryKey: ["/api/subcontractors"],
+  });
+
   // Create timesheet entry mutation
   const createEntryMutation = useMutation({
     mutationFn: async (data: InsertTimesheet) => {
@@ -90,12 +115,6 @@ export default function Puantaj() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/timesheets"] });
-      toast({
-        title: "Başarılı",
-        description: "Puantaj kaydı başarıyla oluşturuldu",
-      });
-      setIsDialogOpen(false);
-      form.reset();
     },
     onError: (error: Error) => {
       toast({
@@ -153,11 +172,12 @@ export default function Puantaj() {
     },
   });
 
-  // Form setup
+  // Form setup for edit dialog
   const form = useForm<InsertTimesheet>({
     resolver: zodResolver(insertTimesheetSchema),
     defaultValues: {
       projectId: "",
+      subcontractorId: null,
       date: new Date().toISOString().split("T")[0],
       isGrubu: "",
       workerCount: 0,
@@ -167,29 +187,130 @@ export default function Puantaj() {
   });
 
   const onSubmit = (data: InsertTimesheet) => {
-    // Convert empty strings to null for optional fields
     const cleanedData = {
       ...data,
       notes: data.notes || null,
+      subcontractorId: data.subcontractorId || null,
     };
 
     if (editingEntry) {
       updateEntryMutation.mutate({ id: editingEntry.id, data: cleanedData });
-    } else {
-      createEntryMutation.mutate(cleanedData);
+    }
+  };
+
+  // Add entry to pending list
+  const handleAddToPending = () => {
+    if (!currentIsGrubu || !currentWorkerCount || !currentHours) {
+      toast({
+        title: "Eksik Bilgi",
+        description: "İş grubu, işçi sayısı ve çalışma saati zorunludur",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const subcontractor = subcontractors.find(s => s.id === currentSubcontractorId);
+    
+    const newEntry: PendingEntry = {
+      id: `pending-${Date.now()}-${Math.random()}`,
+      isGrubu: currentIsGrubu,
+      subcontractorId: currentSubcontractorId || null,
+      subcontractorName: subcontractor?.name || "Belirtilmedi",
+      workerCount: parseInt(currentWorkerCount),
+      hours: currentHours,
+      notes: currentNotes,
+    };
+
+    setPendingEntries([...pendingEntries, newEntry]);
+    
+    // Reset form fields for next entry
+    setCurrentIsGrubu("");
+    setCurrentSubcontractorId("");
+    setCurrentWorkerCount("");
+    setCurrentHours("");
+    setCurrentNotes("");
+
+    toast({
+      title: "Eklendi",
+      description: "Kayıt listeye eklendi. Tüm kayıtları tamamlayınca 'Kaydet' butonuna basın.",
+    });
+  };
+
+  // Remove entry from pending list
+  const handleRemovePending = (id: string) => {
+    setPendingEntries(pendingEntries.filter(e => e.id !== id));
+  };
+
+  // Save all pending entries using Promise.all for efficiency
+  const handleSaveAll = async () => {
+    if (!activeProjectId) {
+      toast({
+        title: "Proje Seçin",
+        description: "Lütfen önce ana sayfadan aktif proje seçin",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (pendingEntries.length === 0) {
+      toast({
+        title: "Kayıt Yok",
+        description: "Kaydedilecek puantaj girişi bulunamadı",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      // Create all entries in parallel using Promise.all
+      const createPromises = pendingEntries.map(entry => 
+        apiRequest("POST", "/api/timesheets", {
+          projectId: activeProjectId,
+          subcontractorId: entry.subcontractorId,
+          date: batchDate,
+          isGrubu: entry.isGrubu,
+          workerCount: entry.workerCount,
+          hours: entry.hours,
+          notes: entry.notes || null,
+        })
+      );
+
+      await Promise.all(createPromises);
+
+      // Invalidate cache once after all entries are created
+      queryClient.invalidateQueries({ queryKey: ["/api/timesheets"] });
+
+      toast({
+        title: "Başarılı",
+        description: `${pendingEntries.length} puantaj kaydı başarıyla oluşturuldu`,
+      });
+
+      // Reset all
+      setPendingEntries([]);
+      setBatchDate(new Date().toISOString().split("T")[0]);
+      setIsDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Kayıtlar oluşturulurken bir hata oluştu",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleAddEntry = () => {
     setEditingEntry(null);
-    form.reset({
-      projectId: activeProjectId || "",
-      date: new Date().toISOString().split("T")[0],
-      isGrubu: "",
-      workerCount: 0,
-      hours: "",
-      notes: "",
-    });
+    setPendingEntries([]);
+    setBatchDate(new Date().toISOString().split("T")[0]);
+    setCurrentIsGrubu("");
+    setCurrentSubcontractorId("");
+    setCurrentWorkerCount("");
+    setCurrentHours("");
+    setCurrentNotes("");
     setIsDialogOpen(true);
   };
 
@@ -197,6 +318,7 @@ export default function Puantaj() {
     setEditingEntry(entry);
     form.reset({
       projectId: entry.projectId,
+      subcontractorId: entry.subcontractorId || "",
       date: entry.date,
       isGrubu: entry.isGrubu,
       workerCount: entry.workerCount,
@@ -216,23 +338,25 @@ export default function Puantaj() {
     }
   };
 
-  // Create a map of projects for easy lookup
+  // Create maps for easy lookup
   const projectMap = new Map(projects.map(p => [p.id, p]));
+  const subcontractorMap = new Map(subcontractors.map(s => [s.id, s]));
 
-  // Enrich timesheet entries with project names
+  // Enrich timesheet entries with project and subcontractor names
   const enrichedEntries = timesheets.map(entry => ({
     ...entry,
     projectName: projectMap.get(entry.projectId)?.name || "Bilinmeyen Proje",
+    subcontractorName: entry.subcontractorId ? subcontractorMap.get(entry.subcontractorId)?.name || "Bilinmeyen" : "Belirtilmedi",
   }));
 
   // Filter timesheet entries
   const filteredTimesheets = enrichedEntries.filter((entry) => {
     const matchesSearch =
       entry.isGrubu.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      entry.projectName?.toLowerCase().includes(searchTerm.toLowerCase());
+      entry.projectName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entry.subcontractorName?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesProject = selectedProject === "all" || entry.projectId === selectedProject;
     
-    // Date filtering - normalize dates to avoid timezone issues
     let matchesDate = true;
     if (startDate || endDate) {
       const entryDate = parseISO(entry.date);
@@ -258,6 +382,9 @@ export default function Puantaj() {
   const totalWorkers = filteredTimesheets.reduce((sum, entry) => sum + entry.workerCount, 0);
   const totalHours = filteredTimesheets.reduce((sum, entry) => sum + parseFloat(entry.hours), 0);
 
+  // Get active project name
+  const activeProject = projects.find(p => p.id === activeProjectId);
+
   return (
     <div className="space-y-6">
       <PrintHeader documentTitle="PUANTAJ LİSTESİ" />
@@ -266,12 +393,15 @@ export default function Puantaj() {
         <div>
           <h1 className="text-3xl font-bold">Puantaj</h1>
           <p className="text-muted-foreground mt-1">Günlük işçi çalışma saatleri takibi</p>
+          {activeProject && (
+            <p className="text-sm text-primary mt-1">Aktif Proje: {activeProject.name}</p>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <PrintButton />
           <Button onClick={handleAddEntry} data-testid="button-add-timesheet">
             <Plus className="h-4 w-4 mr-2" />
-            Yeni Kayıt Ekle
+            Toplu Puantaj Girişi
           </Button>
         </div>
       </div>
@@ -281,7 +411,7 @@ export default function Puantaj() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="İş grubunda ara..."
+              placeholder="İş grubunda veya taşeronda ara..."
               className="pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -402,7 +532,7 @@ export default function Puantaj() {
         <CardHeader>
           <CardTitle>Puantaj Kayıtları</CardTitle>
           <CardDescription>
-            İş gruplarına göre günlük işçi çalışma saatleri
+            İş gruplarına ve taşeronlara göre günlük işçi çalışma saatleri
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -427,11 +557,12 @@ export default function Puantaj() {
                   <TableRow>
                     <TableHead>Tarih</TableHead>
                     <TableHead>Proje</TableHead>
+                    <TableHead>Taşeron</TableHead>
                     <TableHead>İş Grubu</TableHead>
                     <TableHead className="text-right">İşçi Sayısı</TableHead>
                     <TableHead className="text-right">Saat</TableHead>
                     <TableHead>Notlar</TableHead>
-                    <TableHead className="text-right">İşlemler</TableHead>
+                    <TableHead className="text-right no-print">İşlemler</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -441,13 +572,14 @@ export default function Puantaj() {
                         {format(new Date(entry.date), "dd MMMM yyyy", { locale: tr })}
                       </TableCell>
                       <TableCell className="font-medium">{entry.projectName}</TableCell>
+                      <TableCell>{entry.subcontractorName}</TableCell>
                       <TableCell>{entry.isGrubu}</TableCell>
                       <TableCell className="text-right font-mono">{entry.workerCount}</TableCell>
                       <TableCell className="text-right font-mono">{entry.hours}</TableCell>
                       <TableCell className="max-w-[200px] truncate">
                         {entry.notes || "-"}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right no-print">
                         <div className="flex justify-end gap-2">
                           <Button
                             variant="ghost"
@@ -476,22 +608,237 @@ export default function Puantaj() {
         </CardContent>
       </Card>
 
-      {/* Form Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      {/* Batch Entry Dialog */}
+      <Dialog open={isDialogOpen && !editingEntry} onOpenChange={(open) => { if (!open) setIsDialogOpen(false); }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Toplu Puantaj Girişi</DialogTitle>
+            <DialogDescription>
+              {activeProject ? (
+                <span>Proje: <strong>{activeProject.name}</strong> - Birden fazla ekip için puantaj girişi yapabilirsiniz.</span>
+              ) : (
+                <span className="text-destructive">Lütfen önce ana sayfadan aktif proje seçin!</span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Date Selection */}
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <label className="text-sm font-medium mb-2 block">Tarih</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !batchDate && "text-muted-foreground"
+                      )}
+                      data-testid="button-batch-date"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {batchDate ? format(new Date(batchDate), "PPP", { locale: tr }) : "Tarih seçin"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={batchDate ? new Date(batchDate) : undefined}
+                      onSelect={(date) => {
+                        if (date) {
+                          setBatchDate(format(date, "yyyy-MM-dd"));
+                        }
+                      }}
+                      locale={tr}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+
+            {/* Entry Form */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Yeni Kayıt Ekle</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">İş Grubu *</label>
+                    <Select value={currentIsGrubu} onValueChange={setCurrentIsGrubu}>
+                      <SelectTrigger data-testid="select-is-grubu">
+                        <SelectValue placeholder="Seçin" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {isGrubuEnum.map((grup) => (
+                          <SelectItem key={grup} value={grup}>
+                            {grup}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Taşeron</label>
+                    <Select value={currentSubcontractorId} onValueChange={setCurrentSubcontractorId}>
+                      <SelectTrigger data-testid="select-subcontractor">
+                        <SelectValue placeholder="Seçin" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Belirtilmedi</SelectItem>
+                        {subcontractors.map((sub) => (
+                          <SelectItem key={sub.id} value={sub.id}>
+                            {sub.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">İşçi Sayısı *</label>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      value={currentWorkerCount}
+                      onChange={(e) => setCurrentWorkerCount(e.target.value)}
+                      data-testid="input-worker-count"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Çalışma Saati *</label>
+                    <Input
+                      type="number"
+                      step="0.5"
+                      placeholder="8"
+                      value={currentHours}
+                      onChange={(e) => setCurrentHours(e.target.value)}
+                      data-testid="input-hours"
+                    />
+                  </div>
+
+                  <div className="flex items-end">
+                    <Button 
+                      onClick={handleAddToPending}
+                      className="w-full"
+                      disabled={!activeProjectId}
+                      data-testid="button-add-entry"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Ekle
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <label className="text-sm font-medium mb-2 block">Notlar</label>
+                  <Textarea
+                    placeholder="Ek notlar (opsiyonel)..."
+                    value={currentNotes}
+                    onChange={(e) => setCurrentNotes(e.target.value)}
+                    className="min-h-16"
+                    data-testid="textarea-notes"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Pending Entries List */}
+            {pendingEntries.length > 0 && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Bekleyen Kayıtlar ({pendingEntries.length})</CardTitle>
+                  <CardDescription>Aşağıdaki kayıtlar kaydedilmeyi bekliyor</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>İş Grubu</TableHead>
+                        <TableHead>Taşeron</TableHead>
+                        <TableHead className="text-right">İşçi</TableHead>
+                        <TableHead className="text-right">Saat</TableHead>
+                        <TableHead>Notlar</TableHead>
+                        <TableHead className="text-right">Kaldır</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {pendingEntries.map((entry) => (
+                        <TableRow key={entry.id}>
+                          <TableCell>{entry.isGrubu}</TableCell>
+                          <TableCell>{entry.subcontractorName}</TableCell>
+                          <TableCell className="text-right font-mono">{entry.workerCount}</TableCell>
+                          <TableCell className="text-right font-mono">{entry.hours}</TableCell>
+                          <TableCell className="max-w-[150px] truncate">{entry.notes || "-"}</TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleRemovePending(entry.id)}
+                              data-testid={`button-remove-${entry.id}`}
+                            >
+                              <X className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+
+                  <div className="mt-4 p-3 bg-muted rounded-lg">
+                    <div className="flex justify-between text-sm">
+                      <span>Toplam İşçi:</span>
+                      <span className="font-mono font-medium">{pendingEntries.reduce((sum, e) => sum + e.workerCount, 0)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm mt-1">
+                      <span>Toplam Saat:</span>
+                      <span className="font-mono font-medium">{pendingEntries.reduce((sum, e) => sum + parseFloat(e.hours), 0).toFixed(2)}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsDialogOpen(false)}
+              disabled={isSaving}
+              data-testid="button-cancel"
+            >
+              İptal
+            </Button>
+            <Button 
+              onClick={handleSaveAll} 
+              disabled={isSaving || pendingEntries.length === 0 || !activeProjectId}
+              data-testid="button-save-all"
+            >
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Tümünü Kaydet ({pendingEntries.length})
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={isDialogOpen && !!editingEntry} onOpenChange={(open) => { if (!open) { setIsDialogOpen(false); setEditingEntry(null); } }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {editingEntry ? "Puantaj Kaydını Düzenle" : "Yeni Puantaj Kaydı"}
-            </DialogTitle>
+            <DialogTitle>Puantaj Kaydını Düzenle</DialogTitle>
             <DialogDescription>
-              Puantaj bilgilerini girin. * işaretli alanlar zorunludur.
+              Puantaj bilgilerini güncelleyin.
             </DialogDescription>
           </DialogHeader>
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Project Select */}
                 <FormField
                   control={form.control}
                   name="projectId"
@@ -521,7 +868,6 @@ export default function Puantaj() {
                   )}
                 />
 
-                {/* Date Picker */}
                 <FormField
                   control={form.control}
                   name="date"
@@ -567,7 +913,6 @@ export default function Puantaj() {
                   )}
                 />
 
-                {/* İş Grubu Select */}
                 <FormField
                   control={form.control}
                   name="isGrubu"
@@ -576,7 +921,7 @@ export default function Puantaj() {
                       <FormLabel>İş Grubu *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger data-testid="select-is-grubu">
+                          <SelectTrigger data-testid="select-is-grubu-edit">
                             <SelectValue placeholder="İş grubu seçin" />
                           </SelectTrigger>
                         </FormControl>
@@ -593,7 +938,32 @@ export default function Puantaj() {
                   )}
                 />
 
-                {/* Worker Count */}
+                <FormField
+                  control={form.control}
+                  name="subcontractorId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Taşeron</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-subcontractor-edit">
+                            <SelectValue placeholder="Taşeron seçin" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="">Belirtilmedi</SelectItem>
+                          {subcontractors.map((sub) => (
+                            <SelectItem key={sub.id} value={sub.id}>
+                              {sub.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <FormField
                   control={form.control}
                   name="workerCount"
@@ -609,7 +979,7 @@ export default function Puantaj() {
                             const value = e.target.value;
                             field.onChange(value === "" ? 0 : parseInt(value));
                           }}
-                          data-testid="input-worker-count"
+                          data-testid="input-worker-count-edit"
                         />
                       </FormControl>
                       <FormMessage />
@@ -617,20 +987,19 @@ export default function Puantaj() {
                   )}
                 />
 
-                {/* Hours */}
                 <FormField
                   control={form.control}
                   name="hours"
                   render={({ field }) => (
-                    <FormItem className="md:col-span-2">
+                    <FormItem>
                       <FormLabel>Çalışma Saati *</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
-                          step="0.01"
-                          placeholder="8.00"
+                          step="0.5"
+                          placeholder="8"
                           {...field}
-                          data-testid="input-hours"
+                          data-testid="input-hours-edit"
                         />
                       </FormControl>
                       <FormMessage />
@@ -639,7 +1008,6 @@ export default function Puantaj() {
                 />
               </div>
 
-              {/* Notes */}
               <FormField
                 control={form.control}
                 name="notes"
@@ -652,7 +1020,7 @@ export default function Puantaj() {
                         className="min-h-20"
                         {...field}
                         value={field.value || ""}
-                        data-testid="textarea-notes"
+                        data-testid="textarea-notes-edit"
                       />
                     </FormControl>
                     <FormMessage />
@@ -664,15 +1032,15 @@ export default function Puantaj() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
+                  onClick={() => { setIsDialogOpen(false); setEditingEntry(null); }}
                   disabled={isPending}
-                  data-testid="button-cancel"
+                  data-testid="button-cancel-edit"
                 >
                   İptal
                 </Button>
-                <Button type="submit" disabled={isPending} data-testid="button-submit">
+                <Button type="submit" disabled={isPending} data-testid="button-submit-edit">
                   {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {editingEntry ? "Güncelle" : "Kaydet"}
+                  Güncelle
                 </Button>
               </DialogFooter>
             </form>

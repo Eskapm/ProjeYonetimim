@@ -251,6 +251,7 @@ export type PublicUser = Omit<User, "password">;
 export const timesheets = pgTable("timesheets", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   projectId: varchar("project_id").notNull(),
+  subcontractorId: varchar("subcontractor_id"),
   date: date("date").notNull(),
   isGrubu: text("is_grubu").notNull(),
   workerCount: integer("worker_count").notNull(),
