@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Building2, Lock, User, Mail, Eye, EyeOff, MapPin, Building, Globe } from "lucide-react";
 import {
   Dialog,
@@ -28,6 +29,18 @@ export default function AuthPage() {
   const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  
+  // Load remembered username on mount
+  useEffect(() => {
+    const savedUsername = localStorage.getItem("rememberedUsername");
+    const wasRemembered = localStorage.getItem("rememberMe") === "true";
+    if (savedUsername && wasRemembered) {
+      setLoginUsername(savedUsername);
+      setRememberMe(true);
+    }
+  }, []);
   
   // Register state
   const [isRegistering, setIsRegistering] = useState(false);
@@ -88,10 +101,25 @@ export default function AuthPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    loginMutation.mutate({
-      username: loginUsername,
-      password: loginPassword,
-    });
+    setLoginError("");
+    
+    // Save or remove remembered username
+    if (rememberMe) {
+      localStorage.setItem("rememberedUsername", loginUsername);
+      localStorage.setItem("rememberMe", "true");
+    } else {
+      localStorage.removeItem("rememberedUsername");
+      localStorage.removeItem("rememberMe");
+    }
+    
+    loginMutation.mutate(
+      { username: loginUsername, password: loginPassword },
+      {
+        onError: () => {
+          setLoginError("Kullanıcı adı veya şifre hatalı");
+        },
+      }
+    );
   };
 
   const handleRegister = (e: React.FormEvent) => {
@@ -179,6 +207,28 @@ export default function AuthPage() {
                       </button>
                     </div>
                   </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="remember-me"
+                      checked={rememberMe}
+                      onCheckedChange={(checked) => setRememberMe(checked === true)}
+                      data-testid="checkbox-remember-me"
+                    />
+                    <Label 
+                      htmlFor="remember-me" 
+                      className="text-sm font-normal cursor-pointer"
+                    >
+                      Beni Hatırla
+                    </Label>
+                  </div>
+                  
+                  {loginError && (
+                    <p className="text-sm text-destructive" data-testid="text-login-error">
+                      {loginError}
+                    </p>
+                  )}
+                  
                   <Button
                     type="submit"
                     className="w-full"
