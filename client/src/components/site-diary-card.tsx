@@ -212,26 +212,26 @@ export function SiteDiaryCard({ entry, onEdit, onDelete }: SiteDiaryCardProps) {
               <X className="h-6 w-6" />
             </Button>
             
-            {/* Navigation buttons */}
+            {/* Navigation buttons - always visible for better UX */}
             {photos.length > 1 && (
               <>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute left-2 top-1/2 -translate-y-1/2 text-white"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white bg-black/40 rounded-full h-12 w-12"
                   onClick={prevPhoto}
                   data-testid="button-prev-photo"
                 >
-                  <ChevronLeft className="h-8 w-8" />
+                  <ChevronLeft className="h-10 w-10" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-white"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-black/40 rounded-full h-12 w-12"
                   onClick={nextPhoto}
                   data-testid="button-next-photo"
                 >
-                  <ChevronRight className="h-8 w-8" />
+                  <ChevronRight className="h-10 w-10" />
                 </Button>
               </>
             )}
