@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { Pencil, Type, Undo2, RotateCcw, Check, X, Loader2, ZoomIn, ZoomOut, Move } from "lucide-react";
+import { Pencil, Type, Undo2, RotateCcw, Check, X, Loader2, ZoomIn, ZoomOut, Move, RotateCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PhotoEditorProps {
@@ -14,26 +14,38 @@ interface PhotoEditorProps {
   onSave: (editedImage: string) => void;
 }
 
-type Tool = "draw" | "text" | "pan";
+type Tool = "draw" | "text" | "pan" | "select";
 
 interface DrawAction {
   type: "draw";
+  id: string;
   points: { x: number; y: number }[];
   color: string;
   lineWidth: number;
+  scale: number;
+  rotation: number;
+  offsetX: number;
+  offsetY: number;
 }
 
 interface TextAction {
   type: "text";
+  id: string;
   text: string;
   x: number;
   y: number;
   color: string;
   fontSize: number;
-  id: string;
+  scale: number;
+  rotation: number;
 }
 
 type Action = DrawAction | TextAction;
+
+interface SelectionHandle {
+  type: "scale" | "rotate";
+  cursor: string;
+}
 
 export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -48,7 +60,6 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
   const [currentPath, setCurrentPath] = useState<{ x: number; y: number }[]>([]);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
-  const [isAddingText, setIsAddingText] = useState(false);
   
   // Zoom and pan state
   const [zoom, setZoom] = useState(1);
@@ -56,12 +67,21 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
   const [isPanning, setIsPanning] = useState(false);
   const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
   
-  // Dragging text state
-  const [draggingTextId, setDraggingTextId] = useState<string | null>(null);
+  // Selection state
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isScaling, setIsScaling] = useState(false);
+  const [isRotating, setIsRotating] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [initialScale, setInitialScale] = useState(1);
+  const [initialRotation, setInitialRotation] = useState(0);
+  const [initialDistance, setInitialDistance] = useState(0);
+  const [initialAngle, setInitialAngle] = useState(0);
+  const [centerPoint, setCenterPoint] = useState({ x: 0, y: 0 });
   
   // Pinch zoom state
   const [lastPinchDistance, setLastPinchDistance] = useState<number | null>(null);
+  const [lastPinchCenter, setLastPinchCenter] = useState<{ x: number; y: number } | null>(null);
 
   const colors = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff", "#ffffff", "#000000"];
 
@@ -104,14 +124,61 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
       setActions([]);
       setCurrentPath([]);
       setImageLoaded(false);
-      setIsAddingText(false);
       setTextInput("");
       setZoom(1);
       setPan({ x: 0, y: 0 });
-      setDraggingTextId(null);
+      setSelectedId(null);
       setTimeout(loadImage, 100);
     }
   }, [isOpen, imageData, loadImage]);
+
+  const getActionBounds = (action: Action): { x: number; y: number; width: number; height: number; centerX: number; centerY: number } => {
+    if (action.type === "text") {
+      const canvas = canvasRef.current;
+      if (!canvas) return { x: 0, y: 0, width: 0, height: 0, centerX: 0, centerY: 0 };
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return { x: 0, y: 0, width: 0, height: 0, centerX: 0, centerY: 0 };
+      
+      ctx.font = `${action.fontSize * action.scale}px Arial`;
+      const metrics = ctx.measureText(action.text);
+      const width = metrics.width;
+      const height = action.fontSize * action.scale;
+      
+      return {
+        x: action.x,
+        y: action.y - height,
+        width,
+        height,
+        centerX: action.x + width / 2,
+        centerY: action.y - height / 2,
+      };
+    } else {
+      // For draw actions, calculate bounding box
+      if (action.points.length === 0) return { x: 0, y: 0, width: 0, height: 0, centerX: 0, centerY: 0 };
+      
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      action.points.forEach(p => {
+        minX = Math.min(minX, p.x);
+        minY = Math.min(minY, p.y);
+        maxX = Math.max(maxX, p.x);
+        maxY = Math.max(maxY, p.y);
+      });
+      
+      const width = (maxX - minX) * action.scale;
+      const height = (maxY - minY) * action.scale;
+      const centerX = (minX + maxX) / 2 + action.offsetX;
+      const centerY = (minY + maxY) / 2 + action.offsetY;
+      
+      return {
+        x: centerX - width / 2,
+        y: centerY - height / 2,
+        width,
+        height,
+        centerX,
+        centerY,
+      };
+    }
+  };
 
   const redrawCanvas = useCallback(() => {
     if (!canvasRef.current || !imageLoaded) return;
@@ -126,40 +193,96 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
       actions.forEach((action) => {
+        ctx.save();
+        
         if (action.type === "draw" && action.points.length > 0) {
+          // Calculate original center (without offset)
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+          action.points.forEach(p => {
+            minX = Math.min(minX, p.x);
+            minY = Math.min(minY, p.y);
+            maxX = Math.max(maxX, p.x);
+            maxY = Math.max(maxY, p.y);
+          });
+          const originalCenterX = (minX + maxX) / 2;
+          const originalCenterY = (minY + maxY) / 2;
+          
+          // Apply transforms: translate to new position, rotate around center, scale
+          ctx.translate(originalCenterX + action.offsetX, originalCenterY + action.offsetY);
+          ctx.rotate(action.rotation);
+          ctx.scale(action.scale, action.scale);
+          ctx.translate(-originalCenterX, -originalCenterY);
+          
           ctx.beginPath();
           ctx.strokeStyle = action.color;
           ctx.lineWidth = action.lineWidth;
           ctx.lineCap = "round";
           ctx.lineJoin = "round";
 
+          // Draw points at original positions (transform handles the offset)
           ctx.moveTo(action.points[0].x, action.points[0].y);
           for (let i = 1; i < action.points.length; i++) {
             ctx.lineTo(action.points[i].x, action.points[i].y);
           }
           ctx.stroke();
         } else if (action.type === "text") {
+          ctx.translate(action.x, action.y);
+          ctx.rotate(action.rotation);
+          ctx.scale(action.scale, action.scale);
+          
           ctx.font = `${action.fontSize}px Arial`;
           ctx.fillStyle = action.color;
-          ctx.fillText(action.text, action.x, action.y);
+          ctx.fillText(action.text, 0, 0);
+        }
+        
+        ctx.restore();
+        
+        // Draw selection handles
+        if (action.id === selectedId) {
+          const bounds = getActionBounds(action);
+          const padding = 8;
           
-          // Draw selection box if this text is being dragged
-          if (action.id === draggingTextId) {
+          ctx.save();
+          ctx.strokeStyle = "#0066ff";
+          ctx.lineWidth = 2;
+          ctx.setLineDash([5, 5]);
+          
+          if (action.type === "text") {
+            ctx.translate(action.x, action.y);
+            ctx.rotate(action.rotation);
+            ctx.scale(action.scale, action.scale);
+            
             const metrics = ctx.measureText(action.text);
-            ctx.strokeStyle = "#0066ff";
-            ctx.lineWidth = 2;
-            ctx.setLineDash([5, 5]);
-            ctx.strokeRect(
-              action.x - 4,
-              action.y - action.fontSize,
-              metrics.width + 8,
-              action.fontSize + 8
-            );
+            ctx.strokeRect(-padding, -action.fontSize - padding, metrics.width + padding * 2, action.fontSize + padding * 2);
+            
+            // Scale handle (bottom-right)
             ctx.setLineDash([]);
+            ctx.fillStyle = "#0066ff";
+            ctx.fillRect(metrics.width + padding - 6, -6, 12, 12);
+            
+            // Rotate handle (top-center)
+            ctx.beginPath();
+            ctx.arc(metrics.width / 2, -action.fontSize - padding - 15, 8, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            ctx.strokeRect(bounds.x - padding, bounds.y - padding, bounds.width + padding * 2, bounds.height + padding * 2);
+            
+            // Scale handle
+            ctx.setLineDash([]);
+            ctx.fillStyle = "#0066ff";
+            ctx.fillRect(bounds.x + bounds.width + padding - 6, bounds.y + bounds.height + padding - 6, 12, 12);
+            
+            // Rotate handle
+            ctx.beginPath();
+            ctx.arc(bounds.centerX, bounds.y - padding - 15, 8, 0, Math.PI * 2);
+            ctx.fill();
           }
+          
+          ctx.restore();
         }
       });
 
+      // Draw current path
       if (currentPath.length > 0) {
         ctx.beginPath();
         ctx.strokeStyle = color;
@@ -175,7 +298,7 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
       }
     };
     img.src = imageData;
-  }, [actions, currentPath, color, lineWidth, imageData, imageLoaded, draggingTextId]);
+  }, [actions, currentPath, color, lineWidth, imageData, imageLoaded, selectedId]);
 
   useEffect(() => {
     redrawCanvas();
@@ -202,8 +325,6 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
       return { x: 0, y: 0 };
     }
 
-    // The bounding rect already reflects CSS transforms (zoom/pan)
-    // So we just need to map screen coordinates to canvas coordinates
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     
@@ -213,31 +334,64 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
     };
   };
 
-  const findTextAtPosition = (x: number, y: number): TextAction | null => {
-    if (!canvasRef.current) return null;
-    const ctx = canvasRef.current.getContext("2d");
-    if (!ctx) return null;
+  // Transform world coordinates to object's local coordinates (accounting for rotation)
+  const worldToLocal = (x: number, y: number, action: Action): { x: number; y: number } => {
+    const bounds = getActionBounds(action);
+    const rotation = action.rotation;
     
-    // Check in reverse order (top-most first)
+    // Translate to center, rotate inversely, translate back
+    const dx = x - bounds.centerX;
+    const dy = y - bounds.centerY;
+    const cos = Math.cos(-rotation);
+    const sin = Math.sin(-rotation);
+    
+    return {
+      x: bounds.centerX + dx * cos - dy * sin,
+      y: bounds.centerY + dx * sin + dy * cos,
+    };
+  };
+
+  const findActionAtPosition = (x: number, y: number): Action | null => {
     for (let i = actions.length - 1; i >= 0; i--) {
       const action = actions[i];
-      if (action.type === "text") {
-        ctx.font = `${action.fontSize}px Arial`;
-        const metrics = ctx.measureText(action.text);
-        const textWidth = metrics.width;
-        const textHeight = action.fontSize;
-        
-        if (
-          x >= action.x - 4 &&
-          x <= action.x + textWidth + 4 &&
-          y >= action.y - textHeight &&
-          y <= action.y + 8
-        ) {
-          return action;
-        }
+      const bounds = getActionBounds(action);
+      const padding = 20;
+      
+      // Transform click position to object's local space
+      const local = worldToLocal(x, y, action);
+      
+      if (
+        local.x >= bounds.x - padding &&
+        local.x <= bounds.x + bounds.width + padding &&
+        local.y >= bounds.y - padding &&
+        local.y <= bounds.y + bounds.height + padding
+      ) {
+        return action;
       }
     }
     return null;
+  };
+
+  const isOnScaleHandle = (x: number, y: number, action: Action): boolean => {
+    const bounds = getActionBounds(action);
+    // Transform click to local space
+    const local = worldToLocal(x, y, action);
+    
+    const handleX = bounds.x + bounds.width + 8;
+    const handleY = bounds.y + bounds.height + 8;
+    const distance = Math.sqrt((local.x - handleX) ** 2 + (local.y - handleY) ** 2);
+    return distance < 20;
+  };
+
+  const isOnRotateHandle = (x: number, y: number, action: Action): boolean => {
+    const bounds = getActionBounds(action);
+    // Transform click to local space
+    const local = worldToLocal(x, y, action);
+    
+    const handleX = bounds.centerX;
+    const handleY = bounds.y - 23;
+    const distance = Math.sqrt((local.x - handleX) ** 2 + (local.y - handleY) ** 2);
+    return distance < 20;
   };
 
   const getPinchDistance = (e: React.TouchEvent): number => {
@@ -247,27 +401,92 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
     return Math.sqrt(dx * dx + dy * dy);
   };
 
+  const getPinchCenter = (e: React.TouchEvent): { x: number; y: number } => {
+    if (e.touches.length < 2) return { x: 0, y: 0 };
+    return {
+      x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+      y: (e.touches[0].clientY + e.touches[1].clientY) / 2,
+    };
+  };
+
   const handleStart = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     
-    // Handle pinch zoom start
+    // Handle pinch zoom/rotate for selected item or view zoom
     if ("touches" in e && e.touches.length === 2) {
-      setLastPinchDistance(getPinchDistance(e));
+      const distance = getPinchDistance(e);
+      const center = getPinchCenter(e);
+      
+      if (selectedId) {
+        // Pinch to scale/rotate selected item
+        const action = actions.find(a => a.id === selectedId);
+        if (action) {
+          setInitialScale(action.scale);
+          setInitialRotation(action.rotation);
+          setInitialDistance(distance);
+          
+          // Calculate initial angle
+          const dx = e.touches[1].clientX - e.touches[0].clientX;
+          const dy = e.touches[1].clientY - e.touches[0].clientY;
+          setInitialAngle(Math.atan2(dy, dx));
+          
+          setIsScaling(true);
+          setIsRotating(true);
+        }
+      } else {
+        // Pinch to zoom view
+        setLastPinchDistance(distance);
+        setLastPinchCenter(center);
+      }
       return;
     }
     
     const coords = getCanvasCoordinates(e);
     
-    // Check if clicking on existing text (for dragging)
-    if (tool === "text") {
-      const textAtPos = findTextAtPosition(coords.x, coords.y);
-      if (textAtPos) {
-        setDraggingTextId(textAtPos.id);
-        setDragOffset({
-          x: coords.x - textAtPos.x,
-          y: coords.y - textAtPos.y,
-        });
+    // Check if clicking on selection handles
+    if (selectedId && tool === "select") {
+      const action = actions.find(a => a.id === selectedId);
+      if (action) {
+        if (isOnScaleHandle(coords.x, coords.y, action)) {
+          setIsScaling(true);
+          setInitialScale(action.scale);
+          const bounds = getActionBounds(action);
+          setCenterPoint({ x: bounds.centerX, y: bounds.centerY });
+          setInitialDistance(Math.sqrt((coords.x - bounds.centerX) ** 2 + (coords.y - bounds.centerY) ** 2));
+          return;
+        }
+        if (isOnRotateHandle(coords.x, coords.y, action)) {
+          setIsRotating(true);
+          setInitialRotation(action.rotation);
+          const bounds = getActionBounds(action);
+          setCenterPoint({ x: bounds.centerX, y: bounds.centerY });
+          setInitialAngle(Math.atan2(coords.y - bounds.centerY, coords.x - bounds.centerX));
+          return;
+        }
+      }
+    }
+    
+    // Select mode - find and select item
+    if (tool === "select") {
+      const actionAtPos = findActionAtPosition(coords.x, coords.y);
+      if (actionAtPos) {
+        setSelectedId(actionAtPos.id);
+        setIsDragging(true);
+        
+        if (actionAtPos.type === "text") {
+          setDragOffset({
+            x: coords.x - actionAtPos.x,
+            y: coords.y - actionAtPos.y,
+          });
+        } else {
+          setDragOffset({
+            x: coords.x - actionAtPos.offsetX,
+            y: coords.y - actionAtPos.offsetY,
+          });
+        }
         return;
+      } else {
+        setSelectedId(null);
       }
     }
     
@@ -284,34 +503,124 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
     if (tool === "draw") {
       setIsDrawing(true);
       setCurrentPath([coords]);
-    } else if (tool === "text") {
-      setIsAddingText(true);
+      setSelectedId(null);
+    } else if (tool === "text" && textInput.trim()) {
+      const newId = `text-${Date.now()}`;
+      setActions((prev) => [
+        ...prev,
+        { type: "text", id: newId, text: textInput, x: coords.x, y: coords.y, color, fontSize, scale: 1, rotation: 0 },
+      ]);
+      setTextInput("");
+      setSelectedId(newId);
+      setTool("select");
     }
   };
 
   const handleMove = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     
-    // Handle pinch zoom
-    if ("touches" in e && e.touches.length === 2 && lastPinchDistance !== null) {
+    // Handle pinch zoom/scale/rotate
+    if ("touches" in e && e.touches.length === 2) {
       const newDistance = getPinchDistance(e);
-      const delta = newDistance - lastPinchDistance;
-      const zoomDelta = delta * 0.01;
-      setZoom(prev => Math.max(0.5, Math.min(3, prev + zoomDelta)));
-      setLastPinchDistance(newDistance);
+      const newCenter = getPinchCenter(e);
+      
+      if (selectedId && (isScaling || isRotating)) {
+        // Scale and rotate selected item
+        const scaleFactor = newDistance / initialDistance;
+        const dx = e.touches[1].clientX - e.touches[0].clientX;
+        const dy = e.touches[1].clientY - e.touches[0].clientY;
+        const newAngle = Math.atan2(dy, dx);
+        const angleDiff = newAngle - initialAngle;
+        
+        setActions(prev => prev.map(action => {
+          if (action.id === selectedId) {
+            return {
+              ...action,
+              scale: Math.max(0.2, Math.min(5, initialScale * scaleFactor)),
+              rotation: initialRotation + angleDiff,
+            };
+          }
+          return action;
+        }));
+      } else if (lastPinchDistance !== null && lastPinchCenter !== null) {
+        // Zoom view centered on pinch
+        const delta = newDistance - lastPinchDistance;
+        const zoomDelta = delta * 0.005;
+        const newZoom = Math.max(0.5, Math.min(3, zoom + zoomDelta));
+        
+        // Adjust pan to zoom toward pinch center
+        if (containerRef.current) {
+          const containerRect = containerRef.current.getBoundingClientRect();
+          const centerX = newCenter.x - containerRect.left;
+          const centerY = newCenter.y - containerRect.top;
+          
+          const zoomRatio = newZoom / zoom;
+          setPan(prev => ({
+            x: centerX - (centerX - prev.x) * zoomRatio,
+            y: centerY - (centerY - prev.y) * zoomRatio,
+          }));
+        }
+        
+        setZoom(newZoom);
+        setLastPinchDistance(newDistance);
+        setLastPinchCenter(newCenter);
+      }
       return;
     }
     
-    // Handle text dragging
-    if (draggingTextId) {
-      const coords = getCanvasCoordinates(e);
+    const coords = getCanvasCoordinates(e);
+    
+    // Handle scaling with mouse
+    if (isScaling && selectedId) {
+      const currentDistance = Math.sqrt((coords.x - centerPoint.x) ** 2 + (coords.y - centerPoint.y) ** 2);
+      const scaleFactor = currentDistance / initialDistance;
+      
       setActions(prev => prev.map(action => {
-        if (action.type === "text" && action.id === draggingTextId) {
+        if (action.id === selectedId) {
           return {
             ...action,
-            x: coords.x - dragOffset.x,
-            y: coords.y - dragOffset.y,
+            scale: Math.max(0.2, Math.min(5, initialScale * scaleFactor)),
           };
+        }
+        return action;
+      }));
+      return;
+    }
+    
+    // Handle rotating with mouse
+    if (isRotating && selectedId) {
+      const currentAngle = Math.atan2(coords.y - centerPoint.y, coords.x - centerPoint.x);
+      const angleDiff = currentAngle - initialAngle;
+      
+      setActions(prev => prev.map(action => {
+        if (action.id === selectedId) {
+          return {
+            ...action,
+            rotation: initialRotation + angleDiff,
+          };
+        }
+        return action;
+      }));
+      return;
+    }
+    
+    // Handle dragging selected item
+    if (isDragging && selectedId) {
+      setActions(prev => prev.map(action => {
+        if (action.id === selectedId) {
+          if (action.type === "text") {
+            return {
+              ...action,
+              x: coords.x - dragOffset.x,
+              y: coords.y - dragOffset.y,
+            };
+          } else {
+            return {
+              ...action,
+              offsetX: coords.x - dragOffset.x,
+              offsetY: coords.y - dragOffset.y,
+            };
+          }
         }
         return action;
       }));
@@ -340,68 +649,59 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
     
     if (!isDrawing || tool !== "draw") return;
     
-    const coords = getCanvasCoordinates(e);
     setCurrentPath((prev) => [...prev, coords]);
   };
 
-  const handleEnd = (e?: React.MouseEvent | React.TouchEvent) => {
+  const handleEnd = () => {
     // End pinch zoom
     setLastPinchDistance(null);
+    setLastPinchCenter(null);
     
-    // End text dragging
-    if (draggingTextId) {
-      setDraggingTextId(null);
-      return;
-    }
+    // End scaling/rotating
+    setIsScaling(false);
+    setIsRotating(false);
+    
+    // End dragging
+    setIsDragging(false);
     
     // End panning
-    if (isPanning) {
-      setIsPanning(false);
-      return;
-    }
+    setIsPanning(false);
     
+    // End drawing
     if (isDrawing && currentPath.length > 0) {
+      const newId = `draw-${Date.now()}`;
       setActions((prev) => [
         ...prev,
-        { type: "draw", points: currentPath, color, lineWidth },
+        { type: "draw", id: newId, points: currentPath, color, lineWidth, scale: 1, rotation: 0, offsetX: 0, offsetY: 0 },
       ]);
       setCurrentPath([]);
+      setSelectedId(newId);
+      setTool("select");
     }
     setIsDrawing(false);
   };
 
-  const handleCanvasClick = (e: React.MouseEvent) => {
-    if (tool === "pan") return;
-    
-    const coords = getCanvasCoordinates(e);
-    
-    // Check if clicking on existing text
-    if (tool === "text") {
-      const textAtPos = findTextAtPosition(coords.x, coords.y);
-      if (textAtPos) {
-        // Text is now selected for dragging (handled in handleStart)
-        return;
-      }
-      
-      // Add new text if input has content
-      if (textInput.trim()) {
-        const newId = `text-${Date.now()}`;
-        setActions((prev) => [
-          ...prev,
-          { type: "text", text: textInput, x: coords.x, y: coords.y, color, fontSize, id: newId },
-        ]);
-        setTextInput("");
-        setIsAddingText(false);
-      } else {
-        setIsAddingText(true);
-      }
-    }
-  };
-
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
+    
+    // Get mouse position relative to container
+    const containerRect = containerRef.current?.getBoundingClientRect();
+    if (!containerRect) return;
+    
+    const mouseX = e.clientX - containerRect.left;
+    const mouseY = e.clientY - containerRect.top;
+    
     const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    setZoom(prev => Math.max(0.5, Math.min(3, prev + delta)));
+    const newZoom = Math.max(0.5, Math.min(3, zoom + delta));
+    
+    // Adjust pan to zoom toward mouse position
+    const zoomRatio = newZoom / zoom;
+    setPan(prev => ({
+      x: mouseX - (mouseX - prev.x) * zoomRatio,
+      y: mouseY - (mouseY - prev.y) * zoomRatio,
+    }));
+    
+    setZoom(newZoom);
   };
 
   const handleZoomIn = () => {
@@ -419,18 +719,33 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
 
   const handleUndo = () => {
     setActions((prev) => prev.slice(0, -1));
+    setSelectedId(null);
   };
 
   const handleReset = () => {
     setActions([]);
     setCurrentPath([]);
+    setSelectedId(null);
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedId) {
+      setActions(prev => prev.filter(a => a.id !== selectedId));
+      setSelectedId(null);
+    }
   };
 
   const handleSave = () => {
     if (!canvasRef.current) return;
-    const dataUrl = canvasRef.current.toDataURL("image/jpeg", 0.9);
-    onSave(dataUrl);
+    setSelectedId(null); // Clear selection before saving
+    setTimeout(() => {
+      if (!canvasRef.current) return;
+      const dataUrl = canvasRef.current.toDataURL("image/jpeg", 0.9);
+      onSave(dataUrl);
+    }, 100);
   };
+
+  const selectedAction = selectedId ? actions.find(a => a.id === selectedId) : null;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()} modal={true}>
@@ -438,7 +753,7 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
         <DialogHeader>
           <DialogTitle>Fotoğraf Düzenle</DialogTitle>
           <DialogDescription>
-            Fotoğraf üzerine çizim yapabilir, yazı ekleyebilir ve yerini değiştirebilirsiniz. Yakınlaştırmak için kaydırma tekerleğini veya parmak hareketlerini kullanın.
+            Çizim veya yazı ekleyin, sonra seçerek taşıyın, büyütün veya döndürün
           </DialogDescription>
         </DialogHeader>
 
@@ -448,7 +763,7 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
               <Button
                 size="sm"
                 variant={tool === "draw" ? "default" : "outline"}
-                onClick={() => { setTool("draw"); setIsAddingText(false); setDraggingTextId(null); }}
+                onClick={() => { setTool("draw"); setSelectedId(null); }}
                 data-testid="button-tool-draw"
               >
                 <Pencil className="h-4 w-4 mr-1" />
@@ -457,7 +772,7 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
               <Button
                 size="sm"
                 variant={tool === "text" ? "default" : "outline"}
-                onClick={() => { setTool("text"); setDraggingTextId(null); }}
+                onClick={() => { setTool("text"); setSelectedId(null); }}
                 data-testid="button-tool-text"
               >
                 <Type className="h-4 w-4 mr-1" />
@@ -465,8 +780,17 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
               </Button>
               <Button
                 size="sm"
+                variant={tool === "select" ? "default" : "outline"}
+                onClick={() => setTool("select")}
+                data-testid="button-tool-select"
+              >
+                <Move className="h-4 w-4 mr-1" />
+                Seç
+              </Button>
+              <Button
+                size="sm"
                 variant={tool === "pan" ? "default" : "outline"}
-                onClick={() => { setTool("pan"); setIsAddingText(false); setDraggingTextId(null); }}
+                onClick={() => { setTool("pan"); setSelectedId(null); }}
                 data-testid="button-tool-pan"
               >
                 <Move className="h-4 w-4 mr-1" />
@@ -496,6 +820,11 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
               <Button size="sm" variant="outline" onClick={handleReset} data-testid="button-reset">
                 <RotateCcw className="h-4 w-4" />
               </Button>
+              {selectedId && (
+                <Button size="sm" variant="destructive" onClick={handleDeleteSelected} data-testid="button-delete-selected">
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
             </div>
             
             {/* Zoom controls */}
@@ -564,9 +893,18 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
                   }
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Mevcut yazıları sürükleyerek taşıyabilirsiniz
-              </p>
+            </div>
+          )}
+          
+          {tool === "select" && (
+            <div className="text-sm text-muted-foreground space-y-1">
+              <p>Bir öğe seçin, sonra:</p>
+              <ul className="list-disc list-inside">
+                <li>Sürükleyerek taşıyın</li>
+                <li>Köşe tutamacını sürükleyerek büyütün/küçültün</li>
+                <li>Üst tutamacı sürükleyerek döndürün</li>
+                <li>İki parmakla büyütüp döndürün (dokunmatik)</li>
+              </ul>
             </div>
           )}
           
@@ -576,12 +914,27 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
             </p>
           )}
 
+          {selectedAction && (
+            <div className="flex items-center gap-4 p-2 bg-muted rounded-md">
+              <span className="text-sm font-medium">Seçili: {selectedAction.type === "text" ? "Yazı" : "Çizim"}</span>
+              <div className="flex items-center gap-2">
+                <Label className="text-sm">Boyut:</Label>
+                <span className="text-sm">{Math.round(selectedAction.scale * 100)}%</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Label className="text-sm">Döndürme:</Label>
+                <span className="text-sm">{Math.round(selectedAction.rotation * 180 / Math.PI)}°</span>
+              </div>
+            </div>
+          )}
+
           <div 
             ref={containerRef}
             className="border rounded-lg overflow-hidden bg-muted flex justify-center items-center min-h-[200px] relative"
             style={{ 
-              cursor: tool === "pan" ? "grab" : tool === "text" && draggingTextId ? "move" : "crosshair",
+              cursor: tool === "pan" ? "grab" : tool === "select" ? "default" : "crosshair",
             }}
+            onWheel={handleWheel}
           >
             {!imageLoaded && (
               <div className="absolute inset-0 flex items-center justify-center bg-muted">
@@ -592,7 +945,7 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
               style={{
                 transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`,
                 transformOrigin: "center center",
-                transition: isPanning || draggingTextId ? "none" : "transform 0.1s ease-out",
+                transition: isPanning || isDragging || isScaling || isRotating ? "none" : "transform 0.1s ease-out",
               }}
             >
               <canvas
@@ -608,8 +961,6 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
                 onTouchStart={handleStart}
                 onTouchMove={handleMove}
                 onTouchEnd={handleEnd}
-                onClick={handleCanvasClick}
-                onWheel={handleWheel}
                 style={{
                   maxWidth: "100%",
                   height: "auto",
