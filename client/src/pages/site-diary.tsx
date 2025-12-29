@@ -509,6 +509,7 @@ export default function SiteDiary() {
                 totalWorkers: entry.totalWorkers ?? undefined,
                 issues: entry.issues ?? undefined,
                 notes: entry.notes ?? undefined,
+                photos: entry.photos ?? [],
               }}
               onEdit={() => handleEditEntry(entry)}
               onDelete={() => handleDeleteEntry(entry.id)}
