@@ -1,10 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PrintButton } from "@/components/print-button";
 import { PrintHeader } from "@/components/print-header";
 import { StatsCard } from "@/components/stats-card";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { FileText, BarChart3, TrendingUp, TrendingDown, DollarSign, PieChart, Calendar, Receipt, ClipboardList, FolderKanban, CheckCircle2, Clock, XCircle, AlertCircle } from "lucide-react";
+import { FileText, BarChart3, TrendingUp, TrendingDown, DollarSign, PieChart, Calendar, Receipt, ClipboardList, FolderKanban, CheckCircle2, Clock, XCircle, AlertCircle, Filter } from "lucide-react";
+import { useProjectContext } from "@/hooks/use-project-context";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -27,15 +28,25 @@ import { Progress } from "@/components/ui/progress";
 type DateFilter = "all" | "this-month" | "this-year" | "custom";
 
 export default function Reports() {
+  const { activeProjectId: contextProjectId } = useProjectContext();
   const [activeTab, setActiveTab] = useState("financial");
   const [dateFilter, setDateFilter] = useState<DateFilter>("this-year");
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
   
-  // Advanced multi-level filters
+  // Advanced multi-level filters - use active project from context as initial default
+  const hasInitializedFromContext = useRef(false);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("all");
   const [selectedWorkGroup, setSelectedWorkGroup] = useState<string>("all");
   const [selectedCostGroup, setSelectedCostGroup] = useState<string>("all");
+  
+  // Initialize filter from context on first mount only
+  useEffect(() => {
+    if (!hasInitializedFromContext.current && contextProjectId) {
+      setSelectedProjectId(contextProjectId);
+      hasInitializedFromContext.current = true;
+    }
+  }, [contextProjectId]);
 
   // Fetch data
   const { data: transactions = [], isLoading: transactionsLoading } = useQuery<TransactionWithProject[]>({
@@ -261,13 +272,18 @@ export default function Reports() {
     return Object.values(months).sort((a, b) => a.monthKey.localeCompare(b.monthKey));
   }, [filteredTransactions]);
 
-  // Task statistics for operational reports
+  // Task statistics for operational reports - filtered by project
+  const filteredTasks = useMemo(() => {
+    if (selectedProjectId === "all") return tasks;
+    return tasks.filter(t => t.projectId === selectedProjectId);
+  }, [tasks, selectedProjectId]);
+
   const taskStats = useMemo(() => {
-    const total = tasks.length;
-    const completed = tasks.filter(t => t.status === "Tamamlandı").length;
-    const inProgress = tasks.filter(t => t.status === "Devam Ediyor").length;
-    const waiting = tasks.filter(t => t.status === "Bekliyor").length;
-    const cancelled = tasks.filter(t => t.status === "İptal").length;
+    const total = filteredTasks.length;
+    const completed = filteredTasks.filter(t => t.status === "Tamamlandı").length;
+    const inProgress = filteredTasks.filter(t => t.status === "Devam Ediyor").length;
+    const waiting = filteredTasks.filter(t => t.status === "Bekliyor").length;
+    const cancelled = filteredTasks.filter(t => t.status === "İptal").length;
 
     return {
       total,
@@ -277,7 +293,7 @@ export default function Reports() {
       cancelled,
       completionRate: total > 0 ? (completed / total) * 100 : 0,
     };
-  }, [tasks]);
+  }, [filteredTasks]);
 
   // Task by status for chart
   const tasksByStatus = useMemo(() => {
@@ -289,10 +305,10 @@ export default function Reports() {
     ].filter(item => item.value > 0);
   }, [taskStats]);
 
-  // Project completion analysis
+  // Project completion analysis - filtered by project
   const projectCompletion = useMemo(() => {
     const projectMap = new Map(projects.map(p => [p.id, p]));
-    const projectTasks: Record<string, { 
+    const projectTasksMap: Record<string, { 
       name: string; 
       total: number; 
       completed: number; 
@@ -300,12 +316,13 @@ export default function Reports() {
       status: string;
     }> = {};
 
-    tasks.forEach(task => {
+    filteredTasks.forEach(task => {
+      if (!task.projectId) return;
       const project = projectMap.get(task.projectId);
       if (!project) return;
 
-      if (!projectTasks[task.projectId]) {
-        projectTasks[task.projectId] = {
+      if (!projectTasksMap[task.projectId]) {
+        projectTasksMap[task.projectId] = {
           name: project.name,
           total: 0,
           completed: 0,
@@ -314,27 +331,33 @@ export default function Reports() {
         };
       }
 
-      projectTasks[task.projectId].total += 1;
+      projectTasksMap[task.projectId].total += 1;
       if (task.status === "Tamamlandı") {
-        projectTasks[task.projectId].completed += 1;
+        projectTasksMap[task.projectId].completed += 1;
       }
     });
 
-    return Object.values(projectTasks).map(p => ({
+    return Object.values(projectTasksMap).map(p => ({
       ...p,
       completion: p.total > 0 ? (p.completed / p.total) * 100 : 0,
     })).sort((a, b) => b.completion - a.completion);
-  }, [projects, tasks]);
+  }, [projects, filteredTasks]);
 
-  // Project status distribution
+  // Filtered projects for project reports tab
+  const filteredProjects = useMemo(() => {
+    if (selectedProjectId === "all") return projects;
+    return projects.filter(p => p.id === selectedProjectId);
+  }, [projects, selectedProjectId]);
+
+  // Project status distribution - filtered by project
   const projectStatusData = useMemo(() => {
     const statusCounts: Record<string, number> = {};
-    projects.forEach(p => {
+    filteredProjects.forEach(p => {
       statusCounts[p.status] = (statusCounts[p.status] || 0) + 1;
     });
 
     return Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
-  }, [projects]);
+  }, [filteredProjects]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('tr-TR', {
@@ -346,6 +369,11 @@ export default function Reports() {
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
 
+  // Get selected project name for display
+  const selectedProjectName = selectedProjectId !== "all" 
+    ? projects.find(p => p.id === selectedProjectId)?.name || "Seçili Proje"
+    : "Tüm Projeler";
+
   return (
     <div className="space-y-6">
       <PrintHeader documentTitle="RAPORLAR" />
@@ -354,11 +382,117 @@ export default function Reports() {
         <div>
           <h1 className="text-3xl font-bold">Raporlar</h1>
           <p className="text-muted-foreground mt-1">Detaylı analiz ve raporlama</p>
+          {selectedProjectId !== "all" && (
+            <p className="text-sm text-primary mt-1">Aktif Filtre: {selectedProjectName}</p>
+          )}
         </div>
         <div className="flex gap-2">
           <PrintButton />
         </div>
       </div>
+
+      {/* Global Filters - Applied to all report tabs */}
+      <Card className="no-print">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Filter className="h-5 w-5" />
+            Filtreler
+          </CardTitle>
+          <CardDescription>
+            Tüm raporlar için geçerli proje, tarih, iş grubu ve maliyet grubu filtreleri
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <Label>Proje</Label>
+              <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+                <SelectTrigger data-testid="select-project-filter">
+                  <SelectValue placeholder="Tüm Projeler" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tüm Projeler</SelectItem>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Dönem</Label>
+              <Select value={dateFilter} onValueChange={(value) => setDateFilter(value as DateFilter)}>
+                <SelectTrigger data-testid="select-date-filter">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tüm Zamanlar</SelectItem>
+                  <SelectItem value="this-month">Bu Ay</SelectItem>
+                  <SelectItem value="this-year">Bu Yıl</SelectItem>
+                  <SelectItem value="custom">Özel Tarih Aralığı</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>İş Grubu</Label>
+              <Select value={selectedWorkGroup} onValueChange={setSelectedWorkGroup}>
+                <SelectTrigger data-testid="select-work-group-filter">
+                  <SelectValue placeholder="Tüm İş Grupları" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tüm İş Grupları</SelectItem>
+                  <SelectItem value="Kaba İmalat">Kaba İmalat</SelectItem>
+                  <SelectItem value="İnce İmalat">İnce İmalat</SelectItem>
+                  <SelectItem value="Mekanik Tesisat">Mekanik Tesisat</SelectItem>
+                  <SelectItem value="Elektrik Tesisat">Elektrik Tesisat</SelectItem>
+                  <SelectItem value="Çevre Düzenlemesi ve Altyapı">Çevre Düzenlemesi ve Altyapı</SelectItem>
+                  <SelectItem value="Genel Giderler ve Endirekt Giderler">Genel Giderler</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Rayiç Grubu</Label>
+              <Select value={selectedCostGroup} onValueChange={setSelectedCostGroup}>
+                <SelectTrigger data-testid="select-cost-group-filter">
+                  <SelectValue placeholder="Tüm Maliyet Grupları" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tüm Maliyet Grupları</SelectItem>
+                  <SelectItem value="Malzeme">Malzeme</SelectItem>
+                  <SelectItem value="İşçilik">İşçilik</SelectItem>
+                  <SelectItem value="Makine Ekipman">Makine Ekipman</SelectItem>
+                  <SelectItem value="Paket">Paket</SelectItem>
+                  <SelectItem value="Genel Giderler ve Endirekt Giderler">Genel Giderler</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          {dateFilter === "custom" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Başlangıç Tarihi</Label>
+                <Input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  data-testid="input-start-date"
+                />
+              </div>
+              <div>
+                <Label>Bitiş Tarihi</Label>
+                <Input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  data-testid="input-end-date"
+                />
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4" data-testid="tabs-report-type">
@@ -382,123 +516,6 @@ export default function Reports() {
 
         {/* Financial Reports Tab */}
         <TabsContent value="financial" className="space-y-6">
-          {/* Date Filter */}
-          <Card className="no-print">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Calendar className="h-5 w-5" />
-                Tarih Filtresi
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
-                  <Label>Dönem</Label>
-                  <Select value={dateFilter} onValueChange={(value) => setDateFilter(value as DateFilter)}>
-                    <SelectTrigger data-testid="select-date-filter">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tüm Zamanlar</SelectItem>
-                      <SelectItem value="this-month">Bu Ay</SelectItem>
-                      <SelectItem value="this-year">Bu Yıl</SelectItem>
-                      <SelectItem value="custom">Özel Tarih Aralığı</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {dateFilter === "custom" && (
-                  <>
-                    <div className="flex-1">
-                      <Label>Başlangıç Tarihi</Label>
-                      <Input
-                        type="date"
-                        value={customStartDate}
-                        onChange={(e) => setCustomStartDate(e.target.value)}
-                        data-testid="input-start-date"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <Label>Bitiş Tarihi</Label>
-                      <Input
-                        type="date"
-                        value={customEndDate}
-                        onChange={(e) => setCustomEndDate(e.target.value)}
-                        data-testid="input-end-date"
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Advanced Multi-Level Filters */}
-          <Card className="no-print">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <BarChart3 className="h-5 w-5" />
-                Gelişmiş Filtreler
-              </CardTitle>
-              <CardDescription>
-                Proje, iş grubu ve maliyet grubu bazlı detaylı raporlama
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label>Proje</Label>
-                  <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
-                    <SelectTrigger data-testid="select-project-filter">
-                      <SelectValue placeholder="Tüm Projeler" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tüm Projeler</SelectItem>
-                      {projects.map((project) => (
-                        <SelectItem key={project.id} value={project.id}>
-                          {project.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>İş Grubu</Label>
-                  <Select value={selectedWorkGroup} onValueChange={setSelectedWorkGroup}>
-                    <SelectTrigger data-testid="select-work-group-filter">
-                      <SelectValue placeholder="Tüm İş Grupları" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tüm İş Grupları</SelectItem>
-                      <SelectItem value="Kaba İmalat">Kaba İmalat</SelectItem>
-                      <SelectItem value="İnce İmalat">İnce İmalat</SelectItem>
-                      <SelectItem value="Mekanik Tesisat">Mekanik Tesisat</SelectItem>
-                      <SelectItem value="Elektrik Tesisat">Elektrik Tesisat</SelectItem>
-                      <SelectItem value="Çevre Düzenlemesi ve Altyapı">Çevre Düzenlemesi ve Altyapı</SelectItem>
-                      <SelectItem value="Genel Giderler ve Endirekt Giderler">Genel Giderler</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Rayiç Grubu</Label>
-                  <Select value={selectedCostGroup} onValueChange={setSelectedCostGroup}>
-                    <SelectTrigger data-testid="select-cost-group-filter">
-                      <SelectValue placeholder="Tüm Maliyet Grupları" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tüm Maliyet Grupları</SelectItem>
-                      <SelectItem value="Malzeme">Malzeme</SelectItem>
-                      <SelectItem value="İşçilik">İşçilik</SelectItem>
-                      <SelectItem value="Makine Ekipman">Makine Ekipman</SelectItem>
-                      <SelectItem value="Paket">Paket</SelectItem>
-                      <SelectItem value="Genel Giderler ve Endirekt Giderler">Genel Giderler</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Financial Summary */}
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -661,8 +678,18 @@ export default function Reports() {
           {!isLoading && projectFinancials.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Proje Bazlı Finansal Analiz</CardTitle>
-                <CardDescription>Her projenin gelir, gider ve kâr durumu</CardDescription>
+                <CardTitle>
+                  Proje Bazlı Finansal Analiz
+                  {selectedProjectId !== "all" && (
+                    <span className="text-primary ml-2">- {selectedProjectName}</span>
+                  )}
+                </CardTitle>
+                <CardDescription>
+                  {selectedProjectId !== "all" 
+                    ? `${selectedProjectName} projesinin gelir, gider ve kâr durumu`
+                    : "Her projenin gelir, gider ve kâr durumu"
+                  }
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -904,25 +931,35 @@ export default function Reports() {
 
                   <Card>
                     <CardHeader>
-                      <CardTitle>Proje Özet İstatistikleri</CardTitle>
-                      <CardDescription>Genel proje bilgileri</CardDescription>
+                      <CardTitle>
+                        Proje Özet İstatistikleri
+                        {selectedProjectId !== "all" && (
+                          <span className="text-primary ml-2">- {selectedProjectName}</span>
+                        )}
+                      </CardTitle>
+                      <CardDescription>
+                        {selectedProjectId !== "all" 
+                          ? `${selectedProjectName} proje bilgileri`
+                          : "Genel proje bilgileri"
+                        }
+                      </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
                         <p className="text-sm text-muted-foreground mb-1">Toplam Proje Sayısı</p>
-                        <p className="text-3xl font-bold">{projects.length}</p>
+                        <p className="text-3xl font-bold">{filteredProjects.length}</p>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-sm text-muted-foreground mb-1">Aktif Projeler</p>
                           <p className="text-2xl font-bold text-blue-600">
-                            {projects.filter(p => p.status === "Devam Ediyor").length}
+                            {filteredProjects.filter(p => p.status === "Devam Ediyor").length}
                           </p>
                         </div>
                         <div>
                           <p className="text-sm text-muted-foreground mb-1">Tamamlanan</p>
                           <p className="text-2xl font-bold text-green-600">
-                            {projects.filter(p => p.status === "Tamamlandı").length}
+                            {filteredProjects.filter(p => p.status === "Tamamlandı").length}
                           </p>
                         </div>
                       </div>
@@ -932,11 +969,21 @@ export default function Reports() {
               )}
 
               {/* Detailed Project Table */}
-              {projects.length > 0 && (
+              {filteredProjects.length > 0 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Proje Detayları</CardTitle>
-                    <CardDescription>Tüm projelerin detaylı bilgileri</CardDescription>
+                    <CardTitle>
+                      Proje Detayları
+                      {selectedProjectId !== "all" && (
+                        <span className="text-primary ml-2">- {selectedProjectName}</span>
+                      )}
+                    </CardTitle>
+                    <CardDescription>
+                      {selectedProjectId !== "all" 
+                        ? `${selectedProjectName} projesinin detaylı bilgileri`
+                        : "Tüm projelerin detaylı bilgileri"
+                      }
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <Table>
@@ -951,7 +998,7 @@ export default function Reports() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {projects.map((project) => (
+                        {filteredProjects.map((project) => (
                           <TableRow key={project.id}>
                             <TableCell className="font-medium">{project.name}</TableCell>
                             <TableCell>{project.location}</TableCell>
@@ -990,7 +1037,7 @@ export default function Reports() {
               )}
 
               {/* Empty State */}
-              {projects.length === 0 && (
+              {filteredProjects.length === 0 && (
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-center py-8 text-muted-foreground">
@@ -1044,14 +1091,12 @@ export default function Reports() {
                         title="Toplam Hakediş"
                         value={`${totalAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
                         icon={Receipt}
-                        trend="neutral"
                         data-testid="card-total-hakedis"
                       />
                       <StatsCard
                         title="Brüt Tutar"
                         value={`${totalGross.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
                         icon={TrendingUp}
-                        trend="neutral"
                         description="Müteahhitlik ücreti dahil"
                         data-testid="card-gross-hakedis"
                       />
@@ -1059,14 +1104,12 @@ export default function Reports() {
                         title="Avans Kesintisi"
                         value={`${totalAdvanceDeduction.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
                         icon={TrendingDown}
-                        trend="negative"
                         data-testid="card-deduction-hakedis"
                       />
                       <StatsCard
                         title="Net Ödeme"
                         value={`${totalNetPayment.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
                         icon={DollarSign}
-                        trend="positive"
                         description="Ödenecek tutar"
                         data-testid="card-net-hakedis"
                       />
@@ -1074,7 +1117,6 @@ export default function Reports() {
                         title="Alınan Ödemeler"
                         value={`${totalReceived.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
                         icon={CheckCircle2}
-                        trend="positive"
                         data-testid="card-received-hakedis"
                       />
                     </div>
