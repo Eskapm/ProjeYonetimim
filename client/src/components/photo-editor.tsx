@@ -202,13 +202,14 @@ export function PhotoEditor({ imageData, isOpen, onClose, onSave }: PhotoEditorP
       return { x: 0, y: 0 };
     }
 
-    // Account for zoom and pan
-    const scaleX = canvas.width / (rect.width * zoom);
-    const scaleY = canvas.height / (rect.height * zoom);
+    // The bounding rect already reflects CSS transforms (zoom/pan)
+    // So we just need to map screen coordinates to canvas coordinates
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
     
     return {
-      x: (clientX - rect.left - pan.x) * scaleX,
-      y: (clientY - rect.top - pan.y) * scaleY,
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY,
     };
   };
 
