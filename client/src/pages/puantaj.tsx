@@ -37,7 +37,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Plus, Search, Calendar as CalendarIcon, Loader2, Edit2, Trash2, Users, Clock, X } from "lucide-react";
+import { Plus, Search, Calendar as CalendarIcon, Loader2, Edit2, Trash2, Users, Clock, X, Eye, Building2, FileText } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertTimesheetSchema, isGrubuEnum, type InsertTimesheet, type Timesheet, type Project, type Subcontractor } from "@shared/schema";
@@ -75,6 +75,7 @@ export default function Puantaj() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<Timesheet | null>(null);
   const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null);
+  const [viewingEntry, setViewingEntry] = useState<(Timesheet & { projectName: string; subcontractorName: string }) | null>(null);
   const { toast } = useToast();
   const { activeProjectId } = useProjectContext();
   const [, setLocation] = useLocation();
@@ -576,7 +577,7 @@ export default function Puantaj() {
                 </TableHeader>
                 <TableBody>
                   {filteredTimesheets.map((entry) => (
-                    <TableRow key={entry.id} data-testid={`row-timesheet-${entry.id}`}>
+                    <TableRow key={entry.id} data-testid={`row-timesheet-${entry.id}`} className="cursor-pointer hover:bg-muted/50" onClick={() => setViewingEntry(entry)}>
                       <TableCell>
                         {format(new Date(entry.date), "dd MMMM yyyy", { locale: tr })}
                       </TableCell>
@@ -593,7 +594,15 @@ export default function Puantaj() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleEditEntry(entry)}
+                            onClick={(e) => { e.stopPropagation(); setViewingEntry(entry); }}
+                            data-testid={`button-view-${entry.id}`}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => { e.stopPropagation(); handleEditEntry(entry); }}
                             data-testid={`button-edit-${entry.id}`}
                           >
                             <Edit2 className="h-4 w-4" />
@@ -601,7 +610,7 @@ export default function Puantaj() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDeleteEntry(entry.id)}
+                            onClick={(e) => { e.stopPropagation(); handleDeleteEntry(entry.id); }}
                             data-testid={`button-delete-${entry.id}`}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -1054,6 +1063,95 @@ export default function Puantaj() {
               </DialogFooter>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Detail View Dialog */}
+      <Dialog open={!!viewingEntry} onOpenChange={(open) => { if (!open) setViewingEntry(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarIcon className="h-5 w-5" />
+              Puantaj Detayı
+            </DialogTitle>
+          </DialogHeader>
+          
+          {viewingEntry && (
+            <div className="space-y-4 mt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-semibold text-muted-foreground mb-1">Tarih</h4>
+                  <p className="text-sm">{format(new Date(viewingEntry.date), "dd MMMM yyyy, EEEE", { locale: tr })}</p>
+                </div>
+                
+                <div>
+                  <h4 className="text-sm font-semibold text-muted-foreground mb-1">İş Grubu</h4>
+                  <p className="text-sm">{viewingEntry.isGrubu}</p>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-semibold text-muted-foreground mb-1 flex items-center gap-2">
+                  <Building2 className="h-4 w-4" />
+                  Proje
+                </h4>
+                <p className="text-sm font-medium">{viewingEntry.projectName}</p>
+              </div>
+              
+              {viewingEntry.subcontractorName && (
+                <div>
+                  <h4 className="text-sm font-semibold text-muted-foreground mb-1">Taşeron</h4>
+                  <p className="text-sm">{viewingEntry.subcontractorName}</p>
+                </div>
+              )}
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <h4 className="text-sm font-semibold text-muted-foreground mb-1 flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    İşçi Sayısı
+                  </h4>
+                  <p className="text-2xl font-bold font-mono">{viewingEntry.workerCount}</p>
+                </div>
+                
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <h4 className="text-sm font-semibold text-muted-foreground mb-1 flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Çalışma Saati
+                  </h4>
+                  <p className="text-2xl font-bold font-mono">{viewingEntry.hours}</p>
+                </div>
+              </div>
+              
+              {viewingEntry.notes && (
+                <div>
+                  <h4 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Notlar
+                  </h4>
+                  <p className="text-sm whitespace-pre-wrap bg-muted/50 rounded-lg p-3">{viewingEntry.notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+          
+          <div className="flex gap-2 mt-6">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => { setViewingEntry(null); if (viewingEntry) handleEditEntry(viewingEntry); }}
+            >
+              <Edit2 className="h-4 w-4 mr-2" />
+              Düzenle
+            </Button>
+            <Button
+              variant="secondary"
+              className="flex-1"
+              onClick={() => setViewingEntry(null)}
+            >
+              Kapat
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 

@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { Calendar, Cloud, Users, AlertCircle, Edit, Trash2, Sun, CloudRain, Snowflake, Wind, Image, ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+import { Calendar, Cloud, Users, AlertCircle, Edit, Trash2, Sun, CloudRain, Snowflake, Wind, Image, ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut, RotateCcw, Eye, FileText, Package } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 interface SiteDiaryEntry {
@@ -36,6 +36,7 @@ const weatherIcons: Record<string, LucideIcon> = {
 
 export function SiteDiaryCard({ entry, onEdit, onDelete }: SiteDiaryCardProps) {
   const WeatherIcon = entry.weather ? weatherIcons[entry.weather] || Cloud : Cloud;
+  const [detailOpen, setDetailOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -72,7 +73,7 @@ export function SiteDiaryCard({ entry, onEdit, onDelete }: SiteDiaryCardProps) {
   
   return (
     <>
-      <Card className="hover-elevate" data-testid={`card-diary-${entry.id}`}>
+      <Card className="hover-elevate cursor-pointer" data-testid={`card-diary-${entry.id}`} onClick={() => setDetailOpen(true)}>
         <CardHeader>
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
@@ -143,7 +144,7 @@ export function SiteDiaryCard({ entry, onEdit, onDelete }: SiteDiaryCardProps) {
                 {photos.map((photo, index) => (
                   <button
                     key={index}
-                    onClick={() => openLightbox(index)}
+                    onClick={(e) => { e.stopPropagation(); openLightbox(index); }}
                     className="relative w-16 h-16 rounded-md overflow-hidden border border-border hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
                     data-testid={`button-photo-${entry.id}-${index}`}
                   >
@@ -163,7 +164,17 @@ export function SiteDiaryCard({ entry, onEdit, onDelete }: SiteDiaryCardProps) {
             variant="outline"
             size="sm"
             className="flex-1"
-            onClick={onEdit}
+            onClick={(e) => { e.stopPropagation(); setDetailOpen(true); }}
+            data-testid={`button-view-diary-${entry.id}`}
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            Detay
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
             data-testid={`button-edit-diary-${entry.id}`}
           >
             <Edit className="h-4 w-4 mr-2" />
@@ -172,15 +183,127 @@ export function SiteDiaryCard({ entry, onEdit, onDelete }: SiteDiaryCardProps) {
           <Button
             variant="destructive"
             size="sm"
-            className="flex-1"
-            onClick={onDelete}
+            onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
             data-testid={`button-delete-diary-${entry.id}`}
           >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Sil
+            <Trash2 className="h-4 w-4" />
           </Button>
         </CardFooter>
       </Card>
+
+      {/* Detail Dialog */}
+      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <Calendar className="h-5 w-5" />
+              <span>Şantiye Defteri - {entry.date}</span>
+              {entry.weather && (
+                <Badge variant="secondary" className="gap-1 ml-2">
+                  <WeatherIcon className="h-3 w-3" />
+                  {entry.weather}
+                </Badge>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 mt-4">
+            {entry.projectName && (
+              <div>
+                <h4 className="text-sm font-semibold text-muted-foreground mb-1">Proje</h4>
+                <p className="text-sm">{entry.projectName}</p>
+              </div>
+            )}
+            
+            <div>
+              <h4 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Yapılan İşler
+              </h4>
+              <p className="text-sm whitespace-pre-wrap bg-muted/50 rounded-lg p-3">{entry.workDone}</p>
+            </div>
+            
+            {entry.materialsUsed && (
+              <div>
+                <h4 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-2">
+                  <Package className="h-4 w-4" />
+                  Kullanılan Malzemeler
+                </h4>
+                <p className="text-sm whitespace-pre-wrap bg-muted/50 rounded-lg p-3">{entry.materialsUsed}</p>
+              </div>
+            )}
+            
+            {entry.totalWorkers !== undefined && (
+              <div>
+                <h4 className="text-sm font-semibold text-muted-foreground mb-1 flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Toplam İşçi Sayısı
+                </h4>
+                <p className="text-lg font-bold">{entry.totalWorkers}</p>
+              </div>
+            )}
+            
+            {entry.issues && (
+              <div className="border-l-4 border-destructive pl-3 bg-destructive/5 rounded-r-lg py-2">
+                <h4 className="text-sm font-semibold text-destructive mb-1 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  Sorunlar
+                </h4>
+                <p className="text-sm whitespace-pre-wrap">{entry.issues}</p>
+              </div>
+            )}
+            
+            {entry.notes && (
+              <div className="border-l-2 border-muted pl-3">
+                <h4 className="text-sm font-semibold text-muted-foreground mb-1">Notlar</h4>
+                <p className="text-sm whitespace-pre-wrap">{entry.notes}</p>
+              </div>
+            )}
+            
+            {photos.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-2">
+                  <Image className="h-4 w-4" />
+                  Fotoğraflar ({photos.length})
+                </h4>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                  {photos.map((photo, index) => (
+                    <button
+                      key={index}
+                      onClick={() => openLightbox(index)}
+                      className="relative aspect-square rounded-md overflow-hidden border border-border hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <img
+                        src={photo}
+                        alt={`Fotoğraf ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex gap-2 mt-6">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => { setDetailOpen(false); onEdit?.(); }}
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Düzenle
+            </Button>
+            <Button
+              variant="secondary"
+              className="flex-1"
+              onClick={() => setDetailOpen(false)}
+            >
+              Kapat
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Photo Lightbox */}
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
