@@ -529,20 +529,20 @@ export default function Reports() {
                 title="Toplam Gelir"
                 value={formatCurrency(financialSummary.totalIncome)}
                 icon={TrendingUp}
-                href="/transactions"
+                href="/islemler"
               />
               <StatsCard
                 title="Toplam Gider"
                 value={formatCurrency(financialSummary.totalExpense)}
                 icon={TrendingDown}
-                href="/transactions"
+                href="/islemler"
               />
               <StatsCard
                 title="Net Kar"
                 value={formatCurrency(financialSummary.netProfit)}
                 icon={DollarSign}
                 description={financialSummary.netProfit >= 0 ? "Karlı" : "Zararda"}
-                href="/transactions"
+                href="/islemler"
               />
             </div>
           )}
@@ -762,26 +762,26 @@ export default function Reports() {
                   title="Toplam Görev"
                   value={taskStats.total}
                   icon={ClipboardList}
-                  href="/work-schedule"
+                  href="/is-programi"
                 />
                 <StatsCard
                   title="Tamamlandı"
                   value={taskStats.completed}
                   icon={CheckCircle2}
                   description={`%${taskStats.completionRate.toFixed(1)} tamamlanma`}
-                  href="/work-schedule"
+                  href="/is-programi"
                 />
                 <StatsCard
                   title="Devam Ediyor"
                   value={taskStats.inProgress}
                   icon={Clock}
-                  href="/work-schedule"
+                  href="/is-programi"
                 />
                 <StatsCard
                   title="Bekliyor"
                   value={taskStats.waiting}
                   icon={AlertCircle}
-                  href="/work-schedule"
+                  href="/is-programi"
                 />
               </div>
 
