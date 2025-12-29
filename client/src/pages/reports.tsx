@@ -529,17 +529,20 @@ export default function Reports() {
                 title="Toplam Gelir"
                 value={formatCurrency(financialSummary.totalIncome)}
                 icon={TrendingUp}
+                href="/transactions"
               />
               <StatsCard
                 title="Toplam Gider"
                 value={formatCurrency(financialSummary.totalExpense)}
                 icon={TrendingDown}
+                href="/transactions"
               />
               <StatsCard
                 title="Net Kar"
                 value={formatCurrency(financialSummary.netProfit)}
                 icon={DollarSign}
                 description={financialSummary.netProfit >= 0 ? "Karlı" : "Zararda"}
+                href="/transactions"
               />
             </div>
           )}
@@ -755,48 +758,31 @@ export default function Reports() {
             <>
               {/* Task Statistics */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Toplam Görev</CardTitle>
-                    <ClipboardList className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{taskStats.total}</div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Tamamlandı</CardTitle>
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-green-600">{taskStats.completed}</div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      %{taskStats.completionRate.toFixed(1)} tamamlanma
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Devam Ediyor</CardTitle>
-                    <Clock className="h-4 w-4 text-blue-600" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-blue-600">{taskStats.inProgress}</div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Bekliyor</CardTitle>
-                    <AlertCircle className="h-4 w-4 text-amber-600" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-amber-600">{taskStats.waiting}</div>
-                  </CardContent>
-                </Card>
+                <StatsCard
+                  title="Toplam Görev"
+                  value={taskStats.total}
+                  icon={ClipboardList}
+                  href="/work-schedule"
+                />
+                <StatsCard
+                  title="Tamamlandı"
+                  value={taskStats.completed}
+                  icon={CheckCircle2}
+                  description={`%${taskStats.completionRate.toFixed(1)} tamamlanma`}
+                  href="/work-schedule"
+                />
+                <StatsCard
+                  title="Devam Ediyor"
+                  value={taskStats.inProgress}
+                  icon={Clock}
+                  href="/work-schedule"
+                />
+                <StatsCard
+                  title="Bekliyor"
+                  value={taskStats.waiting}
+                  icon={AlertCircle}
+                  href="/work-schedule"
+                />
               </div>
 
               {/* Task Status Distribution */}
@@ -1091,108 +1077,141 @@ export default function Reports() {
                         title="Toplam Hakediş"
                         value={`${totalAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
                         icon={Receipt}
-                        data-testid="card-total-hakedis"
+                        href="/hakedis"
                       />
                       <StatsCard
                         title="Brüt Tutar"
                         value={`${totalGross.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
                         icon={TrendingUp}
                         description="Müteahhitlik ücreti dahil"
-                        data-testid="card-gross-hakedis"
+                        href="/hakedis"
                       />
                       <StatsCard
                         title="Avans Kesintisi"
                         value={`${totalAdvanceDeduction.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
                         icon={TrendingDown}
-                        data-testid="card-deduction-hakedis"
+                        href="/hakedis"
                       />
                       <StatsCard
                         title="Net Ödeme"
                         value={`${totalNetPayment.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
                         icon={DollarSign}
                         description="Ödenecek tutar"
-                        data-testid="card-net-hakedis"
+                        href="/hakedis"
                       />
                       <StatsCard
                         title="Alınan Ödemeler"
                         value={`${totalReceived.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
                         icon={CheckCircle2}
-                        data-testid="card-received-hakedis"
+                        href="/hakedis"
                       />
                     </div>
                   </>
                 );
               })()}
 
-              {/* Status Distribution Chart */}
-              {progressPayments.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <PieChart className="h-5 w-5" />
-                      Hakediş Durumu Dağılımı
-                    </CardTitle>
-                    <CardDescription>Ödeme durumlarına göre hakediş sayıları</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <RePieChart>
-                        <Pie
-                          data={[
-                            { name: 'Bekliyor', value: progressPayments.filter(p => p.status === 'Bekliyor').length },
-                            { name: 'Kısmi Ödendi', value: progressPayments.filter(p => p.status === 'Kısmi Ödendi').length },
-                            { name: 'Ödendi', value: progressPayments.filter(p => p.status === 'Ödendi').length }
-                          ].filter(item => item.value > 0)}
-                          dataKey="value"
-                          nameKey="name"
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={100}
-                          label={(entry) => `${entry.name}: ${entry.value}`}
-                        >
-                          {[
-                            { name: 'Bekliyor', color: 'hsl(var(--chart-3))' },
-                            { name: 'Kısmi Ödendi', color: 'hsl(var(--chart-2))' },
-                            { name: 'Ödendi', color: 'hsl(var(--chart-1))' }
-                          ].map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend />
-                      </RePieChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-              )}
+              {/* Status Distribution Chart - Filtered by selected project */}
+              {(() => {
+                const chartPayments = selectedProjectId !== "all" 
+                  ? progressPayments.filter(p => p.projectId === selectedProjectId)
+                  : progressPayments;
+                
+                if (chartPayments.length === 0) return null;
+                
+                return (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <PieChart className="h-5 w-5" />
+                        Hakediş Durumu Dağılımı
+                        {selectedProjectId !== "all" && (
+                          <span className="text-primary text-base font-normal">- {selectedProjectName}</span>
+                        )}
+                      </CardTitle>
+                      <CardDescription>
+                        {selectedProjectId !== "all" 
+                          ? `${selectedProjectName} projesinin ödeme durumlarına göre hakediş sayıları`
+                          : "Ödeme durumlarına göre hakediş sayıları"
+                        }
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <RePieChart>
+                          <Pie
+                            data={[
+                              { name: 'Bekliyor', value: chartPayments.filter(p => p.status === 'Bekliyor').length },
+                              { name: 'Kısmi Ödendi', value: chartPayments.filter(p => p.status === 'Kısmi Ödendi').length },
+                              { name: 'Ödendi', value: chartPayments.filter(p => p.status === 'Ödendi').length }
+                            ].filter(item => item.value > 0)}
+                            dataKey="value"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={100}
+                            label={(entry) => `${entry.name}: ${entry.value}`}
+                          >
+                            {[
+                              { name: 'Bekliyor', color: 'hsl(var(--chart-3))' },
+                              { name: 'Kısmi Ödendi', color: 'hsl(var(--chart-2))' },
+                              { name: 'Ödendi', color: 'hsl(var(--chart-1))' }
+                            ].map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                          <Legend />
+                        </RePieChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                );
+              })()}
 
-              {/* Payments by Project */}
-              {progressPayments.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <FolderKanban className="h-5 w-5" />
-                      Projelere Göre Hakediş Özeti
-                    </CardTitle>
-                    <CardDescription>Her projenin toplam hakediş tutarları ve ödeme durumu</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Proje Adı</TableHead>
-                          <TableHead className="text-right">Hakediş Sayısı</TableHead>
-                          <TableHead className="text-right w-[200px] min-w-[200px]">Toplam Tutar</TableHead>
-                          <TableHead className="text-right w-[200px] min-w-[200px]">Alınan</TableHead>
-                          <TableHead className="text-right w-[200px] min-w-[200px]">Kalan</TableHead>
-                          <TableHead className="text-right">Tamamlanma</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {projects
-                          .filter(project => progressPayments.some(p => p.projectId === project.id))
-                          .map(project => {
-                            const projectPayments = progressPayments.filter(p => p.projectId === project.id);
+              {/* Payments by Project - Filtered by selected project */}
+              {(() => {
+                const tablePayments = selectedProjectId !== "all" 
+                  ? progressPayments.filter(p => p.projectId === selectedProjectId)
+                  : progressPayments;
+                
+                const relevantProjects = selectedProjectId !== "all"
+                  ? projects.filter(p => p.id === selectedProjectId)
+                  : projects.filter(project => progressPayments.some(p => p.projectId === project.id));
+                
+                if (relevantProjects.length === 0) return null;
+                
+                return (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <FolderKanban className="h-5 w-5" />
+                        Projelere Göre Hakediş Özeti
+                        {selectedProjectId !== "all" && (
+                          <span className="text-primary text-base font-normal">- {selectedProjectName}</span>
+                        )}
+                      </CardTitle>
+                      <CardDescription>
+                        {selectedProjectId !== "all" 
+                          ? `${selectedProjectName} projesinin toplam hakediş tutarları ve ödeme durumu`
+                          : "Her projenin toplam hakediş tutarları ve ödeme durumu"
+                        }
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Proje Adı</TableHead>
+                            <TableHead className="text-right">Hakediş Sayısı</TableHead>
+                            <TableHead className="text-right w-[200px] min-w-[200px]">Toplam Tutar</TableHead>
+                            <TableHead className="text-right w-[200px] min-w-[200px]">Alınan</TableHead>
+                            <TableHead className="text-right w-[200px] min-w-[200px]">Kalan</TableHead>
+                            <TableHead className="text-right">Tamamlanma</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {relevantProjects.map(project => {
+                            const projectPayments = tablePayments.filter(p => p.projectId === project.id);
                             const totalAmount = projectPayments.reduce((sum, p) => sum + parseFloat(p.amount as string), 0);
                             const totalReceived = projectPayments.reduce((sum, p) => sum + parseFloat(p.receivedAmount as string), 0);
                             const remaining = totalAmount - totalReceived;
@@ -1222,11 +1241,12 @@ export default function Reports() {
                               </TableRow>
                             );
                           })}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-              )}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                );
+              })()}
 
               {/* Empty State */}
               {progressPayments.length === 0 && (
