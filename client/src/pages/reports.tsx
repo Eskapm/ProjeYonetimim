@@ -1,11 +1,11 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { PrintButton } from "@/components/print-button";
 import { PrintHeader } from "@/components/print-header";
 import { StatsCard } from "@/components/stats-card";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { FileText, BarChart3, TrendingUp, TrendingDown, DollarSign, PieChart, Calendar, Receipt, ClipboardList, FolderKanban, CheckCircle2, Clock, XCircle, AlertCircle, Filter } from "lucide-react";
-import { useProjectContext } from "@/hooks/use-project-context";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -28,25 +28,16 @@ import { Progress } from "@/components/ui/progress";
 type DateFilter = "all" | "this-month" | "this-year" | "custom";
 
 export default function Reports() {
-  const { activeProjectId: contextProjectId } = useProjectContext();
+  const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("financial");
   const [dateFilter, setDateFilter] = useState<DateFilter>("this-year");
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
   
-  // Advanced multi-level filters - use active project from context as initial default
-  const hasInitializedFromContext = useRef(false);
+  // Advanced multi-level filters - default to "all" (Tüm Projeler)
   const [selectedProjectId, setSelectedProjectId] = useState<string>("all");
   const [selectedWorkGroup, setSelectedWorkGroup] = useState<string>("all");
   const [selectedCostGroup, setSelectedCostGroup] = useState<string>("all");
-  
-  // Initialize filter from context on first mount only
-  useEffect(() => {
-    if (!hasInitializedFromContext.current && contextProjectId) {
-      setSelectedProjectId(contextProjectId);
-      hasInitializedFromContext.current = true;
-    }
-  }, [contextProjectId]);
 
   // Fetch data
   const { data: transactions = [], isLoading: transactionsLoading } = useQuery<TransactionWithProject[]>({
@@ -219,6 +210,7 @@ export default function Reports() {
   // Project financial analysis
   const projectFinancials = useMemo(() => {
     const projectMap: Record<string, {
+      projectId: string;
       name: string;
       income: number;
       expense: number;
@@ -228,6 +220,7 @@ export default function Reports() {
     filteredTransactions.forEach((t) => {
       if (!projectMap[t.projectId]) {
         projectMap[t.projectId] = {
+          projectId: t.projectId,
           name: t.projectName,
           income: 0,
           expense: 0,
@@ -242,8 +235,9 @@ export default function Reports() {
       }
     });
 
-    return Object.values(projectMap).map((p) => ({
+    return Object.entries(projectMap).map(([id, p]) => ({
       ...p,
+      projectId: id,
       profit: p.income - p.expense,
     })).sort((a, b) => b.profit - a.profit);
   }, [filteredTransactions]);
@@ -309,6 +303,7 @@ export default function Reports() {
   const projectCompletion = useMemo(() => {
     const projectMap = new Map(projects.map(p => [p.id, p]));
     const projectTasksMap: Record<string, { 
+      projectId: string;
       name: string; 
       total: number; 
       completed: number; 
@@ -323,6 +318,7 @@ export default function Reports() {
 
       if (!projectTasksMap[task.projectId]) {
         projectTasksMap[task.projectId] = {
+          projectId: task.projectId,
           name: project.name,
           total: 0,
           completed: 0,
@@ -529,20 +525,17 @@ export default function Reports() {
                 title="Toplam Gelir"
                 value={formatCurrency(financialSummary.totalIncome)}
                 icon={TrendingUp}
-                href="/islemler"
               />
               <StatsCard
                 title="Toplam Gider"
                 value={formatCurrency(financialSummary.totalExpense)}
                 icon={TrendingDown}
-                href="/islemler"
               />
               <StatsCard
                 title="Net Kar"
                 value={formatCurrency(financialSummary.netProfit)}
                 icon={DollarSign}
                 description={financialSummary.netProfit >= 0 ? "Karlı" : "Zararda"}
-                href="/islemler"
               />
             </div>
           )}
@@ -707,7 +700,12 @@ export default function Reports() {
                   </TableHeader>
                   <TableBody>
                     {projectFinancials.map((project) => (
-                      <TableRow key={project.name}>
+                      <TableRow 
+                        key={project.projectId}
+                        className="cursor-pointer"
+                        onClick={() => setLocation(`/projeler/${project.projectId}`)}
+                        data-testid={`row-project-financial-${project.projectId}`}
+                      >
                         <TableCell className="font-medium">{project.name}</TableCell>
                         <TableCell className="text-right font-mono text-green-600 dark:text-green-400">
                           {formatCurrency(project.income)}
@@ -762,26 +760,22 @@ export default function Reports() {
                   title="Toplam Görev"
                   value={taskStats.total}
                   icon={ClipboardList}
-                  href="/is-programi"
                 />
                 <StatsCard
                   title="Tamamlandı"
                   value={taskStats.completed}
                   icon={CheckCircle2}
                   description={`%${taskStats.completionRate.toFixed(1)} tamamlanma`}
-                  href="/is-programi"
                 />
                 <StatsCard
                   title="Devam Ediyor"
                   value={taskStats.inProgress}
                   icon={Clock}
-                  href="/is-programi"
                 />
                 <StatsCard
                   title="Bekliyor"
                   value={taskStats.waiting}
                   icon={AlertCircle}
-                  href="/is-programi"
                 />
               </div>
 
@@ -836,7 +830,12 @@ export default function Reports() {
                       </TableHeader>
                       <TableBody>
                         {projectCompletion.map((project) => (
-                          <TableRow key={project.name}>
+                          <TableRow 
+                            key={project.projectId}
+                            className="cursor-pointer"
+                            onClick={() => setLocation("/is-programi")}
+                            data-testid={`row-project-completion-${project.projectId}`}
+                          >
                             <TableCell className="font-medium">{project.name}</TableCell>
                             <TableCell className="text-center">{project.total}</TableCell>
                             <TableCell className="text-center">{project.completed}</TableCell>
@@ -985,7 +984,12 @@ export default function Reports() {
                       </TableHeader>
                       <TableBody>
                         {filteredProjects.map((project) => (
-                          <TableRow key={project.id}>
+                          <TableRow 
+                            key={project.id}
+                            className="cursor-pointer"
+                            onClick={() => setLocation(`/projeler/${project.id}`)}
+                            data-testid={`row-project-detail-${project.id}`}
+                          >
                             <TableCell className="font-medium">{project.name}</TableCell>
                             <TableCell>{project.location}</TableCell>
                             <TableCell className="text-right font-mono">
@@ -1077,33 +1081,28 @@ export default function Reports() {
                         title="Toplam Hakediş"
                         value={`${totalAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
                         icon={Receipt}
-                        href="/hakedis"
                       />
                       <StatsCard
                         title="Brüt Tutar"
                         value={`${totalGross.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
                         icon={TrendingUp}
                         description="Müteahhitlik ücreti dahil"
-                        href="/hakedis"
                       />
                       <StatsCard
                         title="Avans Kesintisi"
                         value={`${totalAdvanceDeduction.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
                         icon={TrendingDown}
-                        href="/hakedis"
                       />
                       <StatsCard
                         title="Net Ödeme"
                         value={`${totalNetPayment.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
                         icon={DollarSign}
                         description="Ödenecek tutar"
-                        href="/hakedis"
                       />
                       <StatsCard
                         title="Alınan Ödemeler"
                         value={`${totalReceived.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`}
                         icon={CheckCircle2}
-                        href="/hakedis"
                       />
                     </div>
                   </>
@@ -1218,7 +1217,12 @@ export default function Reports() {
                             const completionRate = totalAmount > 0 ? (totalReceived / totalAmount) * 100 : 0;
 
                             return (
-                              <TableRow key={project.id}>
+                              <TableRow 
+                                key={project.id}
+                                className="cursor-pointer"
+                                onClick={() => setLocation("/hakedis")}
+                                data-testid={`row-hakedis-project-${project.id}`}
+                              >
                                 <TableCell className="font-medium">{project.name}</TableCell>
                                 <TableCell className="text-right">{projectPayments.length}</TableCell>
                                 <TableCell className="text-right font-mono">
