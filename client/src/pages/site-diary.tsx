@@ -39,7 +39,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Search, Calendar as CalendarIcon, Loader2, Image, X, Camera } from "lucide-react";
+import { Plus, Search, Calendar as CalendarIcon, Loader2, Image, X, Camera, FolderOpen } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertSiteDiarySchema, type InsertSiteDiary, type SiteDiary, type Project } from "@shared/schema";
@@ -729,6 +729,7 @@ export default function SiteDiary() {
                       </button>
                     </div>
                   ))}
+                  {/* Camera button - opens camera on mobile */}
                   <label
                     className={cn(
                       "w-20 h-20 flex flex-col items-center justify-center border-2 border-dashed rounded-md cursor-pointer",
@@ -766,14 +767,63 @@ export default function SiteDiary() {
                         }
                         e.target.value = "";
                       }}
-                      data-testid="input-photo-upload"
+                      data-testid="input-photo-camera"
                     />
                     {isUploadingPhoto ? (
                       <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                     ) : (
                       <>
                         <Camera className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground mt-1">Çek/Ekle</span>
+                        <span className="text-xs text-muted-foreground mt-1">Çek</span>
+                      </>
+                    )}
+                  </label>
+                  
+                  {/* File picker button - opens file selector */}
+                  <label
+                    className={cn(
+                      "w-20 h-20 flex flex-col items-center justify-center border-2 border-dashed rounded-md cursor-pointer",
+                      "hover:border-primary hover:bg-muted/50 transition-colors",
+                      isUploadingPhoto && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={isUploadingPhoto}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        
+                        setIsUploadingPhoto(true);
+                        try {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            const base64 = reader.result as string;
+                            setPhotoToEdit(base64);
+                            setIsEditorOpen(true);
+                            setIsUploadingPhoto(false);
+                          };
+                          reader.readAsDataURL(file);
+                        } catch (error) {
+                          toast({
+                            title: "Hata",
+                            description: "Fotoğraf yüklenirken bir hata oluştu",
+                            variant: "destructive",
+                          });
+                          setIsUploadingPhoto(false);
+                        }
+                        e.target.value = "";
+                      }}
+                      data-testid="input-photo-file"
+                    />
+                    {isUploadingPhoto ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    ) : (
+                      <>
+                        <FolderOpen className="h-5 w-5 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground mt-1">Ekle</span>
                       </>
                     )}
                   </label>
