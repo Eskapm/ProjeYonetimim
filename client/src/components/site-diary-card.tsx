@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Calendar, Cloud, Users, AlertCircle, Edit, Trash2, Sun, CloudRain, Snowflake, Wind, Image, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { Calendar, Cloud, Users, AlertCircle, Edit, Trash2, Sun, CloudRain, Snowflake, Wind, Image, ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 interface SiteDiaryEntry {
@@ -37,20 +38,36 @@ export function SiteDiaryCard({ entry, onEdit, onDelete }: SiteDiaryCardProps) {
   const WeatherIcon = entry.weather ? weatherIcons[entry.weather] || Cloud : Cloud;
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [zoomLevel, setZoomLevel] = useState(1);
   
   const photos = entry.photos || [];
   
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
+    setZoomLevel(1);
     setLightboxOpen(true);
   };
   
   const nextPhoto = () => {
     setLightboxIndex((prev) => (prev + 1) % photos.length);
+    setZoomLevel(1);
   };
   
   const prevPhoto = () => {
     setLightboxIndex((prev) => (prev - 1 + photos.length) % photos.length);
+    setZoomLevel(1);
+  };
+  
+  const zoomIn = () => {
+    setZoomLevel((prev) => Math.min(prev + 0.5, 5));
+  };
+  
+  const zoomOut = () => {
+    setZoomLevel((prev) => Math.max(prev - 0.5, 0.5));
+  };
+  
+  const resetZoom = () => {
+    setZoomLevel(1);
   };
   
   return (
@@ -167,15 +184,22 @@ export function SiteDiaryCard({ entry, onEdit, onDelete }: SiteDiaryCardProps) {
 
       {/* Photo Lightbox */}
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
-        <DialogContent className="max-w-4xl p-0 bg-black/95 border-none">
-          <div className="relative flex items-center justify-center min-h-[60vh]">
-            {photos.length > 0 && (
-              <img
-                src={photos[lightboxIndex]}
-                alt={`Fotoğraf ${lightboxIndex + 1}`}
-                className="max-w-full max-h-[80vh] object-contain"
-              />
-            )}
+        <DialogContent className="max-w-4xl p-0 bg-black/95 border-none" aria-describedby={undefined}>
+          <VisuallyHidden>
+            <DialogTitle>Fotoğraf Görüntüleme</DialogTitle>
+          </VisuallyHidden>
+          <div className="relative flex flex-col items-center justify-center min-h-[60vh]">
+            {/* Image container with zoom */}
+            <div className="overflow-auto max-w-full max-h-[70vh] flex items-center justify-center">
+              {photos.length > 0 && (
+                <img
+                  src={photos[lightboxIndex]}
+                  alt={`Fotoğraf ${lightboxIndex + 1}`}
+                  className="object-contain transition-transform duration-200"
+                  style={{ transform: `scale(${zoomLevel})` }}
+                />
+              )}
+            </div>
             
             {/* Close button */}
             <Button
@@ -194,7 +218,7 @@ export function SiteDiaryCard({ entry, onEdit, onDelete }: SiteDiaryCardProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute left-2 text-white"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 text-white"
                   onClick={prevPhoto}
                   data-testid="button-prev-photo"
                 >
@@ -203,7 +227,7 @@ export function SiteDiaryCard({ entry, onEdit, onDelete }: SiteDiaryCardProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-2 text-white"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-white"
                   onClick={nextPhoto}
                   data-testid="button-next-photo"
                 >
@@ -211,6 +235,42 @@ export function SiteDiaryCard({ entry, onEdit, onDelete }: SiteDiaryCardProps) {
                 </Button>
               </>
             )}
+            
+            {/* Zoom controls */}
+            <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/50 rounded-full px-3 py-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white h-8 w-8"
+                onClick={zoomOut}
+                disabled={zoomLevel <= 0.5}
+                data-testid="button-zoom-out"
+              >
+                <ZoomOut className="h-5 w-5" />
+              </Button>
+              <span className="text-white text-sm min-w-[3rem] text-center">
+                {Math.round(zoomLevel * 100)}%
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white h-8 w-8"
+                onClick={zoomIn}
+                disabled={zoomLevel >= 5}
+                data-testid="button-zoom-in"
+              >
+                <ZoomIn className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white h-8 w-8"
+                onClick={resetZoom}
+                data-testid="button-zoom-reset"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+            </div>
             
             {/* Photo counter */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-3 py-1 rounded-full">

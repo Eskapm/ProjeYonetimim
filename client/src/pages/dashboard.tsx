@@ -177,7 +177,7 @@ export default function Dashboard() {
 
   const handleAddProject = () => {
     // Navigate to projects page with action=new parameter
-    setLocation("/projects?action=new");
+    setLocation("/projeler?action=new");
   };
 
   const handleEditProject = (project: Project) => {

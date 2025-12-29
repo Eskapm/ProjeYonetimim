@@ -112,7 +112,7 @@ export default function SiteDiary() {
     if (dateParam && fromPuantaj === "true" && activeProjectId) {
       setUrlParamsProcessed(true);
       // Clear URL params
-      setLocation("/site-diary", { replace: true });
+      setLocation("/santiye-defteri", { replace: true });
       
       // Reset photos
       setPhotos([]);
