@@ -241,16 +241,23 @@ export default function Projects() {
     };
   };
 
-  // Handle query parameter for editing
+  // Handle query parameter for editing or adding new project
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const editId = params.get('edit');
+    const action = params.get('action');
     
     if (editId && projects.length > 0 && !isDialogOpen) {
       const project = projects.find(p => p.id === editId);
       if (project) {
         handleEditProject(project);
       }
+    } else if (action === 'new' && !isDialogOpen) {
+      handleAddProject();
+      // Clear the action parameter after opening dialog
+      const url = new URL(window.location.href);
+      url.searchParams.delete('action');
+      window.history.replaceState({}, '', url.pathname + url.search);
     }
   }, [location, projects, isDialogOpen, handleEditProject]);
 
