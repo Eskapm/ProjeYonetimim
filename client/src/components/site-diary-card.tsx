@@ -184,96 +184,86 @@ export function SiteDiaryCard({ entry, onEdit, onDelete }: SiteDiaryCardProps) {
 
       {/* Photo Lightbox */}
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
-        <DialogContent className="max-w-4xl p-0 bg-black/95 border-none" aria-describedby={undefined}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none" aria-describedby={undefined}>
           <VisuallyHidden>
             <DialogTitle>Fotoğraf Görüntüleme</DialogTitle>
           </VisuallyHidden>
-          <div className="relative flex flex-col items-center justify-center min-h-[60vh]">
+          <div className="relative flex items-center justify-center min-h-[70vh] w-full">
+            {/* Close button - prominent */}
+            <button
+              className="absolute top-4 right-4 z-50 bg-white/20 rounded-full p-2 text-white"
+              onClick={() => setLightboxOpen(false)}
+              data-testid="button-close-lightbox"
+            >
+              <X className="h-8 w-8" />
+            </button>
+            
+            {/* Left navigation arrow */}
+            {photos.length > 1 && (
+              <button
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-50 bg-white/20 rounded-r-lg p-3 text-white"
+                onClick={prevPhoto}
+                data-testid="button-prev-photo"
+              >
+                <ChevronLeft className="h-10 w-10" />
+              </button>
+            )}
+            
             {/* Image container with zoom */}
-            <div className="overflow-auto max-w-full max-h-[70vh] flex items-center justify-center">
+            <div className="overflow-auto max-w-full max-h-[80vh] flex items-center justify-center px-16">
               {photos.length > 0 && (
                 <img
                   src={photos[lightboxIndex]}
                   alt={`Fotoğraf ${lightboxIndex + 1}`}
-                  className="object-contain transition-transform duration-200"
+                  className="object-contain transition-transform duration-200 max-h-[75vh]"
                   style={{ transform: `scale(${zoomLevel})` }}
                 />
               )}
             </div>
             
-            {/* Close button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2 text-white"
-              onClick={() => setLightboxOpen(false)}
-              data-testid="button-close-lightbox"
-            >
-              <X className="h-6 w-6" />
-            </Button>
-            
-            {/* Navigation buttons - always visible for better UX */}
+            {/* Right navigation arrow */}
             {photos.length > 1 && (
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white bg-black/40 rounded-full h-12 w-12"
-                  onClick={prevPhoto}
-                  data-testid="button-prev-photo"
-                >
-                  <ChevronLeft className="h-10 w-10" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-black/40 rounded-full h-12 w-12"
-                  onClick={nextPhoto}
-                  data-testid="button-next-photo"
-                >
-                  <ChevronRight className="h-10 w-10" />
-                </Button>
-              </>
+              <button
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-50 bg-white/20 rounded-l-lg p-3 text-white"
+                onClick={nextPhoto}
+                data-testid="button-next-photo"
+              >
+                <ChevronRight className="h-10 w-10" />
+              </button>
             )}
             
-            {/* Zoom controls */}
-            <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/50 rounded-full px-3 py-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white h-8 w-8"
+            {/* Zoom controls - bottom center */}
+            <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-black/60 rounded-full px-4 py-2">
+              <button
+                className="text-white disabled:opacity-50"
                 onClick={zoomOut}
                 disabled={zoomLevel <= 0.5}
                 data-testid="button-zoom-out"
               >
-                <ZoomOut className="h-5 w-5" />
-              </Button>
-              <span className="text-white text-sm min-w-[3rem] text-center">
+                <ZoomOut className="h-6 w-6" />
+              </button>
+              <span className="text-white text-sm min-w-[3.5rem] text-center font-medium">
                 {Math.round(zoomLevel * 100)}%
               </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white h-8 w-8"
+              <button
+                className="text-white disabled:opacity-50"
                 onClick={zoomIn}
                 disabled={zoomLevel >= 5}
                 data-testid="button-zoom-in"
               >
-                <ZoomIn className="h-5 w-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white h-8 w-8"
+                <ZoomIn className="h-6 w-6" />
+              </button>
+              <button
+                className="text-white ml-2"
                 onClick={resetZoom}
                 data-testid="button-zoom-reset"
               >
-                <RotateCcw className="h-4 w-4" />
-              </Button>
+                <RotateCcw className="h-5 w-5" />
+              </button>
             </div>
             
             {/* Photo counter */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-3 py-1 rounded-full">
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm bg-black/60 px-4 py-2 rounded-full font-medium">
               {lightboxIndex + 1} / {photos.length}
             </div>
           </div>
