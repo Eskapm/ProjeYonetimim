@@ -44,6 +44,7 @@ import {
   type InsertTransaction,
   type Transaction,
   type Project,
+  type Subcontractor,
   transactionTypeEnum,
   isGrubuEnum,
   rayicGrubuEnum,
@@ -55,6 +56,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 interface TransactionWithProject extends Transaction {
   projectName: string;
+  subcontractorName?: string;
+  subcontractorId: string | null;
 }
 
 export default function Transactions() {
@@ -80,6 +83,10 @@ export default function Transactions() {
 
   const { data: projects = [], isLoading: isLoadingProjects } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
+  });
+
+  const { data: subcontractors = [] } = useQuery<Subcontractor[]>({
+    queryKey: ["/api/subcontractors"],
   });
 
   const createTransactionMutation = useMutation({
@@ -192,11 +199,12 @@ export default function Transactions() {
       isGrubu: "",
       rayicGrubu: "",
       invoiceNumber: "",
+      subcontractorId: "",
     });
     setIsDialogOpen(true);
   };
 
-  const handleEditTransaction = (transaction: Transaction) => {
+  const handleEditTransaction = (transaction: TransactionWithProject) => {
     setEditingTransaction(transaction);
     form.reset({
       projectId: transaction.projectId,
@@ -207,6 +215,7 @@ export default function Transactions() {
       isGrubu: transaction.isGrubu,
       rayicGrubu: transaction.rayicGrubu,
       invoiceNumber: transaction.invoiceNumber ?? "",
+      subcontractorId: transaction.subcontractorId ?? "",
     });
     setIsDialogOpen(true);
   };
@@ -224,12 +233,16 @@ export default function Transactions() {
   const transactionsWithProjects: TransactionWithProject[] = useMemo(() => {
     return transactions.map((transaction) => {
       const project = projects.find((p) => p.id === transaction.projectId);
+      const subcontractor = transaction.subcontractorId 
+        ? subcontractors.find((s) => s.id === transaction.subcontractorId)
+        : null;
       return {
         ...transaction,
         projectName: project?.name || "Bilinmeyen Proje",
+        subcontractorName: subcontractor?.name,
       };
     });
-  }, [transactions, projects]);
+  }, [transactions, projects, subcontractors]);
 
   const filteredTransactions = transactionsWithProjects.filter((transaction) => {
     const matchesSearch =
@@ -652,6 +665,34 @@ export default function Transactions() {
                     </FormItem>
                   )}
                 />
+
+                {form.watch("type") === "Gider" && (
+                  <FormField
+                    control={form.control}
+                    name="subcontractorId"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Taşeron/Tedarikçi</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-transaction-subcontractor">
+                              <SelectValue placeholder="Ödemenin yapıldığı taşeron/tedarikçi seçin" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="">Belirtilmedi</SelectItem>
+                            {subcontractors.map((sub) => (
+                              <SelectItem key={sub.id} value={sub.id}>
+                                {sub.name} {sub.type ? `(${sub.type})` : ''}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <FormField
                   control={form.control}

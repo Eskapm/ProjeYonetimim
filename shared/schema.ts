@@ -157,6 +157,7 @@ export const transactions = pgTable("transactions", {
   isGrubu: text("is_grubu").notNull(),
   rayicGrubu: text("rayic_grubu").notNull(),
   invoiceNumber: text("invoice_number"),
+  subcontractorId: varchar("subcontractor_id"), // Gider için taşeron/tedarikçi bağlantısı
   progressPaymentId: varchar("progress_payment_id"), // Hangi hakedişe dahil edildiği
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -169,9 +170,10 @@ export const insertTransactionSchema = createInsertSchema(transactions).omit({
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Transaction = typeof transactions.$inferSelect;
 
-// Extended type for transactions with project information
+// Extended type for transactions with project and subcontractor information
 export interface TransactionWithProject extends Transaction {
   projectName: string;
+  subcontractorName?: string;
 }
 
 // Faturalar tablosu
