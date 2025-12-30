@@ -8,9 +8,10 @@ interface ExportToExcelProps {
   filename: string;
   sheetName?: string;
   documentTitle?: string;
+  testId?: string;
 }
 
-export function ExportToExcel({ data, filename, sheetName = "Sayfa1", documentTitle }: ExportToExcelProps) {
+export function ExportToExcel({ data, filename, sheetName = "Sayfa1", documentTitle, testId }: ExportToExcelProps) {
   const handleExport = () => {
     if (!data || data.length === 0) {
       alert("Dışa aktarılacak veri yok");
@@ -74,7 +75,7 @@ export function ExportToExcel({ data, filename, sheetName = "Sayfa1", documentTi
     <Button 
       variant="outline" 
       onClick={handleExport}
-      data-testid="button-export-excel"
+      data-testid={testId || "button-export-excel"}
       className="no-print"
     >
       <FileSpreadsheet className="h-4 w-4 mr-2" />
