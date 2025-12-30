@@ -185,6 +185,8 @@ export const transactions = pgTable("transactions", {
   paymentMethod: text("payment_method"), // Nakit, Havale/EFT, Çek, Kredi Kartı
   checkDueDate: date("check_due_date"), // Çek için vade tarihi
   receiptNumber: text("receipt_number"), // Makbuz numarası
+  // Fatura bağlantısı (çift yönlü entegrasyon)
+  linkedInvoiceId: varchar("linked_invoice_id"), // Bağlı fatura ID'si
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -201,6 +203,7 @@ export const insertTransactionSchema = createInsertSchema(transactions).omit({
   paymentMethod: z.string().nullable().optional(),
   checkDueDate: z.string().nullable().optional(),
   receiptNumber: z.string().nullable().optional(),
+  linkedInvoiceId: z.string().nullable().optional(),
 });
 
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
@@ -232,12 +235,16 @@ export const invoices = pgTable("invoices", {
   paidAmount: decimal("paid_amount", { precision: 12, scale: 2 }).default("0"), // Ödenen tutar
   description: text("description"),
   notes: text("notes"),
+  // İşlem bağlantısı (çift yönlü entegrasyon)
+  linkedTransactionId: varchar("linked_transaction_id"), // Bağlı işlem ID'si
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertInvoiceSchema = createInsertSchema(invoices).omit({
   id: true,
   createdAt: true,
+}).extend({
+  linkedTransactionId: z.string().nullable().optional(),
 });
 
 export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
