@@ -288,6 +288,8 @@ export default function Transactions() {
     "Tarih": transaction.date,
     "Proje": transaction.projectName,
     "Tür": transaction.type,
+    "Gelir Türü": transaction.type === "Gelir" ? (transaction.incomeKind || "-") : "-",
+    "Ödeme Yöntemi": transaction.type === "Gelir" ? (transaction.paymentMethod || "-") : "-",
     "Tutar": parseFloat(transaction.amount).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
     "İş Grubu": transaction.isGrubu || "-",
     "Rayiç Grubu": transaction.rayicGrubu || "-",

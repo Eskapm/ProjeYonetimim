@@ -28,6 +28,7 @@ import Hakedis from "@/pages/hakedis";
 import Contracts from "@/pages/contracts";
 import PaymentPlans from "@/pages/payment-plans";
 import Documents from "@/pages/documents";
+import Pricing from "@/pages/pricing";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
 import logoUrl from "@assets/ESKA LOGO TASARIMI_1761497797352.png";
@@ -99,6 +100,7 @@ function Router() {
       <ProtectedRoute path="/sozlesmeler" component={Contracts} />
       <ProtectedRoute path="/odeme-planlari" component={PaymentPlans} />
       <ProtectedRoute path="/dokumanlar" component={Documents} />
+      <ProtectedRoute path="/abonelik" component={Pricing} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

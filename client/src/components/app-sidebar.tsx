@@ -13,7 +13,8 @@ import {
   Receipt,
   FileSignature,
   Wallet,
-  FolderOpen
+  FolderOpen,
+  CreditCard
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
@@ -45,6 +46,7 @@ const menuItems = [
   { title: "Taşeron/Tedarikçi", url: "/taseronlar", icon: Users },
   { title: "Müşteriler", url: "/musteriler", icon: UserCircle },
   { title: "Raporlar", url: "/raporlar", icon: BarChart3 },
+  { title: "Abonelik Planları", url: "/abonelik", icon: CreditCard },
 ];
 
 export function AppSidebar() {

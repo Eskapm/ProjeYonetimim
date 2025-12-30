@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { type TransactionWithProject, type Project, type Invoice, type Task, type ProgressPayment, type Timesheet, type SiteDiary, type Subcontractor, type BudgetItem } from "@shared/schema";
+import { type TransactionWithProject, type Project, type Invoice, type Task, type ProgressPayment, type Timesheet, type SiteDiary, type Subcontractor, type BudgetItem, type PaymentPlan } from "@shared/schema";
 import { calculateTaxSummary } from "@shared/taxCalculations";
 import { BarChart, Bar, PieChart as RePieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -97,7 +97,11 @@ export default function Reports() {
     queryKey: ["/api/budget-items"],
   });
 
-  const isLoading = transactionsLoading || projectsLoading || invoicesLoading || tasksLoading || paymentsLoading || timesheetsLoading || siteDiaryLoading || subcontractorsLoading || budgetLoading;
+  const { data: paymentPlans = [], isLoading: paymentPlansLoading } = useQuery<PaymentPlan[]>({
+    queryKey: ["/api/payment-plans"],
+  });
+
+  const isLoading = transactionsLoading || projectsLoading || invoicesLoading || tasksLoading || paymentsLoading || timesheetsLoading || siteDiaryLoading || subcontractorsLoading || budgetLoading || paymentPlansLoading;
 
   // Filter transactions by date and advanced filters (project, work group, cost group)
   const filteredTransactions = useMemo(() => {
@@ -214,14 +218,115 @@ export default function Reports() {
     };
   }, [filteredTransactions, invoices, dateFilter, customStartDate, customEndDate]);
 
+  // Calculate cash flow projections
+  const cashflowData = useMemo(() => {
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const months: { month: string; planned: number; actual: number; net: number }[] = [];
+    
+    // Get next 6 months
+    for (let i = 0; i < 6; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      const monthKey = date.toLocaleDateString('tr-TR', { month: 'short', year: 'numeric' });
+      const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+      const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
+      const isPastMonth = monthEnd < currentMonthStart;
+      const isCurrentMonth = monthStart <= now && monthEnd >= now;
+      const isFutureMonth = monthStart > now;
+      
+      // For past and current months, use actual transactions
+      let actualNet = 0;
+      if (isPastMonth || isCurrentMonth) {
+        const actualIncome = transactions
+          .filter(t => {
+            const tDate = new Date(t.date);
+            return t.type === 'Gelir' && tDate >= monthStart && tDate <= monthEnd;
+          })
+          .reduce((sum, t) => sum + safeNumber(t.amount), 0);
+        
+        const actualExpense = transactions
+          .filter(t => {
+            const tDate = new Date(t.date);
+            return t.type === 'Gider' && tDate >= monthStart && tDate <= monthEnd;
+          })
+          .reduce((sum, t) => sum + safeNumber(t.amount), 0);
+        
+        actualNet = actualIncome - actualExpense;
+      }
+      
+      // For future months, use pending payment plans only
+      let plannedNet = 0;
+      if (isFutureMonth) {
+        const plannedIncome = paymentPlans
+          .filter(p => {
+            const planDate = new Date(p.plannedDate);
+            return p.type === 'Gelir' && p.status === 'Bekliyor' && planDate >= monthStart && planDate <= monthEnd;
+          })
+          .reduce((sum, p) => sum + safeNumber(p.plannedAmount), 0);
+        
+        const plannedExpense = paymentPlans
+          .filter(p => {
+            const planDate = new Date(p.plannedDate);
+            return p.type === 'Gider' && p.status === 'Bekliyor' && planDate >= monthStart && planDate <= monthEnd;
+          })
+          .reduce((sum, p) => sum + safeNumber(p.plannedAmount), 0);
+        
+        plannedNet = plannedIncome - plannedExpense;
+      }
+      
+      months.push({
+        month: monthKey,
+        planned: plannedNet,
+        actual: actualNet,
+        net: isFutureMonth ? plannedNet : actualNet,
+      });
+    }
+    
+    // Calculate cumulative balance starting from current balance
+    let runningBalance = financialSummary.netProfit;
+    const cumulativeMonths = months.map((m, idx) => {
+      // For first month (current), don't add - it's already in the current balance
+      if (idx > 0) {
+        runningBalance += m.net;
+      }
+      return { ...m, cumulative: runningBalance };
+    });
+    
+    // Payment plan summaries - only pending
+    const pendingPayments = paymentPlans.filter(p => p.status === 'Bekliyor');
+    const overduePayments = paymentPlans.filter(p => {
+      const dueDate = new Date(p.plannedDate);
+      return p.status === 'Bekliyor' && dueDate < now;
+    });
+    
+    const totalPlannedIncome = paymentPlans
+      .filter(p => p.type === 'Gelir' && p.status === 'Bekliyor')
+      .reduce((sum, p) => sum + safeNumber(p.plannedAmount), 0);
+    
+    const totalPlannedExpense = paymentPlans
+      .filter(p => p.type === 'Gider' && p.status === 'Bekliyor')
+      .reduce((sum, p) => sum + safeNumber(p.plannedAmount), 0);
+    
+    return {
+      months: cumulativeMonths,
+      pendingPayments,
+      overduePayments,
+      totalPlannedIncome,
+      totalPlannedExpense,
+      currentBalance: financialSummary.netProfit,
+      projectedBalance: runningBalance,
+    };
+  }, [transactions, paymentPlans, financialSummary.netProfit]);
+
   // Group by work category (İş Grubu)
   const workGroupData = useMemo(() => {
     const groups: Record<string, number> = {};
     
     filteredTransactions
-      .filter((t) => t.type === "Gider")
+      .filter((t) => t.type === "Gider" && t.isGrubu)
       .forEach((t) => {
-        groups[t.isGrubu] = (groups[t.isGrubu] || 0) + safeNumber(t.amount);
+        const key = t.isGrubu!;
+        groups[key] = (groups[key] || 0) + safeNumber(t.amount);
       });
 
     return Object.entries(groups)
@@ -234,9 +339,10 @@ export default function Reports() {
     const groups: Record<string, number> = {};
     
     filteredTransactions
-      .filter((t) => t.type === "Gider")
+      .filter((t) => t.type === "Gider" && t.rayicGrubu)
       .forEach((t) => {
-        groups[t.rayicGrubu] = (groups[t.rayicGrubu] || 0) + safeNumber(t.amount);
+        const key = t.rayicGrubu!;
+        groups[key] = (groups[key] || 0) + safeNumber(t.amount);
       });
 
     return Object.entries(groups)
@@ -906,10 +1012,14 @@ export default function Reports() {
       </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4" data-testid="tabs-report-type">
+        <TabsList className="grid w-full grid-cols-5" data-testid="tabs-report-type">
           <TabsTrigger value="financial" data-testid="tab-financial">
             <Receipt className="h-4 w-4 mr-2" />
             Mali Raporlar
+          </TabsTrigger>
+          <TabsTrigger value="cashflow" data-testid="tab-cashflow">
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Nakit Akış
           </TabsTrigger>
           <TabsTrigger value="operational" data-testid="tab-operational">
             <ClipboardList className="h-4 w-4 mr-2" />
@@ -1881,6 +1991,199 @@ export default function Reports() {
                       <FolderKanban className="h-16 w-16 mx-auto mb-4 opacity-50" />
                       <p className="text-lg font-medium mb-2">Henüz proje bulunmuyor</p>
                       <p className="text-sm">Proje ekleyerek proje raporlarınızı görüntüleyebilirsiniz</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          )}
+        </TabsContent>
+
+        {/* Cash Flow Tab */}
+        <TabsContent value="cashflow" className="space-y-6">
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <Skeleton className="h-32" />
+              <Skeleton className="h-32" />
+              <Skeleton className="h-32" />
+              <Skeleton className="h-32" />
+            </div>
+          ) : (
+            <>
+              {/* Cash Flow Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <StatsCard
+                  title="Mevcut Bakiye"
+                  value={formatCurrency(cashflowData.currentBalance)}
+                  icon={Wallet}
+                  description={cashflowData.currentBalance >= 0 ? "Pozitif" : "Negatif"}
+                />
+                <StatsCard
+                  title="Tahmini Bakiye"
+                  value={formatCurrency(cashflowData.projectedBalance)}
+                  icon={Target}
+                  description="6 Aylık projeksiyon"
+                />
+                <StatsCard
+                  title="Beklenen Gelir"
+                  value={formatCurrency(cashflowData.totalPlannedIncome)}
+                  icon={TrendingUp}
+                  description={`${cashflowData.pendingPayments.filter(p => p.type === 'Gelir').length} bekleyen ödeme`}
+                />
+                <StatsCard
+                  title="Beklenen Gider"
+                  value={formatCurrency(cashflowData.totalPlannedExpense)}
+                  icon={TrendingDown}
+                  description={`${cashflowData.pendingPayments.filter(p => p.type === 'Gider').length} bekleyen ödeme`}
+                />
+              </div>
+
+              {/* Overdue Payments Warning */}
+              {cashflowData.overduePayments.length > 0 && (
+                <Card className="border-destructive">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-destructive">
+                      <AlertCircle className="h-5 w-5" />
+                      Gecikmiş Ödemeler ({cashflowData.overduePayments.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {cashflowData.overduePayments.slice(0, 5).map((payment) => {
+                        const project = projects.find(p => p.id === payment.projectId);
+                        return (
+                          <div key={payment.id} className="flex items-center justify-between p-2 bg-destructive/10 rounded-md">
+                            <div>
+                              <span className="font-medium">{payment.description}</span>
+                              <span className="text-sm text-muted-foreground ml-2">({project?.name || '-'})</span>
+                            </div>
+                            <div className="text-right">
+                              <Badge variant={payment.type === 'Gelir' ? 'default' : 'secondary'}>
+                                {payment.type}
+                              </Badge>
+                              <span className="ml-2 font-mono">
+                                {safeNumber(payment.plannedAmount).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Cash Flow Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5" />
+                    Nakit Akış Projeksiyonu (6 Ay)
+                  </CardTitle>
+                  <CardDescription>
+                    Planlanan ödemeler ve kümülatif bakiye tahmini
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[400px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={cashflowData.months}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`} />
+                        <Tooltip
+                          formatter={(value: number) =>
+                            `${value.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`
+                          }
+                          labelFormatter={(label) => `Dönem: ${label}`}
+                        />
+                        <Legend />
+                        <Bar dataKey="planned" name="Planlanan Net" fill="hsl(var(--primary))" />
+                        <Bar dataKey="actual" name="Gerçekleşen Net" fill="hsl(var(--accent))" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Cumulative Balance Line Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Kümülatif Bakiye Tahmini
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={cashflowData.months}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`} />
+                        <Tooltip
+                          formatter={(value: number) =>
+                            `${value.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`
+                          }
+                        />
+                        <Legend />
+                        <Line
+                          type="monotone"
+                          dataKey="cumulative"
+                          name="Kümülatif Bakiye"
+                          stroke="hsl(var(--primary))"
+                          strokeWidth={2}
+                          dot={{ fill: "hsl(var(--primary))" }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Monthly Breakdown Table */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Aylık Detay</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Dönem</TableHead>
+                        <TableHead className="text-right">Planlanan Net</TableHead>
+                        <TableHead className="text-right">Gerçekleşen Net</TableHead>
+                        <TableHead className="text-right">Kümülatif Bakiye</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {cashflowData.months.map((month) => (
+                        <TableRow key={month.month}>
+                          <TableCell className="font-medium">{month.month}</TableCell>
+                          <TableCell className={`text-right font-mono ${month.planned >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {month.planned.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL
+                          </TableCell>
+                          <TableCell className={`text-right font-mono ${month.actual >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {month.actual.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL
+                          </TableCell>
+                          <TableCell className={`text-right font-mono font-bold ${month.cumulative >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {month.cumulative.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+
+              {/* Empty State */}
+              {paymentPlans.length === 0 && (
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Wallet className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                      <p className="text-lg font-medium mb-2">Henüz ödeme planı bulunmuyor</p>
+                      <p className="text-sm">Ödeme planları ekleyerek nakit akış projeksiyonlarınızı görüntüleyebilirsiniz</p>
                     </div>
                   </CardContent>
                 </Card>

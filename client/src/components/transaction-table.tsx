@@ -133,6 +133,8 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
               <TableHead className="w-[110px] min-w-[110px] print:w-[80px] print:min-w-[80px]">Tarih</TableHead>
               <TableHead className="print:w-[80px] print:min-w-[80px]">Proje</TableHead>
               <TableHead className="print:w-[60px] print:min-w-[60px]">Tür</TableHead>
+              <TableHead className="print-hidden">Gelir Türü</TableHead>
+              <TableHead className="print-hidden">Ödeme Yöntemi</TableHead>
               <TableHead className="print:w-[70px] print:min-w-[70px]">İş Grubu</TableHead>
               <TableHead className="print:w-[70px] print:min-w-[70px]">Rayiç Grubu</TableHead>
               <TableHead className="print:w-[100px] print:min-w-[100px]">Açıklama</TableHead>
@@ -144,7 +146,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
           <TableBody>
             {transactions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
                   Henüz işlem kaydı bulunmamaktadır
                 </TableCell>
               </TableRow>
@@ -171,8 +173,14 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                         {transaction.type}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm">{transaction.isGrubu}</TableCell>
-                    <TableCell className="text-sm">{transaction.rayicGrubu}</TableCell>
+                    <TableCell className="text-sm">
+                      {transaction.type === "Gelir" ? (transaction.incomeKind || "-") : "-"}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {transaction.type === "Gelir" ? (transaction.paymentMethod || "-") : "-"}
+                    </TableCell>
+                    <TableCell className="text-sm">{transaction.isGrubu || "-"}</TableCell>
+                    <TableCell className="text-sm">{transaction.rayicGrubu || "-"}</TableCell>
                     <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
                       {transaction.description || '-'}
                     </TableCell>
@@ -266,7 +274,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                             </Badge>
                           </TableCell>
                           <TableCell className="text-sm">{transaction.isGrubu}</TableCell>
-                          <TableCell className="text-sm">{transaction.rayicGrubu}</TableCell>
+                          <TableCell className="text-sm">{transaction.rayicGrubu || "-"}</TableCell>
                           <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
                             {transaction.description || '-'}
                           </TableCell>
