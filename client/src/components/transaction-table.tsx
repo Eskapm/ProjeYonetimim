@@ -23,7 +23,7 @@ interface TransactionWithProject {
   rayicGrubu: string;
   description: string | null;
   invoiceNumber: string | null;
-  subcontractorId?: string | null;
+  subcontractorId: string | null;
   subcontractorName?: string;
   progressPaymentId: string | null;
   createdAt: Date | null;

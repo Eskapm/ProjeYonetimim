@@ -179,6 +179,7 @@ export default function Transactions() {
       ...data,
       description: data.description || null,
       invoiceNumber: data.invoiceNumber || null,
+      subcontractorId: data.subcontractorId || null,
     };
 
     if (editingTransaction) {
