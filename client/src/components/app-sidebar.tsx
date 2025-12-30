@@ -10,7 +10,10 @@ import {
   Calculator,
   BookOpen,
   ClipboardList,
-  Receipt
+  Receipt,
+  FileSignature,
+  Wallet,
+  FolderOpen
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
@@ -34,6 +37,9 @@ const menuItems = [
   { title: "Puantaj", url: "/puantaj", icon: ClipboardList },
   { title: "Faturalar", url: "/faturalar", icon: FileText },
   { title: "Hakediş", url: "/hakedis", icon: Receipt },
+  { title: "Sözleşmeler", url: "/sozlesmeler", icon: FileSignature },
+  { title: "Ödeme Planları", url: "/odeme-planlari", icon: Wallet },
+  { title: "Dökümanlar", url: "/dokumanlar", icon: FolderOpen },
   { title: "İş Programı", url: "/is-programi", icon: CalendarDays },
   { title: "Bütçe & Keşif", url: "/butce", icon: Calculator },
   { title: "Taşeron/Tedarikçi", url: "/taseronlar", icon: Users },

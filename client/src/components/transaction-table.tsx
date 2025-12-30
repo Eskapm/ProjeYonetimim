@@ -19,14 +19,23 @@ interface TransactionWithProject {
   projectName: string;
   type: string;
   amount: string;
-  isGrubu: string;
-  rayicGrubu: string;
+  isGrubu: string | null;
+  rayicGrubu: string | null;
   description: string | null;
   invoiceNumber: string | null;
   subcontractorId: string | null;
   subcontractorName?: string;
   progressPaymentId: string | null;
   createdAt: Date | null;
+  // Gelir için yeni alanlar
+  incomeKind: string | null;
+  customerId: string | null;
+  customerName?: string;
+  linkedProgressPaymentId: string | null;
+  linkedProgressPaymentNumber?: number;
+  paymentMethod: string | null;
+  checkDueDate: string | null;
+  receiptNumber: string | null;
 }
 
 interface TransactionTableProps {

@@ -61,6 +61,13 @@ Preferred communication style: Simple, everyday language.
 *   **Taşeron/Tedarikçi Module**: Renamed from "Taşeronlar" to "Taşeron/Tedarikçi" to support both subcontractors and suppliers. Added type field (Taşeron/Tedarikçi) with tab-based filtering (Tümü, Taşeron, Tedarikçi).
 *   **User Registration System**: Full user registration with fields for Ad Soyad (fullName), E-Posta (email), Şifre (password with visibility toggle), Şifre Tekrar (confirmPassword), Firma Adı (companyName - optional), Ülke (country), Şehir (city). Password visibility toggle (eye icon) on both login and registration forms. Backend validation with Zod schema, email uniqueness check, and password hashing.
 
+### Enterprise Features (New)
+
+*   **Gelir Modülü Yeniden Tasarımı**: Gelir işlemleri artık incomeKind (Avans/Hakediş/Teminat İadesi/Fiyat Farkı), paymentMethod (Nakit/Banka/Çek/Kredi Kartı), müşteri bağlantısı ve onaylı hakediş bağlantısı içeriyor. İş Grubu ve Rayiç Grubu sadece giderler için zorunlu.
+*   **Sözleşme Yönetimi (Contract Management)**: contracts tablosu ile proje bazlı sözleşme yönetimi. Sözleşme numarası, türü (Ana Sözleşme/Alt Sözleşme/Ek Protokol/Tadilat), toplam bedel, avans oranı, teminat kesinti oranı, sözleşme maddeleri ve durum takibi (Taslak/Aktif/Tamamlandı/İptal).
+*   **Ödeme Planları (Payment Plans)**: payment_plans tablosu ile gelir/gider bazlı planlanan ödemeler takvimi. Geciken ödeme uyarıları, planlanan vs gerçekleşen tutar karşılaştırması, sözleşme bağlantısı.
+*   **Döküman Yönetimi (Document Management)**: documents tablosu ile proje bazlı dosya yönetimi. Kategori (Sözleşme/Proje/Hakediş/Fatura/Teknik Çizim/Fotoğraf/Rapor/Diğer), dosya URL, tür ve boyut bilgisi.
+
 ## External Dependencies
 
 ### Database

@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { insertProjectSchema, insertCustomerSchema, insertSubcontractorSchema, insertTransactionSchema, insertSiteDiarySchema, insertTimesheetSchema, insertInvoiceSchema, insertProgressPaymentSchema, insertTaskSchema, insertBudgetItemSchema } from "@shared/schema";
+import { insertProjectSchema, insertCustomerSchema, insertSubcontractorSchema, insertTransactionSchema, insertSiteDiarySchema, insertTimesheetSchema, insertInvoiceSchema, insertProgressPaymentSchema, insertTaskSchema, insertBudgetItemSchema, insertContractSchema, insertPaymentPlanSchema, insertDocumentSchema } from "@shared/schema";
 import { ZodError } from "zod";
 
 // Authentication middleware - Giriş yapmayan kullanıcıları engeller
@@ -621,6 +621,196 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.sendStatus(204);
     } catch (error) {
       res.status(500).send("Bütçe kalemi silinirken hata oluştu");
+    }
+  });
+
+  // Contract routes
+  app.get("/api/contracts", requireAuth, async (req, res) => {
+    try {
+      const contracts = await storage.getContracts();
+      res.json(contracts);
+    } catch (error) {
+      res.status(500).send("Sözleşmeler yüklenirken hata oluştu");
+    }
+  });
+
+  app.get("/api/contracts/:id", requireAuth, async (req, res) => {
+    try {
+      const contract = await storage.getContract(req.params.id);
+      if (!contract) {
+        return res.status(404).send("Sözleşme bulunamadı");
+      }
+      res.json(contract);
+    } catch (error) {
+      res.status(500).send("Sözleşme yüklenirken hata oluştu");
+    }
+  });
+
+  app.post("/api/contracts", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertContractSchema.parse(req.body);
+      const contract = await storage.createContract(validatedData);
+      res.status(201).json(contract);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).send(error.message || "Geçersiz sözleşme verisi");
+      }
+      res.status(500).send("Sözleşme oluşturulurken hata oluştu");
+    }
+  });
+
+  app.patch("/api/contracts/:id", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertContractSchema.partial().parse(req.body);
+      const contract = await storage.updateContract(req.params.id, validatedData);
+      if (!contract) {
+        return res.status(404).send("Sözleşme bulunamadı");
+      }
+      res.json(contract);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).send(error.message || "Geçersiz sözleşme verisi");
+      }
+      res.status(500).send("Sözleşme güncellenirken hata oluştu");
+    }
+  });
+
+  app.delete("/api/contracts/:id", requireAuth, async (req, res) => {
+    try {
+      const success = await storage.deleteContract(req.params.id);
+      if (!success) {
+        return res.status(404).send("Sözleşme bulunamadı");
+      }
+      res.sendStatus(204);
+    } catch (error) {
+      res.status(500).send("Sözleşme silinirken hata oluştu");
+    }
+  });
+
+  // Payment Plan routes
+  app.get("/api/payment-plans", requireAuth, async (req, res) => {
+    try {
+      const plans = await storage.getPaymentPlans();
+      res.json(plans);
+    } catch (error) {
+      res.status(500).send("Ödeme planları yüklenirken hata oluştu");
+    }
+  });
+
+  app.get("/api/payment-plans/:id", requireAuth, async (req, res) => {
+    try {
+      const plan = await storage.getPaymentPlan(req.params.id);
+      if (!plan) {
+        return res.status(404).send("Ödeme planı bulunamadı");
+      }
+      res.json(plan);
+    } catch (error) {
+      res.status(500).send("Ödeme planı yüklenirken hata oluştu");
+    }
+  });
+
+  app.post("/api/payment-plans", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertPaymentPlanSchema.parse(req.body);
+      const plan = await storage.createPaymentPlan(validatedData);
+      res.status(201).json(plan);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).send(error.message || "Geçersiz ödeme planı verisi");
+      }
+      res.status(500).send("Ödeme planı oluşturulurken hata oluştu");
+    }
+  });
+
+  app.patch("/api/payment-plans/:id", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertPaymentPlanSchema.partial().parse(req.body);
+      const plan = await storage.updatePaymentPlan(req.params.id, validatedData);
+      if (!plan) {
+        return res.status(404).send("Ödeme planı bulunamadı");
+      }
+      res.json(plan);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).send(error.message || "Geçersiz ödeme planı verisi");
+      }
+      res.status(500).send("Ödeme planı güncellenirken hata oluştu");
+    }
+  });
+
+  app.delete("/api/payment-plans/:id", requireAuth, async (req, res) => {
+    try {
+      const success = await storage.deletePaymentPlan(req.params.id);
+      if (!success) {
+        return res.status(404).send("Ödeme planı bulunamadı");
+      }
+      res.sendStatus(204);
+    } catch (error) {
+      res.status(500).send("Ödeme planı silinirken hata oluştu");
+    }
+  });
+
+  // Document routes
+  app.get("/api/documents", requireAuth, async (req, res) => {
+    try {
+      const projectId = req.query.projectId as string | undefined;
+      const docs = await storage.getDocuments(projectId);
+      res.json(docs);
+    } catch (error) {
+      res.status(500).send("Dökümanlar yüklenirken hata oluştu");
+    }
+  });
+
+  app.get("/api/documents/:id", requireAuth, async (req, res) => {
+    try {
+      const doc = await storage.getDocument(req.params.id);
+      if (!doc) {
+        return res.status(404).send("Döküman bulunamadı");
+      }
+      res.json(doc);
+    } catch (error) {
+      res.status(500).send("Döküman yüklenirken hata oluştu");
+    }
+  });
+
+  app.post("/api/documents", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertDocumentSchema.parse(req.body);
+      const doc = await storage.createDocument(validatedData);
+      res.status(201).json(doc);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).send(error.message || "Geçersiz döküman verisi");
+      }
+      res.status(500).send("Döküman oluşturulurken hata oluştu");
+    }
+  });
+
+  app.patch("/api/documents/:id", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertDocumentSchema.partial().parse(req.body);
+      const doc = await storage.updateDocument(req.params.id, validatedData);
+      if (!doc) {
+        return res.status(404).send("Döküman bulunamadı");
+      }
+      res.json(doc);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).send(error.message || "Geçersiz döküman verisi");
+      }
+      res.status(500).send("Döküman güncellenirken hata oluştu");
+    }
+  });
+
+  app.delete("/api/documents/:id", requireAuth, async (req, res) => {
+    try {
+      const success = await storage.deleteDocument(req.params.id);
+      if (!success) {
+        return res.status(404).send("Döküman bulunamadı");
+      }
+      res.sendStatus(204);
+    } catch (error) {
+      res.status(500).send("Döküman silinirken hata oluştu");
     }
   });
 

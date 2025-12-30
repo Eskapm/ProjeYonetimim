@@ -45,9 +45,13 @@ import {
   type Transaction,
   type Project,
   type Subcontractor,
+  type Customer,
+  type ProgressPayment,
   transactionTypeEnum,
   isGrubuEnum,
   rayicGrubuEnum,
+  incomeKindEnum,
+  paymentMethodEnum,
 } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -58,6 +62,8 @@ interface TransactionWithProject extends Transaction {
   projectName: string;
   subcontractorName?: string;
   subcontractorId: string | null;
+  customerName?: string;
+  linkedProgressPaymentNumber?: number;
 }
 
 export default function Transactions() {
@@ -87,6 +93,14 @@ export default function Transactions() {
 
   const { data: subcontractors = [] } = useQuery<Subcontractor[]>({
     queryKey: ["/api/subcontractors"],
+  });
+
+  const { data: customers = [] } = useQuery<Customer[]>({
+    queryKey: ["/api/customers"],
+  });
+
+  const { data: progressPayments = [] } = useQuery<ProgressPayment[]>({
+    queryKey: ["/api/progress-payments"],
   });
 
   const createTransactionMutation = useMutation({
@@ -617,55 +631,208 @@ export default function Transactions() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="isGrubu"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>İş Grubu *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-transaction-is-grubu">
-                            <SelectValue placeholder="İş grubu seçin" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {isGrubuEnum.map((group) => (
-                            <SelectItem key={group} value={group}>
-                              {group}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {/* Gelir için alanlar */}
+                {form.watch("type") === "Gelir" && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="incomeKind"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Gelir Türü *</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-transaction-income-kind">
+                                <SelectValue placeholder="Gelir türü seçin" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {incomeKindEnum.map((kind) => (
+                                <SelectItem key={kind} value={kind}>
+                                  {kind}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <FormField
-                  control={form.control}
-                  name="rayicGrubu"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Rayiç Grubu *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-transaction-rayic-grubu">
-                            <SelectValue placeholder="Rayiç grubu seçin" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {rayicGrubuEnum.map((group) => (
-                            <SelectItem key={group} value={group}>
-                              {group}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    <FormField
+                      control={form.control}
+                      name="paymentMethod"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Ödeme Yöntemi</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-transaction-payment-method">
+                                <SelectValue placeholder="Ödeme yöntemi seçin" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {paymentMethodEnum.map((method) => (
+                                <SelectItem key={method} value={method}>
+                                  {method}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {form.watch("paymentMethod") === "Çek" && (
+                      <FormField
+                        control={form.control}
+                        name="checkDueDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Çek Vade Tarihi</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                value={field.value ?? ""}
+                                type="date"
+                                data-testid="input-transaction-check-due-date"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    {form.watch("incomeKind") === "Hakediş Ödemesi" && (
+                      <FormField
+                        control={form.control}
+                        name="linkedProgressPaymentId"
+                        render={({ field }) => {
+                          const selectedProjectId = form.watch("projectId");
+                          const projectProgressPayments = progressPayments.filter(
+                            pp => pp.projectId === selectedProjectId
+                          );
+                          return (
+                            <FormItem>
+                              <FormLabel>Bağlı Hakediş</FormLabel>
+                              <Select 
+                                onValueChange={(value) => field.onChange(value === "__none__" ? null : value)} 
+                                value={field.value || "__none__"}
+                              >
+                                <FormControl>
+                                  <SelectTrigger data-testid="select-transaction-linked-progress-payment">
+                                    <SelectValue placeholder="Hakediş seçin" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="__none__">Belirtilmedi</SelectItem>
+                                  {projectProgressPayments.map((pp) => (
+                                    <SelectItem key={pp.id} value={pp.id}>
+                                      Hakediş #{pp.paymentNumber} - {Number(pp.netPayment || pp.amount).toLocaleString('tr-TR')} ₺
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }}
+                      />
+                    )}
+
+                    {/* Müşteri bilgisi - otomatik projeden gelir */}
+                    {(() => {
+                      const selectedProjectId = form.watch("projectId");
+                      const selectedProject = projects.find(p => p.id === selectedProjectId);
+                      const projectCustomer = selectedProject?.customerId 
+                        ? customers.find(c => c.id === selectedProject.customerId)
+                        : null;
+                      
+                      return projectCustomer ? (
+                        <div className="md:col-span-2 p-3 bg-muted/50 rounded-lg">
+                          <span className="text-sm text-muted-foreground">Müşteri: </span>
+                          <span className="font-medium">{projectCustomer.name}</span>
+                        </div>
+                      ) : null;
+                    })()}
+
+                    <FormField
+                      control={form.control}
+                      name="receiptNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Makbuz/Dekont No</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value ?? ""}
+                              placeholder="Örn: MK-2024-001"
+                              data-testid="input-transaction-receipt-number"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                )}
+
+                {/* Gider için alanlar */}
+                {form.watch("type") === "Gider" && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="isGrubu"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>İş Grubu *</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-transaction-is-grubu">
+                                <SelectValue placeholder="İş grubu seçin" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {isGrubuEnum.map((group) => (
+                                <SelectItem key={group} value={group}>
+                                  {group}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="rayicGrubu"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Rayiç Grubu *</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-transaction-rayic-grubu">
+                                <SelectValue placeholder="Rayiç grubu seçin" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {rayicGrubuEnum.map((group) => (
+                                <SelectItem key={group} value={group}>
+                                  {group}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                )}
 
                 {form.watch("type") === "Gider" && (
                   <FormField

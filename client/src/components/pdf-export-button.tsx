@@ -12,10 +12,12 @@ interface TransactionData {
   projectName: string;
   type: string;
   amount: string;
-  isGrubu: string;
-  rayicGrubu: string;
+  isGrubu: string | null;
+  rayicGrubu: string | null;
   description: string | null;
   progressPaymentId: string | null;
+  incomeKind?: string | null;
+  paymentMethod?: string | null;
 }
 
 interface PDFExportButtonProps {

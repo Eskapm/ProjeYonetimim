@@ -31,6 +31,22 @@ export const taskStatusEnum = ["Beklemede", "Devam Ediyor", "Tamamlandı", "İpt
 // İşlem tipleri
 export const transactionTypeEnum = ["Gelir", "Gider"] as const;
 
+// Gelir türleri (sadece Gelir işlemleri için)
+export const incomeKindEnum = [
+  "Avans Ödemesi",
+  "Hakediş Ödemesi",
+  "Teminat İadesi",
+  "Fiyat Farkı"
+] as const;
+
+// Ödeme yöntemleri
+export const paymentMethodEnum = [
+  "Nakit",
+  "Havale/EFT",
+  "Çek",
+  "Kredi Kartı"
+] as const;
+
 // Fatura tipleri
 export const invoiceTypeEnum = ["Alış", "Satış"] as const;
 
@@ -154,11 +170,21 @@ export const transactions = pgTable("transactions", {
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   date: date("date").notNull(),
   description: text("description"),
-  isGrubu: text("is_grubu").notNull(),
-  rayicGrubu: text("rayic_grubu").notNull(),
+  // Gider için kategoriler (Gelir için opsiyonel)
+  isGrubu: text("is_grubu"),
+  rayicGrubu: text("rayic_grubu"),
   invoiceNumber: text("invoice_number"),
-  subcontractorId: varchar("subcontractor_id"), // Gider için taşeron/tedarikçi bağlantısı
-  progressPaymentId: varchar("progress_payment_id"), // Hangi hakedişe dahil edildiği
+  // Gider için taşeron/tedarikçi bağlantısı
+  subcontractorId: varchar("subcontractor_id"),
+  // Hangi hakedişe dahil edildiği (gider için)
+  progressPaymentId: varchar("progress_payment_id"),
+  // Gelir için yeni alanlar
+  incomeKind: text("income_kind"), // Avans, Hakediş, Teminat İadesi, Fiyat Farkı
+  customerId: varchar("customer_id"), // Gelir için müşteri bağlantısı
+  linkedProgressPaymentId: varchar("linked_progress_payment_id"), // Hakediş ödemesi için bağlantı
+  paymentMethod: text("payment_method"), // Nakit, Havale/EFT, Çek, Kredi Kartı
+  checkDueDate: date("check_due_date"), // Çek için vade tarihi
+  receiptNumber: text("receipt_number"), // Makbuz numarası
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -167,15 +193,25 @@ export const insertTransactionSchema = createInsertSchema(transactions).omit({
   createdAt: true,
 }).extend({
   subcontractorId: z.string().nullable().optional(),
+  customerId: z.string().nullable().optional(),
+  linkedProgressPaymentId: z.string().nullable().optional(),
+  isGrubu: z.string().nullable().optional(),
+  rayicGrubu: z.string().nullable().optional(),
+  incomeKind: z.string().nullable().optional(),
+  paymentMethod: z.string().nullable().optional(),
+  checkDueDate: z.string().nullable().optional(),
+  receiptNumber: z.string().nullable().optional(),
 });
 
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Transaction = typeof transactions.$inferSelect;
 
-// Extended type for transactions with project and subcontractor information
+// Extended type for transactions with project, subcontractor and customer information
 export interface TransactionWithProject extends Transaction {
   projectName: string;
   subcontractorName?: string;
+  customerName?: string;
+  linkedProgressPaymentNumber?: number;
 }
 
 // Faturalar tablosu
@@ -385,3 +421,96 @@ export const insertProgressPaymentSchema = createInsertSchema(progressPayments).
 
 export type InsertProgressPayment = z.infer<typeof insertProgressPaymentSchema>;
 export type ProgressPayment = typeof progressPayments.$inferSelect;
+
+// Sözleşme durumları
+export const contractStatusEnum = ["Taslak", "Aktif", "Tamamlandı", "İptal"] as const;
+
+// Sözleşmeler tablosu
+export const contracts = pgTable("contracts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id").notNull(),
+  contractNumber: text("contract_number"), // Sözleşme numarası
+  title: text("title").notNull(),
+  contractType: text("contract_type"), // Anahtar Teslim, Maliyet + Kar
+  totalAmount: decimal("total_amount", { precision: 15, scale: 2 }).notNull(),
+  startDate: date("start_date"),
+  endDate: date("end_date"),
+  signDate: date("sign_date"), // İmza tarihi
+  status: text("status").notNull().default("Taslak"),
+  advancePaymentRate: decimal("advance_payment_rate", { precision: 5, scale: 2 }).default("0"),
+  retentionRate: decimal("retention_rate", { precision: 5, scale: 2 }).default("0"), // Teminat kesinti oranı
+  description: text("description"),
+  terms: text("terms"), // Sözleşme maddeleri
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertContractSchema = createInsertSchema(contracts).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertContract = z.infer<typeof insertContractSchema>;
+export type Contract = typeof contracts.$inferSelect;
+
+// Ödeme planı durumları
+export const paymentPlanStatusEnum = ["Bekliyor", "Ödendi", "Gecikmiş", "İptal"] as const;
+
+// Ödeme planı tablosu
+export const paymentPlans = pgTable("payment_plans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id").notNull(),
+  contractId: varchar("contract_id"), // Opsiyonel sözleşme bağlantısı
+  title: text("title").notNull(),
+  type: text("type").notNull(), // Gelir veya Gider
+  plannedAmount: decimal("planned_amount", { precision: 15, scale: 2 }).notNull(),
+  actualAmount: decimal("actual_amount", { precision: 15, scale: 2 }).default("0"),
+  plannedDate: date("planned_date").notNull(),
+  actualDate: date("actual_date"),
+  status: text("status").notNull().default("Bekliyor"),
+  description: text("description"),
+  transactionId: varchar("transaction_id"), // Gerçekleşen ödeme ile bağlantı
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertPaymentPlanSchema = createInsertSchema(paymentPlans).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertPaymentPlan = z.infer<typeof insertPaymentPlanSchema>;
+export type PaymentPlan = typeof paymentPlans.$inferSelect;
+
+// Döküman kategorileri
+export const documentCategoryEnum = [
+  "Sözleşme",
+  "Proje",
+  "Hakediş",
+  "Fatura",
+  "Teknik Çizim",
+  "Fotoğraf",
+  "Rapor",
+  "Diğer"
+] as const;
+
+// Dökümanlar tablosu
+export const documents = pgTable("documents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id").notNull(),
+  name: text("name").notNull(),
+  category: text("category").notNull().default("Diğer"),
+  fileUrl: text("file_url").notNull(),
+  fileType: text("file_type"), // pdf, jpg, png, doc, etc.
+  fileSize: integer("file_size"), // Bytes
+  description: text("description"),
+  uploadedBy: varchar("uploaded_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertDocumentSchema = createInsertSchema(documents).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertDocument = z.infer<typeof insertDocumentSchema>;
+export type Document = typeof documents.$inferSelect;
