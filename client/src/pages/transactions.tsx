@@ -674,14 +674,17 @@ export default function Transactions() {
                     render={({ field }) => (
                       <FormItem className="md:col-span-2">
                         <FormLabel>Taşeron/Tedarikçi</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <Select 
+                          onValueChange={(value) => field.onChange(value === "__none__" ? null : value)} 
+                          value={field.value || "__none__"}
+                        >
                           <FormControl>
                             <SelectTrigger data-testid="select-transaction-subcontractor">
                               <SelectValue placeholder="Ödemenin yapıldığı taşeron/tedarikçi seçin" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">Belirtilmedi</SelectItem>
+                            <SelectItem value="__none__">Belirtilmedi</SelectItem>
                             {subcontractors.map((sub) => (
                               <SelectItem key={sub.id} value={sub.id}>
                                 {sub.name} {sub.type ? `(${sub.type})` : ''}
