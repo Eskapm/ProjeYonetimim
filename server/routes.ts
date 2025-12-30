@@ -235,8 +235,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             linkedTransactionId: transaction.id,
           };
           createdInvoice = await storage.createInvoice(invoiceData);
-          // İşlemi fatura ID'si ile güncelle
-          await storage.updateTransaction(transaction.id, { linkedInvoiceId: createdInvoice.id });
+          
+          // İşlemi fatura ID'si ile güncelle ve sonucu doğrula
+          const updatedTransaction = await storage.updateTransaction(transaction.id, { linkedInvoiceId: createdInvoice.id });
+          if (!updatedTransaction) {
+            throw new Error("İşlem güncellenemedi");
+          }
+          
+          // Başarılı: Bağlantılı işlemi döndür
+          return res.status(201).json(updatedTransaction);
         } catch (invoiceError) {
           // Tam rollback: Hem faturayı hem işlemi temizle
           console.error("Fatura/bağlantı hatası, tüm kayıtlar geri alınıyor:", invoiceError);
@@ -450,8 +457,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             paymentMethod: null,
           };
           createdTransaction = await storage.createTransaction(transactionData);
-          // Faturayı işlem ID'si ile güncelle
-          await storage.updateInvoice(invoice.id, { linkedTransactionId: createdTransaction.id });
+          
+          // Faturayı işlem ID'si ile güncelle ve sonucu doğrula
+          const updatedInvoice = await storage.updateInvoice(invoice.id, { linkedTransactionId: createdTransaction.id });
+          if (!updatedInvoice) {
+            throw new Error("Fatura güncellenemedi");
+          }
+          
+          // Başarılı: Bağlantılı faturayı döndür
+          return res.status(201).json(updatedInvoice);
         } catch (transactionError) {
           // Tam rollback: Hem işlemi hem faturayı temizle
           console.error("İşlem/bağlantı hatası, tüm kayıtlar geri alınıyor:", transactionError);
