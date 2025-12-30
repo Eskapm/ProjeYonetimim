@@ -194,8 +194,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/transactions", requireAuth, async (req, res) => {
     try {
-      const validatedData = insertTransactionSchema.parse(req.body);
+      const { createInvoice: shouldCreateInvoice, invoiceTaxRate, ...transactionData } = req.body;
+      const validatedData = insertTransactionSchema.parse(transactionData);
+      
+      // Mükerrer kontrol: Aynı fatura numarası ile zaten bağlı bir fatura var mı?
+      if (shouldCreateInvoice && validatedData.invoiceNumber) {
+        const existingInvoices = await storage.getInvoices();
+        const duplicateInvoice = existingInvoices.find(
+          inv => inv.invoiceNumber === validatedData.invoiceNumber
+        );
+        if (duplicateInvoice) {
+          return res.status(409).send(`Bu fatura numarası (${validatedData.invoiceNumber}) ile zaten bir fatura mevcut. Mükerrer kayıt önlendi.`);
+        }
+      }
+      
       const transaction = await storage.createTransaction(validatedData);
+      
+      // Eğer fatura oluştur seçeneği işaretliyse, otomatik fatura oluştur
+      if (shouldCreateInvoice && transaction.invoiceNumber) {
+        let createdInvoice: any = null;
+        try {
+          const taxRate = parseFloat(invoiceTaxRate) || 20;
+          const subtotal = parseFloat(String(transaction.amount)) / (1 + taxRate / 100);
+          const taxAmount = parseFloat(String(transaction.amount)) - subtotal;
+          
+          const invoiceData = {
+            invoiceNumber: transaction.invoiceNumber,
+            type: transaction.type === 'Gelir' ? 'Satış' : 'Alış',
+            projectId: transaction.projectId,
+            customerId: transaction.customerId || null,
+            subcontractorId: transaction.subcontractorId || null,
+            date: transaction.date,
+            subtotal: subtotal.toFixed(2),
+            taxRate: taxRate.toString(),
+            taxAmount: taxAmount.toFixed(2),
+            total: String(transaction.amount),
+            status: 'Ödendi',
+            paidAmount: String(transaction.amount),
+            description: transaction.description,
+            linkedTransactionId: transaction.id,
+          };
+          createdInvoice = await storage.createInvoice(invoiceData);
+          // İşlemi fatura ID'si ile güncelle
+          await storage.updateTransaction(transaction.id, { linkedInvoiceId: createdInvoice.id });
+        } catch (invoiceError) {
+          // Tam rollback: Hem faturayı hem işlemi temizle
+          console.error("Fatura/bağlantı hatası, tüm kayıtlar geri alınıyor:", invoiceError);
+          if (createdInvoice) {
+            try { await storage.deleteInvoice(createdInvoice.id); } catch {}
+          }
+          try { await storage.deleteTransaction(transaction.id); } catch {}
+          return res.status(500).send("Bağlı fatura oluşturulurken hata oluştu. İşlem iptal edildi.");
+        }
+      }
+      
       res.status(201).json(transaction);
     } catch (error: any) {
       if (error instanceof ZodError) {
@@ -364,8 +416,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/invoices", requireAuth, async (req, res) => {
     try {
-      const validatedData = insertInvoiceSchema.parse(req.body);
+      const { createTransaction: shouldCreateTransaction, ...invoiceData } = req.body;
+      const validatedData = insertInvoiceSchema.parse(invoiceData);
+      
+      // Mükerrer kontrol: Aynı fatura numarası ile zaten bir işlem bağlı mı?
+      if (shouldCreateTransaction && validatedData.invoiceNumber) {
+        const existingTransactions = await storage.getTransactions();
+        const duplicateTransaction = existingTransactions.find(
+          t => t.invoiceNumber === validatedData.invoiceNumber
+        );
+        if (duplicateTransaction) {
+          return res.status(409).send(`Bu fatura numarası (${validatedData.invoiceNumber}) ile zaten bir işlem kaydı mevcut. Mükerrer kayıt önlendi.`);
+        }
+      }
+      
       const invoice = await storage.createInvoice(validatedData);
+      
+      // Eğer işlem oluştur seçeneği işaretliyse, otomatik işlem oluştur
+      if (shouldCreateTransaction && invoice.projectId) {
+        let createdTransaction: any = null;
+        try {
+          const transactionData = {
+            projectId: invoice.projectId,
+            type: invoice.type === 'Satış' ? 'Gelir' : 'Gider',
+            amount: invoice.total,
+            date: invoice.date,
+            description: `Fatura: ${invoice.invoiceNumber}`,
+            invoiceNumber: invoice.invoiceNumber,
+            linkedInvoiceId: invoice.id,
+            customerId: invoice.customerId || null,
+            subcontractorId: invoice.subcontractorId || null,
+            incomeKind: invoice.type === 'Satış' ? 'Hakediş Ödemesi' : null,
+            paymentMethod: null,
+          };
+          createdTransaction = await storage.createTransaction(transactionData);
+          // Faturayı işlem ID'si ile güncelle
+          await storage.updateInvoice(invoice.id, { linkedTransactionId: createdTransaction.id });
+        } catch (transactionError) {
+          // Tam rollback: Hem işlemi hem faturayı temizle
+          console.error("İşlem/bağlantı hatası, tüm kayıtlar geri alınıyor:", transactionError);
+          if (createdTransaction) {
+            try { await storage.deleteTransaction(createdTransaction.id); } catch {}
+          }
+          try { await storage.deleteInvoice(invoice.id); } catch {}
+          return res.status(500).send("Bağlı işlem oluşturulurken hata oluştu. Fatura iptal edildi.");
+        }
+      }
+      
       res.status(201).json(invoice);
     } catch (error: any) {
       if (error instanceof ZodError) {

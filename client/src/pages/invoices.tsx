@@ -38,7 +38,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Calendar as CalendarIcon, Loader2, Edit2, Trash2, FileText, TrendingUp, TrendingDown } from "lucide-react";
+import { Plus, Search, Calendar as CalendarIcon, Loader2, Edit2, Trash2, FileText, TrendingUp, TrendingDown, ArrowLeftRight } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { 
@@ -76,6 +77,7 @@ export default function Invoices() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [deleteInvoiceId, setDeleteInvoiceId] = useState<string | null>(null);
+  const [createTransaction, setCreateTransaction] = useState(false);
   const { toast } = useToast();
   const { activeProjectId } = useProjectContext();
 
@@ -106,17 +108,19 @@ export default function Invoices() {
 
   // Create invoice mutation
   const createInvoiceMutation = useMutation({
-    mutationFn: async (data: InsertInvoice) => {
+    mutationFn: async (data: InsertInvoice & { createTransaction?: boolean }) => {
       const response = await apiRequest("POST", "/api/invoices", data);
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       toast({
         title: "Başarılı",
         description: "Fatura başarıyla oluşturuldu",
       });
       setIsDialogOpen(false);
+      setCreateTransaction(false);
       form.reset();
     },
     onError: (error: Error) => {
@@ -248,12 +252,17 @@ export default function Invoices() {
     if (editingInvoice) {
       updateInvoiceMutation.mutate({ id: editingInvoice.id, data: cleanedData });
     } else {
-      createInvoiceMutation.mutate(cleanedData);
+      // "İşlem Oluştur" seçeneği için backend'e ekstra bilgi gönder
+      const submitData = createTransaction && cleanedData.projectId
+        ? { ...cleanedData, createTransaction: true }
+        : cleanedData;
+      createInvoiceMutation.mutate(submitData);
     }
   };
 
   const handleAddInvoice = () => {
     setEditingInvoice(null);
+    setCreateTransaction(false);
     // Find customer for active project if exists
     const activeProject = activeProjectId ? projects.find(p => p.id === activeProjectId) : null;
     const autoCustomerId = activeProject?.customerId || null;
@@ -1037,6 +1046,32 @@ export default function Invoices() {
                   </FormItem>
                 )}
               />
+
+              {/* Otomatik İşlem Oluşturma Seçeneği - sadece yeni faturada ve proje seçildiğinde */}
+              {!editingInvoice && form.watch("projectId") && (
+                <div className="space-y-4 p-4 bg-muted/50 rounded-lg border border-dashed">
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      id="create-transaction"
+                      checked={createTransaction}
+                      onCheckedChange={(checked) => setCreateTransaction(checked === true)}
+                      data-testid="checkbox-create-transaction"
+                    />
+                    <div className="space-y-1">
+                      <label
+                        htmlFor="create-transaction"
+                        className="text-sm font-medium cursor-pointer flex items-center gap-2"
+                      >
+                        <ArrowLeftRight className="h-4 w-4" />
+                        Gelir/Gider işlemlerine de kaydet
+                      </label>
+                      <p className="text-xs text-muted-foreground">
+                        Bu fatura için otomatik olarak {form.watch("type") === "Satış" ? "gelir" : "gider"} kaydı oluşturulacak
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <DialogFooter>
                 <Button

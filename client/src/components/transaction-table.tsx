@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, Check, X } from "lucide-react";
+import { Edit, Trash2, Check, X, FileText } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 
 interface TransactionWithProject {
@@ -36,6 +36,8 @@ interface TransactionWithProject {
   paymentMethod: string | null;
   checkDueDate: string | null;
   receiptNumber: string | null;
+  // Fatura bağlantısı
+  linkedInvoiceId?: string | null;
 }
 
 interface TransactionTableProps {
@@ -181,8 +183,16 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                     </TableCell>
                     <TableCell className="text-sm">{transaction.isGrubu || "-"}</TableCell>
                     <TableCell className="text-sm">{transaction.rayicGrubu || "-"}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
-                      {transaction.description || '-'}
+                    <TableCell className="text-sm text-muted-foreground max-w-[200px]">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate">{transaction.description || '-'}</span>
+                        {transaction.linkedInvoiceId && (
+                          <Badge variant="outline" className="shrink-0 gap-1 text-xs py-0 px-1">
+                            <FileText className="h-3 w-3" />
+                            Fatura
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-center" data-testid={`text-progress-payment-status-${transaction.id}`}>
                       {transaction.progressPaymentId ? (

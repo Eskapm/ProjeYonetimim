@@ -63,6 +63,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Enterprise Features (New)
 
+*   **Fatura-İşlem Çift Yönlü Entegrasyonu (Bidirectional Invoice-Transaction Linking)**: Faturalar ve Gelir/Gider işlemleri arasında otomatik bağlantı kurularak mükerrer veri girişi önlenir. İşlem oluştururken "Fatura Oluştur" checkbox'ı seçildiğinde otomatik fatura oluşturulur; fatura oluştururken "İşlem Oluştur" seçeneği ile otomatik Gelir/Gider kaydı oluşturulur. Schema'da linkedInvoiceId (transactions) ve linkedTransactionId (invoices) alanları, 409 Conflict mükerrer kontrolü, ve hata durumunda tam rollback mekanizması mevcut. Bağlı kayıtlar tabloda "Fatura" badge'i ile gösterilir.
 *   **Gelir Modülü Yeniden Tasarımı**: Gelir işlemleri artık incomeKind (Avans/Hakediş/Teminat İadesi/Fiyat Farkı), paymentMethod (Nakit/Banka/Çek/Kredi Kartı), müşteri bağlantısı ve onaylı hakediş bağlantısı içeriyor. İş Grubu ve Rayiç Grubu sadece giderler için zorunlu.
 *   **Sözleşme Yönetimi (Contract Management)**: contracts tablosu ile proje bazlı sözleşme yönetimi. Sözleşme numarası, türü (Ana Sözleşme/Alt Sözleşme/Ek Protokol/Tadilat), toplam bedel, avans oranı, teminat kesinti oranı, sözleşme maddeleri ve durum takibi (Taslak/Aktif/Tamamlandı/İptal).
 *   **Ödeme Planları (Payment Plans)**: payment_plans tablosu ile gelir/gider bazlı planlanan ödemeler takvimi. Geciken ödeme uyarıları, planlanan vs gerçekleşen tutar karşılaştırması, sözleşme bağlantısı.

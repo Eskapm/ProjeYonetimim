@@ -34,7 +34,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Search, Calculator, Loader2 } from "lucide-react";
+import { Plus, Search, Calculator, Loader2, FileText } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { calculateTaxSummary } from "@shared/taxCalculations";
 import { PrintHeader } from "@/components/print-header";
 import { useForm } from "react-hook-form";
@@ -75,6 +76,8 @@ export default function Transactions() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deleteTransactionId, setDeleteTransactionId] = useState<string | null>(null);
+  const [createInvoice, setCreateInvoice] = useState(false);
+  const [invoiceTaxRate, setInvoiceTaxRate] = useState("20");
   const { toast } = useToast();
   const { activeProjectId, activeProject } = useProjectContext();
 
@@ -199,12 +202,18 @@ export default function Transactions() {
     if (editingTransaction) {
       updateTransactionMutation.mutate({ id: editingTransaction.id, data: cleanedData });
     } else {
-      createTransactionMutation.mutate(cleanedData);
+      // "Fatura Oluştur" seçeneği için backend'e ekstra bilgi gönder
+      const submitData = createInvoice && cleanedData.invoiceNumber
+        ? { ...cleanedData, createInvoice: true, invoiceTaxRate }
+        : cleanedData;
+      createTransactionMutation.mutate(submitData as InsertTransaction);
     }
   };
 
   const handleAddTransaction = () => {
     setEditingTransaction(null);
+    setCreateInvoice(false);
+    setInvoiceTaxRate("20");
     form.reset({
       projectId: activeProjectId || "",
       type: "Gider",
@@ -885,6 +894,54 @@ export default function Transactions() {
                     </FormItem>
                   )}
                 />
+
+                {/* Otomatik Fatura Oluşturma Seçeneği */}
+                {!editingTransaction && form.watch("invoiceNumber") && (
+                  <div className="md:col-span-2 space-y-4 p-4 bg-muted/50 rounded-lg border border-dashed">
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        id="create-invoice"
+                        checked={createInvoice}
+                        onCheckedChange={(checked) => setCreateInvoice(checked === true)}
+                        data-testid="checkbox-create-invoice"
+                      />
+                      <div className="space-y-1">
+                        <label
+                          htmlFor="create-invoice"
+                          className="text-sm font-medium cursor-pointer flex items-center gap-2"
+                        >
+                          <FileText className="h-4 w-4" />
+                          Faturalar bölümüne de kaydet
+                        </label>
+                        <p className="text-xs text-muted-foreground">
+                          Bu işlem için otomatik olarak fatura kaydı oluşturulacak
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {createInvoice && (
+                      <div className="ml-6 space-y-2">
+                        <label className="text-sm text-muted-foreground">KDV Oranı (%)</label>
+                        <Select value={invoiceTaxRate} onValueChange={setInvoiceTaxRate}>
+                          <SelectTrigger className="w-32" data-testid="select-invoice-tax-rate">
+                            <SelectValue placeholder="KDV %" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">%0</SelectItem>
+                            <SelectItem value="1">%1</SelectItem>
+                            <SelectItem value="8">%8</SelectItem>
+                            <SelectItem value="10">%10</SelectItem>
+                            <SelectItem value="18">%18</SelectItem>
+                            <SelectItem value="20">%20</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                          Girilen tutar KDV dahil olarak kabul edilir
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <FormField
                   control={form.control}
