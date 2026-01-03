@@ -223,6 +223,142 @@
   }
 }
 
+/* ============================================
+   RESPONSIVE DESIGN UTILITIES
+   Automatic scaling for phone/tablet/desktop
+   ============================================ */
+
+/* Responsive container with automatic padding */
+.responsive-container {
+  @apply w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8;
+}
+
+/* Responsive page header */
+.responsive-header {
+  @apply flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6;
+}
+
+.responsive-header-title {
+  @apply text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight;
+}
+
+/* Responsive card grid - auto-scales based on screen size */
+.responsive-card-grid {
+  @apply grid gap-3 sm:gap-4 lg:gap-6;
+  @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+}
+
+/* Responsive summary grid for financial data */
+.responsive-summary-grid {
+  @apply grid gap-2 sm:gap-4;
+  @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3;
+}
+
+/* Responsive filter bar - stacks on mobile */
+.responsive-filter-bar {
+  @apply flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3;
+}
+
+/* Responsive action buttons - full width on mobile */
+.responsive-actions {
+  @apply flex flex-col gap-2 w-full sm:flex-row sm:w-auto sm:gap-3;
+}
+
+.responsive-actions > button,
+.responsive-actions > a {
+  @apply w-full sm:w-auto;
+}
+
+/* Responsive table wrapper - horizontal scroll on small screens */
+.responsive-table-wrapper {
+  @apply w-full overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0;
+  @apply rounded-md border;
+}
+
+/* Table minimum widths for proper display */
+.responsive-table-wrapper table {
+  @apply min-w-[640px] sm:min-w-0 w-full;
+}
+
+/* Responsive table cells - hide less important columns on mobile */
+@media (max-width: 640px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .hide-tablet {
+    display: none !important;
+  }
+}
+
+/* Priority columns that are always visible */
+.show-always {
+  display: table-cell !important;
+}
+
+/* Responsive text sizing for financial data */
+.responsive-amount {
+  @apply text-sm sm:text-base font-mono whitespace-nowrap;
+}
+
+/* Responsive dialog/modal sizing */
+.responsive-dialog {
+  @apply w-[95vw] max-w-lg sm:max-w-xl md:max-w-2xl lg:max-w-3xl;
+}
+
+/* Responsive form layout - single column on mobile, multi-column on larger */
+.responsive-form-grid {
+  @apply grid gap-4;
+  @apply grid-cols-1 sm:grid-cols-2;
+}
+
+.responsive-form-grid-3 {
+  @apply grid gap-4;
+  @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3;
+}
+
+/* Touch-friendly button sizing on mobile */
+@media (max-width: 640px) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Responsive sidebar adjustments */
+@media (max-width: 768px) {
+  [data-sidebar="sidebar"] {
+    position: fixed !important;
+    z-index: 50 !important;
+  }
+}
+
+/* Responsive tabs - horizontal scroll on mobile */
+.responsive-tabs {
+  @apply overflow-x-auto;
+}
+
+.responsive-tabs [role="tablist"] {
+  @apply flex-nowrap min-w-max sm:min-w-0 sm:flex-wrap;
+}
+
+/* Card responsive padding */
+.responsive-card-padding {
+  @apply p-3 sm:p-4 lg:p-6;
+}
+
+/* Responsive spacing utilities */
+.responsive-spacing {
+  @apply space-y-3 sm:space-y-4 lg:space-y-6;
+}
+
+/* Mobile-first badge sizing */
+.responsive-badge {
+  @apply text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1;
+}
+
 /**
  * Using the elevate system.
  * Automatic contrast adjustment.

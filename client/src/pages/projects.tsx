@@ -262,15 +262,15 @@ export default function Projects() {
   }, [location, projects, isDialogOpen, handleEditProject]);
 
   return (
-    <div className="space-y-6">
+    <div className="responsive-container responsive-spacing">
       <PrintHeader documentTitle="PROJELER LİSTESİ" />
       
-      <div className="flex items-center justify-between">
+      <div className="responsive-header">
         <div>
-          <h1 className="text-3xl font-bold">Projeler</h1>
-          <p className="text-muted-foreground mt-1">Tüm projelerinizi görüntüleyin ve yönetin</p>
+          <h1 className="responsive-header-title">Projeler</h1>
+          <p className="text-muted-foreground text-sm mt-1">Tüm projelerinizi görüntüleyin ve yönetin</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="responsive-actions">
           <ExportToExcel
             data={filteredProjects.map((project) => ({
               "Proje Adı": project.name,
@@ -287,18 +287,19 @@ export default function Projects() {
             documentTitle="PROJELER LİSTESİ"
           />
           <PrintButton />
-          <Button onClick={handleAddProject} data-testid="button-add-project">
+          <Button onClick={handleAddProject} data-testid="button-add-project" className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
-            Yeni Proje Ekle
+            <span className="hidden sm:inline">Yeni Proje Ekle</span>
+            <span className="sm:hidden">Ekle</span>
           </Button>
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 no-print">
-        <div className="relative flex-1">
+      <div className="responsive-filter-bar no-print">
+        <div className="relative flex-1 min-w-[180px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Proje adı veya konum ile ara..."
+            placeholder="Ara..."
             className="pl-10"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -306,8 +307,8 @@ export default function Projects() {
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[200px]" data-testid="select-status-filter">
-            <SelectValue placeholder="Durum filtrele" />
+          <SelectTrigger className="w-full sm:w-[160px]" data-testid="select-status-filter">
+            <SelectValue placeholder="Durum" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tüm Durumlar</SelectItem>
@@ -330,7 +331,7 @@ export default function Projects() {
 
       {/* Loading state */}
       {isLoading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="responsive-card-grid">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div key={i} className="space-y-3">
               <Skeleton className="h-48 w-full rounded-lg" />
@@ -358,7 +359,7 @@ export default function Projects() {
 
       {/* Projects grid */}
       {!isLoading && !error && filteredProjects.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
           {filteredProjects.map((project) => {
             const projectWithCost = getProjectWithCostPerSqm(project);
             return (

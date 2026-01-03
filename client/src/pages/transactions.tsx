@@ -307,14 +307,12 @@ export default function Transactions() {
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="responsive-container responsive-spacing">
       <PrintHeader documentTitle="İŞLEMLER RAPORU" />
       
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Gelir & Gider İşlemleri</h1>
-        </div>
-        <div className="flex items-center gap-2">
+      <div className="responsive-header">
+        <h1 className="responsive-header-title">Gelir & Gider İşlemleri</h1>
+        <div className="responsive-actions">
           <ExportToExcel 
             data={excelData} 
             filename="islemler" 
@@ -331,62 +329,65 @@ export default function Transactions() {
             transactions={filteredTransactions}
             filterInfo={typeFilter !== "all" ? `Filtre: ${typeFilter}` : undefined}
           />
-          <Button onClick={handleAddTransaction} data-testid="button-add-transaction">
+          <Button onClick={handleAddTransaction} data-testid="button-add-transaction" className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
-            Yeni İşlem Ekle
+            <span className="hidden sm:inline">Yeni İşlem Ekle</span>
+            <span className="sm:hidden">Ekle</span>
           </Button>
         </div>
       </div>
 
-      <Tabs defaultValue="transactions" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
-          <TabsTrigger value="transactions" data-testid="tab-transactions-list">
-            İşlem Listesi
-          </TabsTrigger>
-          <TabsTrigger value="taxes" data-testid="tab-tax-summary">
-            <Calculator className="h-4 w-4 mr-2" />
-            Vergi Hesaplama
-          </TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue="transactions" className="responsive-spacing">
+        <div className="responsive-tabs">
+          <TabsList className="grid w-full grid-cols-2 max-w-md">
+            <TabsTrigger value="transactions" data-testid="tab-transactions-list">
+              İşlem Listesi
+            </TabsTrigger>
+            <TabsTrigger value="taxes" data-testid="tab-tax-summary">
+              <Calculator className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Vergi Hesaplama</span>
+              <span className="sm:hidden">Vergi</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-        <TabsContent value="transactions" className="space-y-6">
-          <div className="flex flex-col gap-4 no-print">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="İşlem açıklaması veya proje adı ile ara..."
-                  className="pl-10"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  data-testid="input-search-transactions"
-                />
-              </div>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-full sm:w-[150px]" data-testid="select-type-filter">
-                  <SelectValue placeholder="Tür" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tümü</SelectItem>
-                  <SelectItem value="Gelir">Gelir</SelectItem>
-                  <SelectItem value="Gider">Gider</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={selectedProject} onValueChange={setSelectedProject}>
-                <SelectTrigger className="w-full sm:w-[250px]" data-testid="select-project-filter-transactions">
-                  <SelectValue placeholder="Proje seç" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tüm Projeler</SelectItem>
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <TabsContent value="transactions" className="responsive-spacing">
+          <div className="responsive-filter-bar no-print">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Ara..."
+                className="pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                data-testid="input-search-transactions"
+              />
             </div>
-            <div className="flex flex-col sm:flex-row gap-4">
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-full sm:w-[120px]" data-testid="select-type-filter">
+                <SelectValue placeholder="Tür" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tümü</SelectItem>
+                <SelectItem value="Gelir">Gelir</SelectItem>
+                <SelectItem value="Gider">Gider</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={selectedProject} onValueChange={setSelectedProject}>
+              <SelectTrigger className="w-full sm:w-[180px]" data-testid="select-project-filter-transactions">
+                <SelectValue placeholder="Proje" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tüm Projeler</SelectItem>
+                {projects.map((project) => (
+                  <SelectItem key={project.id} value={project.id}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="responsive-filter-bar no-print">
               <Select value={isGrubuFilter} onValueChange={setIsGrubuFilter}>
                 <SelectTrigger className="w-full sm:w-[280px]" data-testid="select-is-grubu-filter">
                   <SelectValue placeholder="İş Grubu" />
@@ -413,7 +414,6 @@ export default function Transactions() {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
           </div>
 
           {transactionsError && (

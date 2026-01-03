@@ -369,15 +369,15 @@ export default function Invoices() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="responsive-container responsive-spacing">
       <PrintHeader documentTitle="FATURALAR LİSTESİ" />
       
-      <div className="flex items-center justify-between">
+      <div className="responsive-header">
         <div>
-          <h1 className="text-3xl font-bold">Faturalar</h1>
-          <p className="text-muted-foreground mt-1">Alış ve satış faturaları yönetimi</p>
+          <h1 className="responsive-header-title">Faturalar</h1>
+          <p className="text-muted-foreground text-sm mt-1">Alış ve satış faturaları yönetimi</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="responsive-actions">
           <ExportToExcel
             data={filteredInvoices.map((invoice) => ({
               "Fatura No": invoice.invoiceNumber,
@@ -398,50 +398,50 @@ export default function Invoices() {
             documentTitle="FATURALAR LİSTESİ"
           />
           <PrintButton />
-          <Button onClick={handleAddInvoice} data-testid="button-add-invoice">
+          <Button onClick={handleAddInvoice} data-testid="button-add-invoice" className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
-            Yeni Fatura Ekle
+            <span className="hidden sm:inline">Yeni Fatura Ekle</span>
+            <span className="sm:hidden">Ekle</span>
           </Button>
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 no-print">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Fatura numarası, açıklama veya projede ara..."
-              className="pl-10"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              data-testid="input-search-invoice"
-            />
-          </div>
-          <Select value={selectedType} onValueChange={setSelectedType}>
-            <SelectTrigger className="w-full sm:w-[180px]" data-testid="select-type-filter">
-              <SelectValue placeholder="Fatura türü" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tüm Faturalar</SelectItem>
-              {invoiceTypeEnum.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type} Faturası
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-            <SelectTrigger className="w-full sm:w-[180px]" data-testid="select-status-filter">
-              <SelectValue placeholder="Durum" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tüm Durumlar</SelectItem>
-              {invoiceStatusEnum.map((status) => (
-                <SelectItem key={status} value={status}>
-                  {status}
-                </SelectItem>
-              ))}
-            </SelectContent>
+      <div className="responsive-filter-bar no-print">
+        <div className="relative flex-1 min-w-[180px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Ara..."
+            className="pl-10"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            data-testid="input-search-invoice"
+          />
+        </div>
+        <Select value={selectedType} onValueChange={setSelectedType}>
+          <SelectTrigger className="w-full sm:w-[140px]" data-testid="select-type-filter">
+            <SelectValue placeholder="Tür" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tüm Faturalar</SelectItem>
+            {invoiceTypeEnum.map((type) => (
+              <SelectItem key={type} value={type}>
+                {type}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+          <SelectTrigger className="w-full sm:w-[140px]" data-testid="select-status-filter">
+            <SelectValue placeholder="Durum" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tüm Durumlar</SelectItem>
+            {invoiceStatusEnum.map((status) => (
+              <SelectItem key={status} value={status}>
+                {status}
+              </SelectItem>
+            ))}
+          </SelectContent>
           </Select>
           <Select value={selectedProject} onValueChange={setSelectedProject}>
             <SelectTrigger className="w-full sm:w-[200px]" data-testid="select-project-filter">
@@ -456,11 +456,10 @@ export default function Invoices() {
               ))}
             </SelectContent>
           </Select>
-        </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="responsive-summary-grid no-print">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Toplam Satış</CardTitle>
@@ -527,67 +526,68 @@ export default function Invoices() {
               {invoices.length === 0 ? "Henüz fatura eklenmemiş" : "Fatura bulunamadı"}
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="responsive-table-wrapper">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Fatura No</TableHead>
-                    <TableHead>Tür</TableHead>
-                    <TableHead>Tarih</TableHead>
-                    <TableHead>Müşteri/Taşeron</TableHead>
-                    <TableHead>Proje</TableHead>
-                    <TableHead className="text-right w-[200px] min-w-[200px]">Tutar</TableHead>
-                    <TableHead className="text-right w-[200px] min-w-[200px]">KDV</TableHead>
-                    <TableHead className="text-right w-[200px] min-w-[200px]">Toplam</TableHead>
-                    <TableHead className="text-right w-[200px] min-w-[200px]">Ödenen</TableHead>
-                    <TableHead className="text-right w-[200px] min-w-[200px]">Kalan</TableHead>
+                    <TableHead className="min-w-[100px]">Fatura No</TableHead>
+                    <TableHead className="w-[70px]">Tür</TableHead>
+                    <TableHead className="w-[90px]">Tarih</TableHead>
+                    <TableHead className="hide-mobile">Müşteri/Taşeron</TableHead>
+                    <TableHead className="hide-tablet">Proje</TableHead>
+                    <TableHead className="text-right hide-tablet">Tutar</TableHead>
+                    <TableHead className="text-right hide-tablet">KDV</TableHead>
+                    <TableHead className="text-right w-[110px]">Toplam</TableHead>
+                    <TableHead className="text-right hide-mobile">Ödenen</TableHead>
+                    <TableHead className="text-right hide-mobile">Kalan</TableHead>
                     <TableHead>Durum</TableHead>
-                    <TableHead className="text-right">İşlemler</TableHead>
+                    <TableHead className="text-right w-[80px]">İşlem</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredInvoices.map((invoice) => (
                     <TableRow key={invoice.id} data-testid={`row-invoice-${invoice.id}`}>
-                      <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
+                      <TableCell className="font-medium text-sm">{invoice.invoiceNumber}</TableCell>
                       <TableCell>
-                        <Badge variant={invoice.type === "Satış" ? "default" : "secondary"}>
+                        <Badge variant={invoice.type === "Satış" ? "default" : "secondary"} className="responsive-badge">
                           {invoice.type}
                         </Badge>
                       </TableCell>
-                      <TableCell className="whitespace-nowrap">
+                      <TableCell className="whitespace-nowrap text-sm">
                         {formatDate(invoice.date as string)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-sm hide-mobile">
                         {invoice.type === "Satış" ? invoice.customerName : invoice.subcontractorName}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
+                      <TableCell className="text-muted-foreground text-sm hide-tablet">
                         {invoice.projectName || "-"}
                       </TableCell>
-                      <TableCell className="text-right font-mono whitespace-nowrap">
+                      <TableCell className="text-right responsive-amount hide-tablet">
                         {parseFloat(invoice.subtotal).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                       </TableCell>
-                      <TableCell className="text-right font-mono whitespace-nowrap">
+                      <TableCell className="text-right responsive-amount hide-tablet">
                         {parseFloat(invoice.taxAmount).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                       </TableCell>
-                      <TableCell className="text-right font-mono font-semibold whitespace-nowrap">
+                      <TableCell className="text-right responsive-amount font-semibold">
                         {parseFloat(invoice.total).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                       </TableCell>
-                      <TableCell className="text-right font-mono text-green-600 dark:text-green-400 whitespace-nowrap">
+                      <TableCell className="text-right responsive-amount text-green-600 dark:text-green-400 hide-mobile">
                         {parseFloat(invoice.paidAmount || "0").toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                       </TableCell>
-                      <TableCell className="text-right font-mono text-orange-600 dark:text-orange-400 whitespace-nowrap">
+                      <TableCell className="text-right responsive-amount text-orange-600 dark:text-orange-400 hide-mobile">
                         {(parseFloat(invoice.total) - parseFloat(invoice.paidAmount || "0")).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getStatusBadgeVariant(invoice.status)}>
+                        <Badge variant={getStatusBadgeVariant(invoice.status)} className="responsive-badge">
                           {invoice.status}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-1">
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="h-8 w-8"
                             onClick={() => handleEditInvoice(invoice)}
                             data-testid={`button-edit-${invoice.id}`}
                           >
@@ -596,6 +596,7 @@ export default function Invoices() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="h-8 w-8"
                             onClick={() => handleDeleteInvoice(invoice.id)}
                             data-testid={`button-delete-${invoice.id}`}
                           >

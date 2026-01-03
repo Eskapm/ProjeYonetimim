@@ -19,24 +19,22 @@ interface TransactionWithProject {
   projectName: string;
   type: string;
   amount: string;
-  isGrubu: string | null;
-  rayicGrubu: string | null;
-  description: string | null;
-  invoiceNumber: string | null;
-  subcontractorId: string | null;
+  isGrubu?: string | null;
+  rayicGrubu?: string | null;
+  description?: string | null;
+  invoiceNumber?: string | null;
+  subcontractorId?: string | null;
   subcontractorName?: string;
-  progressPaymentId: string | null;
-  createdAt: Date | null;
-  // Gelir için yeni alanlar
-  incomeKind: string | null;
-  customerId: string | null;
+  progressPaymentId?: string | null;
+  createdAt?: Date | null;
+  incomeKind?: string | null;
+  customerId?: string | null;
   customerName?: string;
-  linkedProgressPaymentId: string | null;
+  linkedProgressPaymentId?: string | null;
   linkedProgressPaymentNumber?: number;
-  paymentMethod: string | null;
-  checkDueDate: string | null;
-  receiptNumber: string | null;
-  // Fatura bağlantısı
+  paymentMethod?: string | null;
+  checkDueDate?: string | null;
+  receiptNumber?: string | null;
   linkedInvoiceId?: string | null;
 }
 
@@ -127,22 +125,22 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
 
   return (
     <div className="space-y-4 print:space-y-0 print:m-0 print:p-0">
-      <div className="rounded-md border overflow-x-auto w-full print:border-0 print:rounded-none print:overflow-visible print:space-y-0 print:m-0 print:p-0">
+      <div className="responsive-table-wrapper print:border-0 print:rounded-none print:overflow-visible print:space-y-0 print:m-0 print:p-0">
         <Table className="w-full print:w-full print:m-0 print:p-0">
           <TableHeader className="print:display-table-header-group">
             <TableRow className="print:page-break-inside-avoid">
-              <TableHead className="w-[60px] min-w-[60px] text-center print:w-[50px] print:min-w-[50px]">Sıra No</TableHead>
-              <TableHead className="w-[110px] min-w-[110px] print:w-[80px] print:min-w-[80px]">Tarih</TableHead>
-              <TableHead className="print:w-[80px] print:min-w-[80px]">Proje</TableHead>
-              <TableHead className="print:w-[60px] print:min-w-[60px]">Tür</TableHead>
-              <TableHead className="print-hidden">Gelir Türü</TableHead>
-              <TableHead className="print-hidden">Ödeme Yöntemi</TableHead>
-              <TableHead className="print:w-[70px] print:min-w-[70px]">İş Grubu</TableHead>
-              <TableHead className="print:w-[70px] print:min-w-[70px]">Rayiç Grubu</TableHead>
-              <TableHead className="print:w-[100px] print:min-w-[100px]">Açıklama</TableHead>
-              <TableHead className="text-center print:w-[50px] print:min-w-[50px]">Hakedişe Dahil</TableHead>
-              <TableHead className="text-right w-[200px] min-w-[200px] print:w-[90px] print:min-w-[90px]">Tutar</TableHead>
-              <TableHead className="text-right print-hidden">İşlemler</TableHead>
+              <TableHead className="w-[50px] min-w-[50px] text-center print:w-[40px] print:min-w-[40px] hide-mobile">No</TableHead>
+              <TableHead className="w-[90px] min-w-[90px] print:w-[70px] print:min-w-[70px]">Tarih</TableHead>
+              <TableHead className="min-w-[100px] print:w-[80px] print:min-w-[80px]">Proje</TableHead>
+              <TableHead className="w-[70px] min-w-[70px] print:w-[50px] print:min-w-[50px]">Tür</TableHead>
+              <TableHead className="print-hidden hide-tablet">Gelir Türü</TableHead>
+              <TableHead className="print-hidden hide-tablet">Ödeme</TableHead>
+              <TableHead className="print:w-[60px] print:min-w-[60px] hide-mobile">İş Grubu</TableHead>
+              <TableHead className="print:w-[60px] print:min-w-[60px] hide-mobile">Rayiç</TableHead>
+              <TableHead className="print:w-[100px] print:min-w-[100px] hide-tablet">Açıklama</TableHead>
+              <TableHead className="text-center print:w-[40px] print:min-w-[40px] hide-mobile">Hakediş</TableHead>
+              <TableHead className="text-right w-[130px] min-w-[100px] print:w-[80px] print:min-w-[80px]">Tutar</TableHead>
+              <TableHead className="text-right print-hidden w-[100px]">İşlemler</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -161,29 +159,29 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                     data-testid={`row-transaction-${transaction.id}`}
                     className="print-hidden"
                   >
-                    <TableCell className="text-center font-medium text-muted-foreground">{index + 1}</TableCell>
-                    <TableCell className="font-medium whitespace-nowrap">{formatDate(transaction.date)}</TableCell>
-                    <TableCell>{transaction.projectName}</TableCell>
+                    <TableCell className="text-center font-medium text-muted-foreground hide-mobile">{index + 1}</TableCell>
+                    <TableCell className="font-medium whitespace-nowrap text-sm">{formatDate(transaction.date)}</TableCell>
+                    <TableCell className="text-sm">{transaction.projectName}</TableCell>
                     <TableCell>
                       <Badge
-                        className={
+                        className={`responsive-badge ${
                           transaction.type === "Gelir"
                             ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
                             : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                        }
+                        }`}
                       >
                         {transaction.type}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm">
+                    <TableCell className="text-sm hide-tablet">
                       {transaction.type === "Gelir" ? (transaction.incomeKind || "-") : "-"}
                     </TableCell>
-                    <TableCell className="text-sm">
+                    <TableCell className="text-sm hide-tablet">
                       {transaction.type === "Gelir" ? (transaction.paymentMethod || "-") : "-"}
                     </TableCell>
-                    <TableCell className="text-sm">{transaction.isGrubu || "-"}</TableCell>
-                    <TableCell className="text-sm">{transaction.rayicGrubu || "-"}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-[200px]">
+                    <TableCell className="text-sm hide-mobile">{transaction.isGrubu || "-"}</TableCell>
+                    <TableCell className="text-sm hide-mobile">{transaction.rayicGrubu || "-"}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground max-w-[200px] hide-tablet">
                       <div className="flex items-center gap-2">
                         <span className="truncate">{transaction.description || '-'}</span>
                         {transaction.linkedInvoiceId && (
@@ -194,21 +192,22 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-center" data-testid={`text-progress-payment-status-${transaction.id}`}>
+                    <TableCell className="text-center hide-mobile" data-testid={`text-progress-payment-status-${transaction.id}`}>
                       {transaction.progressPaymentId ? (
-                        <Check className="h-5 w-5 text-green-600 dark:text-green-400 mx-auto" />
+                        <Check className="h-4 w-4 text-green-600 dark:text-green-400 mx-auto" />
                       ) : (
-                        <X className="h-5 w-5 text-muted-foreground mx-auto" />
+                        <X className="h-4 w-4 text-muted-foreground mx-auto" />
                       )}
                     </TableCell>
-                    <TableCell className="text-right font-mono font-semibold whitespace-nowrap">
+                    <TableCell className="text-right responsive-amount font-semibold">
                       {formatCurrency(transaction.amount)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
+                      <div className="flex justify-end gap-1">
                         <Button
                           variant="ghost"
                           size="icon"
+                          className="h-8 w-8"
                           onClick={() => onEdit?.(transaction)}
                           data-testid={`button-edit-transaction-${transaction.id}`}
                         >
@@ -217,6 +216,7 @@ export function TransactionTable({ transactions, onEdit, onDelete }: Transaction
                         <Button
                           variant="ghost"
                           size="icon"
+                          className="h-8 w-8"
                           onClick={() => onDelete?.(transaction.id)}
                           data-testid={`button-delete-transaction-${transaction.id}`}
                         >
