@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { FileSpreadsheet } from "lucide-react";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { format } from "date-fns";
 
 interface ExportToExcelProps {
@@ -11,13 +11,15 @@ interface ExportToExcelProps {
 }
 
 export function ExportToExcel({ data, filename, sheetName = "Sayfa1", documentTitle }: ExportToExcelProps) {
-  const handleExport = () => {
+  const handleExport = async () => {
     if (!data || data.length === 0) {
       alert("Dışa aktarılacak veri yok");
       return;
     }
 
-    // Kurumsal başlık verileri
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet(sheetName);
+
     const companyHeader = [
       ["ESKA YAPI MÜHENDİSLİK İNŞAAT EMLAK TURİZM VE TİCARET LİMİTED ŞİRKETİ"],
       [],
@@ -30,37 +32,36 @@ export function ExportToExcel({ data, filename, sheetName = "Sayfa1", documentTi
       [],
     ];
 
-    // Veriyi oluştur
-    const worksheet = XLSX.utils.aoa_to_sheet(companyHeader);
-    
-    // Ana veriyi ekle
-    XLSX.utils.sheet_add_json(worksheet, data, { 
-      origin: -1, // Son satırdan sonra ekle
-      skipHeader: false 
+    companyHeader.forEach((row) => {
+      worksheet.addRow(row);
     });
 
-    // Sütun genişliklerini ayarla
-    const colWidths = Object.keys(data[0] || {}).map(() => ({ wch: 20 }));
-    worksheet['!cols'] = colWidths;
+    worksheet.getRow(1).height = 20;
+    worksheet.getRow(2).height = 5;
+    worksheet.getRow(3).height = 15;
+    worksheet.getRow(4).height = 15;
+    worksheet.getRow(5).height = 15;
+    worksheet.getRow(6).height = 5;
+    worksheet.getRow(7).height = 18;
+    worksheet.getRow(8).height = 15;
+    worksheet.getRow(9).height = 5;
 
-    // Satır yüksekliklerini ayarla
-    worksheet['!rows'] = [
-      { hpt: 20 }, // Başlık
-      { hpt: 5 },  // Boşluk
-      { hpt: 15 }, // Mersis
-      { hpt: 15 }, // Vergi
-      { hpt: 15 }, // Adres
-      { hpt: 5 },  // Boşluk
-      { hpt: 18 }, // Belge adı
-      { hpt: 15 }, // Tarih
-      { hpt: 5 },  // Boşluk
-    ];
+    if (data.length > 0) {
+      const headers = Object.keys(data[0]);
+      worksheet.addRow(headers);
 
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-    
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-    const dataBlob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      data.forEach((item) => {
+        const row = headers.map((header) => item[header]);
+        worksheet.addRow(row);
+      });
+
+      headers.forEach((_, index) => {
+        worksheet.getColumn(index + 1).width = 20;
+      });
+    }
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const dataBlob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     
     const url = window.URL.createObjectURL(dataBlob);
     const link = document.createElement("a");
