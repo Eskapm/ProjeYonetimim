@@ -231,21 +231,21 @@
 
 /* Fluid typography CSS custom properties - added to html for clean override */
 html {
-  /* Fluid font sizes using clamp() - automatically scales between min and max */
-  --font-xs: clamp(0.65rem, 0.6rem + 0.25vw, 0.75rem);
-  --font-sm: clamp(0.75rem, 0.7rem + 0.3vw, 0.875rem);
-  --font-base: clamp(0.8rem, 0.75rem + 0.35vw, 1rem);
-  --font-lg: clamp(0.9rem, 0.85rem + 0.4vw, 1.125rem);
-  --font-xl: clamp(1rem, 0.9rem + 0.5vw, 1.25rem);
-  --font-2xl: clamp(1.125rem, 1rem + 0.6vw, 1.5rem);
-  --font-3xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.875rem);
+  /* Fluid font sizes using clamp() - readable minimum sizes */
+  --font-xs: clamp(0.75rem, 0.7rem + 0.2vw, 0.8rem);
+  --font-sm: clamp(0.8rem, 0.75rem + 0.25vw, 0.875rem);
+  --font-base: clamp(0.875rem, 0.85rem + 0.2vw, 1rem);
+  --font-lg: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --font-xl: clamp(1.125rem, 1.05rem + 0.3vw, 1.25rem);
+  --font-2xl: clamp(1.25rem, 1.15rem + 0.35vw, 1.5rem);
+  --font-3xl: clamp(1.5rem, 1.35rem + 0.5vw, 1.875rem);
   
   /* Fluid spacing */
-  --space-xs: clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem);
-  --space-sm: clamp(0.5rem, 0.4rem + 0.3vw, 0.75rem);
-  --space-md: clamp(0.75rem, 0.6rem + 0.5vw, 1rem);
-  --space-lg: clamp(1rem, 0.8rem + 0.6vw, 1.5rem);
-  --space-xl: clamp(1.25rem, 1rem + 0.75vw, 2rem);
+  --space-xs: clamp(0.375rem, 0.3rem + 0.2vw, 0.5rem);
+  --space-sm: clamp(0.5rem, 0.45rem + 0.25vw, 0.75rem);
+  --space-md: clamp(0.75rem, 0.7rem + 0.3vw, 1rem);
+  --space-lg: clamp(1rem, 0.9rem + 0.4vw, 1.5rem);
+  --space-xl: clamp(1.25rem, 1.1rem + 0.5vw, 2rem);
 }
 
 /* Responsive container with automatic padding */
