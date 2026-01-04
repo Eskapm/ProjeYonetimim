@@ -892,39 +892,39 @@ export default function Reports() {
   }, [projectCompletion]);
 
   return (
-    <div className="space-y-6">
+    <div className="responsive-container responsive-spacing">
       <PrintHeader documentTitle="RAPORLAR" />
       
-      <div className="flex items-center justify-between">
+      <div className="responsive-header">
         <div>
-          <h1 className="text-3xl font-bold">Raporlar</h1>
-          <p className="text-muted-foreground mt-1">Detaylı analiz ve raporlama</p>
+          <h1 className="responsive-header-title">Raporlar</h1>
+          <p className="text-muted-foreground text-sm mt-1">Detaylı analiz ve raporlama</p>
           {selectedProjectId !== "all" && (
             <p className="text-sm text-primary mt-1">Aktif Filtre: {selectedProjectName}</p>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="responsive-actions">
           <PrintButton />
         </div>
       </div>
 
       {/* Global Filters - Applied to all report tabs */}
       <Card className="no-print">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Filter className="h-5 w-5" />
+        <CardHeader className="responsive-card-padding">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Filter className="h-4 w-4 sm:h-5 sm:w-5" />
             Filtreler
           </CardTitle>
-          <CardDescription>
-            Tüm raporlar için geçerli proje, tarih, iş grubu ve maliyet grubu filtreleri
+          <CardDescription className="text-xs sm:text-sm">
+            Tüm raporlar için geçerli filtreler
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <Label>Proje</Label>
+        <CardContent className="responsive-card-padding pt-0">
+          <div className="responsive-filter-bar">
+            <div className="w-full sm:w-auto sm:min-w-[140px]">
+              <Label className="text-xs sm:text-sm">Proje</Label>
               <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
-                <SelectTrigger data-testid="select-project-filter">
+                <SelectTrigger data-testid="select-project-filter" className="w-full">
                   <SelectValue placeholder="Tüm Projeler" />
                 </SelectTrigger>
                 <SelectContent>
@@ -937,57 +937,57 @@ export default function Reports() {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label>Dönem</Label>
+            <div className="w-full sm:w-auto sm:min-w-[120px]">
+              <Label className="text-xs sm:text-sm">Dönem</Label>
               <Select value={dateFilter} onValueChange={(value) => setDateFilter(value as DateFilter)}>
-                <SelectTrigger data-testid="select-date-filter">
+                <SelectTrigger data-testid="select-date-filter" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tüm Zamanlar</SelectItem>
                   <SelectItem value="this-month">Bu Ay</SelectItem>
                   <SelectItem value="this-year">Bu Yıl</SelectItem>
-                  <SelectItem value="custom">Özel Tarih Aralığı</SelectItem>
+                  <SelectItem value="custom">Özel Tarih</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label>İş Grubu</Label>
+            <div className="w-full sm:w-auto sm:min-w-[130px]">
+              <Label className="text-xs sm:text-sm">İş Grubu</Label>
               <Select value={selectedWorkGroup} onValueChange={setSelectedWorkGroup}>
-                <SelectTrigger data-testid="select-work-group-filter">
-                  <SelectValue placeholder="Tüm İş Grupları" />
+                <SelectTrigger data-testid="select-work-group-filter" className="w-full">
+                  <SelectValue placeholder="Tümü" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tüm İş Grupları</SelectItem>
+                  <SelectItem value="all">Tüm Gruplar</SelectItem>
                   <SelectItem value="Kaba İmalat">Kaba İmalat</SelectItem>
                   <SelectItem value="İnce İmalat">İnce İmalat</SelectItem>
-                  <SelectItem value="Mekanik Tesisat">Mekanik Tesisat</SelectItem>
-                  <SelectItem value="Elektrik Tesisat">Elektrik Tesisat</SelectItem>
-                  <SelectItem value="Çevre Düzenlemesi ve Altyapı">Çevre Düzenlemesi ve Altyapı</SelectItem>
-                  <SelectItem value="Genel Giderler ve Endirekt Giderler">Genel Giderler</SelectItem>
+                  <SelectItem value="Mekanik Tesisat">Mekanik</SelectItem>
+                  <SelectItem value="Elektrik Tesisat">Elektrik</SelectItem>
+                  <SelectItem value="Çevre Düzenlemesi ve Altyapı">Çevre</SelectItem>
+                  <SelectItem value="Genel Giderler ve Endirekt Giderler">Genel</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label>Rayiç Grubu</Label>
+            <div className="w-full sm:w-auto sm:min-w-[130px]">
+              <Label className="text-xs sm:text-sm">Rayiç Grubu</Label>
               <Select value={selectedCostGroup} onValueChange={setSelectedCostGroup}>
-                <SelectTrigger data-testid="select-cost-group-filter">
-                  <SelectValue placeholder="Tüm Maliyet Grupları" />
+                <SelectTrigger data-testid="select-cost-group-filter" className="w-full">
+                  <SelectValue placeholder="Tümü" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tüm Maliyet Grupları</SelectItem>
+                  <SelectItem value="all">Tüm Maliyetler</SelectItem>
                   <SelectItem value="Malzeme">Malzeme</SelectItem>
                   <SelectItem value="İşçilik">İşçilik</SelectItem>
-                  <SelectItem value="Makine Ekipman">Makine Ekipman</SelectItem>
+                  <SelectItem value="Makine Ekipman">Makine</SelectItem>
                   <SelectItem value="Paket">Paket</SelectItem>
-                  <SelectItem value="Genel Giderler ve Endirekt Giderler">Genel Giderler</SelectItem>
+                  <SelectItem value="Genel Giderler ve Endirekt Giderler">Genel</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           
           {dateFilter === "custom" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
               <div>
                 <Label>Başlangıç Tarihi</Label>
                 <Input
@@ -1011,41 +1011,48 @@ export default function Reports() {
         </CardContent>
       </Card>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5" data-testid="tabs-report-type">
-          <TabsTrigger value="financial" data-testid="tab-financial">
-            <Receipt className="h-4 w-4 mr-2" />
-            Mali Raporlar
-          </TabsTrigger>
-          <TabsTrigger value="cashflow" data-testid="tab-cashflow">
-            <TrendingUp className="h-4 w-4 mr-2" />
-            Nakit Akış
-          </TabsTrigger>
-          <TabsTrigger value="operational" data-testid="tab-operational">
-            <ClipboardList className="h-4 w-4 mr-2" />
-            İşleyiş Raporları
-          </TabsTrigger>
-          <TabsTrigger value="project" data-testid="tab-project">
-            <FolderKanban className="h-4 w-4 mr-2" />
-            Proje Raporları
-          </TabsTrigger>
-          <TabsTrigger value="hakedis" data-testid="tab-hakedis">
-            <DollarSign className="h-4 w-4 mr-2" />
-            Hakediş Raporları
-          </TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="responsive-spacing">
+        <div className="responsive-tabs overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+          <TabsList className="inline-flex w-auto min-w-full sm:grid sm:w-full sm:grid-cols-5" data-testid="tabs-report-type">
+            <TabsTrigger value="financial" data-testid="tab-financial" className="text-xs sm:text-sm px-2 sm:px-4 whitespace-nowrap">
+              <Receipt className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Mali Raporlar</span>
+              <span className="sm:hidden">Mali</span>
+            </TabsTrigger>
+            <TabsTrigger value="cashflow" data-testid="tab-cashflow" className="text-xs sm:text-sm px-2 sm:px-4 whitespace-nowrap">
+              <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Nakit Akış</span>
+              <span className="sm:hidden">Nakit</span>
+            </TabsTrigger>
+            <TabsTrigger value="operational" data-testid="tab-operational" className="text-xs sm:text-sm px-2 sm:px-4 whitespace-nowrap">
+              <ClipboardList className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">İşleyiş</span>
+              <span className="sm:hidden">İşleyiş</span>
+            </TabsTrigger>
+            <TabsTrigger value="project" data-testid="tab-project" className="text-xs sm:text-sm px-2 sm:px-4 whitespace-nowrap">
+              <FolderKanban className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Proje</span>
+              <span className="sm:hidden">Proje</span>
+            </TabsTrigger>
+            <TabsTrigger value="hakedis" data-testid="tab-hakedis" className="text-xs sm:text-sm px-2 sm:px-4 whitespace-nowrap">
+              <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Hakediş</span>
+              <span className="sm:hidden">Hakediş</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Financial Reports Tab */}
-        <TabsContent value="financial" className="space-y-6">
+        <TabsContent value="financial" className="responsive-spacing">
           {/* Financial Summary */}
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
+            <div className="responsive-summary-grid">
+              <Skeleton className="h-24 sm:h-32" />
+              <Skeleton className="h-24 sm:h-32" />
+              <Skeleton className="h-24 sm:h-32" />
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="responsive-summary-grid">
               <StatsCard
                 title="Toplam Gelir"
                 value={formatCurrency(financialSummary.totalIncome)}
@@ -1068,33 +1075,33 @@ export default function Reports() {
           {/* Tax Summary */}
           {!isLoading && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Receipt className="h-5 w-5" />
+              <CardHeader className="responsive-card-padding">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                  <Receipt className="h-4 w-4 sm:h-5 sm:w-5" />
                   Vergi Özeti
                 </CardTitle>
-                <CardDescription>
-                  Toplam gelir ve giderlere göre hesaplanan vergi yükümlülükleri
+                <CardDescription className="text-xs sm:text-sm">
+                  Vergi yükümlülükleri
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <CardContent className="responsive-card-padding pt-0">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Toplam KDV</p>
-                    <p className="text-2xl font-bold">{formatCurrency(financialSummary.totalKDV)}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">Toplam KDV</p>
+                    <p className="responsive-card-value">{formatCurrency(financialSummary.totalKDV)}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Kurumlar Vergisi</p>
-                    <p className="text-2xl font-bold">{formatCurrency(financialSummary.taxSummary.corporateTax)}</p>
-                    <p className="text-xs text-muted-foreground">%25 oran</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">Kurumlar Vergisi</p>
+                    <p className="responsive-card-value">{formatCurrency(financialSummary.taxSummary.corporateTax)}</p>
+                    <p className="text-xs text-muted-foreground hidden sm:block">%25 oran</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Net Kar (Vergi Sonrası)</p>
-                    <p className="text-2xl font-bold">{formatCurrency(financialSummary.taxSummary.netProfit)}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">Net Kar (Sonrası)</p>
+                    <p className="responsive-card-value">{formatCurrency(financialSummary.taxSummary.netProfit)}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Toplam Vergi Yükü</p>
-                    <p className="text-2xl font-bold">{formatCurrency(financialSummary.taxSummary.totalTaxBurden)}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">Toplam Vergi</p>
+                    <p className="responsive-card-value">{formatCurrency(financialSummary.taxSummary.totalTaxBurden)}</p>
                   </div>
                 </div>
               </CardContent>

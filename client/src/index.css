@@ -226,42 +226,89 @@
 /* ============================================
    RESPONSIVE DESIGN UTILITIES
    Automatic scaling for phone/tablet/desktop
+   with fluid typography (clamp-based)
    ============================================ */
+
+/* Fluid typography CSS custom properties */
+:root {
+  /* Fluid font sizes using clamp() - automatically scales between min and max */
+  --font-xs: clamp(0.65rem, 0.6rem + 0.25vw, 0.75rem);
+  --font-sm: clamp(0.75rem, 0.7rem + 0.3vw, 0.875rem);
+  --font-base: clamp(0.8rem, 0.75rem + 0.35vw, 1rem);
+  --font-lg: clamp(0.9rem, 0.85rem + 0.4vw, 1.125rem);
+  --font-xl: clamp(1rem, 0.9rem + 0.5vw, 1.25rem);
+  --font-2xl: clamp(1.125rem, 1rem + 0.6vw, 1.5rem);
+  --font-3xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.875rem);
+  
+  /* Fluid spacing */
+  --space-xs: clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem);
+  --space-sm: clamp(0.5rem, 0.4rem + 0.3vw, 0.75rem);
+  --space-md: clamp(0.75rem, 0.6rem + 0.5vw, 1rem);
+  --space-lg: clamp(1rem, 0.8rem + 0.6vw, 1.5rem);
+  --space-xl: clamp(1.25rem, 1rem + 0.75vw, 2rem);
+}
 
 /* Responsive container with automatic padding */
 .responsive-container {
-  @apply w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8;
+  @apply w-full mx-auto;
+  padding-left: var(--space-md);
+  padding-right: var(--space-md);
+}
+
+@media (min-width: 640px) {
+  .responsive-container {
+    padding-left: var(--space-lg);
+    padding-right: var(--space-lg);
+  }
 }
 
 /* Responsive page header */
 .responsive-header {
-  @apply flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6;
+  @apply flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between;
+  margin-bottom: var(--space-lg);
 }
 
 .responsive-header-title {
-  @apply text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight;
+  font-size: var(--font-2xl);
+  @apply font-bold tracking-tight;
+}
+
+@media (min-width: 640px) {
+  .responsive-header-title {
+    font-size: var(--font-3xl);
+  }
 }
 
 /* Responsive card grid - auto-scales based on screen size */
 .responsive-card-grid {
-  @apply grid gap-3 sm:gap-4 lg:gap-6;
+  @apply grid;
+  gap: var(--space-md);
   @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
 }
 
 /* Responsive summary grid for financial data */
 .responsive-summary-grid {
-  @apply grid gap-2 sm:gap-4;
+  @apply grid;
+  gap: var(--space-sm);
   @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3;
+}
+
+@media (min-width: 640px) {
+  .responsive-summary-grid {
+    gap: var(--space-md);
+  }
 }
 
 /* Responsive filter bar - stacks on mobile */
 .responsive-filter-bar {
-  @apply flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3;
+  @apply flex flex-col sm:flex-row sm:flex-wrap sm:items-center;
+  gap: var(--space-sm);
 }
 
 /* Responsive action buttons - full width on mobile */
 .responsive-actions {
-  @apply flex flex-col gap-2 w-full sm:flex-row sm:w-auto sm:gap-3;
+  @apply flex flex-col w-full sm:flex-row sm:w-auto;
+  gap: var(--space-sm);
 }
 
 .responsive-actions > button,
@@ -271,13 +318,32 @@
 
 /* Responsive table wrapper - horizontal scroll on small screens */
 .responsive-table-wrapper {
-  @apply w-full overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0;
-  @apply rounded-md border;
+  @apply w-full overflow-x-auto rounded-md border;
+  margin-left: calc(-1 * var(--space-md));
+  margin-right: calc(-1 * var(--space-md));
+  padding-left: var(--space-md);
+  padding-right: var(--space-md);
+}
+
+@media (min-width: 640px) {
+  .responsive-table-wrapper {
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
 }
 
 /* Table minimum widths for proper display */
 .responsive-table-wrapper table {
-  @apply min-w-[640px] sm:min-w-0 w-full;
+  @apply w-full;
+  min-width: 500px;
+}
+
+@media (min-width: 640px) {
+  .responsive-table-wrapper table {
+    min-width: 0;
+  }
 }
 
 /* Responsive table cells - hide less important columns on mobile */
@@ -298,9 +364,26 @@
   display: table-cell !important;
 }
 
-/* Responsive text sizing for financial data */
+/* Fluid text sizing for financial data - auto-scales */
 .responsive-amount {
-  @apply text-sm sm:text-base font-mono whitespace-nowrap;
+  font-size: var(--font-sm);
+  @apply font-mono whitespace-nowrap tabular-nums;
+}
+
+@media (min-width: 640px) {
+  .responsive-amount {
+    font-size: var(--font-base);
+  }
+}
+
+/* Text truncation with ellipsis for overflow */
+.text-truncate {
+  @apply truncate max-w-[120px] sm:max-w-[180px] lg:max-w-none;
+}
+
+/* Responsive table text - smaller on mobile */
+.responsive-table-text {
+  font-size: var(--font-sm);
 }
 
 /* Responsive dialog/modal sizing */
@@ -310,20 +393,29 @@
 
 /* Responsive form layout - single column on mobile, multi-column on larger */
 .responsive-form-grid {
-  @apply grid gap-4;
-  @apply grid-cols-1 sm:grid-cols-2;
+  @apply grid grid-cols-1 sm:grid-cols-2;
+  gap: var(--space-md);
 }
 
 .responsive-form-grid-3 {
-  @apply grid gap-4;
-  @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3;
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3;
+  gap: var(--space-md);
 }
 
-/* Touch-friendly button sizing on mobile */
+/* Touch-friendly button sizing on mobile - minimum 44px touch target */
 @media (max-width: 640px) {
-  .touch-target {
+  .touch-target,
+  button,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"] {
     min-height: 44px;
-    min-width: 44px;
+  }
+  
+  /* Icon buttons in tables need smaller min-height */
+  table button[class*="h-8"],
+  table button[class*="h-7"] {
+    min-height: 32px;
   }
 }
 
@@ -346,17 +438,73 @@
 
 /* Card responsive padding */
 .responsive-card-padding {
-  @apply p-3 sm:p-4 lg:p-6;
+  padding: var(--space-md);
+}
+
+@media (min-width: 640px) {
+  .responsive-card-padding {
+    padding: var(--space-lg);
+  }
 }
 
 /* Responsive spacing utilities */
 .responsive-spacing {
-  @apply space-y-3 sm:space-y-4 lg:space-y-6;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
 }
 
-/* Mobile-first badge sizing */
+@media (min-width: 640px) {
+  .responsive-spacing {
+    gap: var(--space-lg);
+  }
+}
+
+/* Mobile-first badge sizing - fluid */
 .responsive-badge {
-  @apply text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1;
+  font-size: var(--font-xs);
+  @apply px-1.5 py-0.5 sm:px-2 sm:py-0.5;
+}
+
+/* Responsive card content scaling */
+.responsive-card-value {
+  font-size: var(--font-xl);
+  @apply font-bold font-mono tabular-nums;
+}
+
+@media (min-width: 640px) {
+  .responsive-card-value {
+    font-size: var(--font-2xl);
+  }
+}
+
+/* Fluid table header/cell padding */
+.responsive-table-wrapper th,
+.responsive-table-wrapper td {
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-sm);
+}
+
+@media (min-width: 640px) {
+  .responsive-table-wrapper th,
+  .responsive-table-wrapper td {
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--font-base);
+  }
+}
+
+/* Compact table variant for data-dense views */
+.compact-table th,
+.compact-table td {
+  padding: var(--space-xs) var(--space-sm) !important;
+  font-size: var(--font-xs) !important;
+}
+
+@media (min-width: 640px) {
+  .compact-table th,
+  .compact-table td {
+    font-size: var(--font-sm) !important;
+  }
 }
 
 /**
