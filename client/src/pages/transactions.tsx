@@ -34,8 +34,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Search, Calculator, Loader2, FileText } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Search, Calculator, Loader2 } from "lucide-react";
 import { calculateTaxSummary } from "@shared/taxCalculations";
 import { PrintHeader } from "@/components/print-header";
 import { useForm } from "react-hook-form";
@@ -45,14 +44,9 @@ import {
   type InsertTransaction,
   type Transaction,
   type Project,
-  type Subcontractor,
-  type Customer,
-  type ProgressPayment,
   transactionTypeEnum,
   isGrubuEnum,
   rayicGrubuEnum,
-  incomeKindEnum,
-  paymentMethodEnum,
 } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -61,38 +55,24 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 interface TransactionWithProject extends Transaction {
   projectName: string;
-  subcontractorName?: string;
-  subcontractorId: string | null;
-  customerName?: string;
-  linkedProgressPaymentNumber?: number;
 }
 
 export default function Transactions() {
-  const { activeProjectId, activeProject, setActiveProjectId } = useProjectContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [selectedProject, setSelectedProject] = useState("all");
   const [isGrubuFilter, setIsGrubuFilter] = useState("all");
   const [rayicGrubuFilter, setRayicGrubuFilter] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deleteTransactionId, setDeleteTransactionId] = useState<string | null>(null);
-  const [createInvoice, setCreateInvoice] = useState(false);
-  const [invoiceTaxRate, setInvoiceTaxRate] = useState("20");
   const { toast } = useToast();
+  const { activeProjectId, activeProject } = useProjectContext();
 
-  // Local state synced with global context for immediate UI updates
-  const [selectedProject, setSelectedProjectLocal] = useState<string>(activeProjectId || "all");
-  
-  // Sync from context to local state
+  // Sync filter with active project
   useEffect(() => {
-    setSelectedProjectLocal(activeProjectId || "all");
+    setSelectedProject(activeProjectId || "all");
   }, [activeProjectId]);
-  
-  // Update both local state and context when user changes selection
-  const setSelectedProject = (id: string) => {
-    setSelectedProjectLocal(id);
-    setActiveProjectId(id === "all" ? null : id);
-  };
 
   const { data: transactions = [], isLoading: isLoadingTransactions, error: transactionsError } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
@@ -100,18 +80,6 @@ export default function Transactions() {
 
   const { data: projects = [], isLoading: isLoadingProjects } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
-  });
-
-  const { data: subcontractors = [] } = useQuery<Subcontractor[]>({
-    queryKey: ["/api/subcontractors"],
-  });
-
-  const { data: customers = [] } = useQuery<Customer[]>({
-    queryKey: ["/api/customers"],
-  });
-
-  const { data: progressPayments = [] } = useQuery<ProgressPayment[]>({
-    queryKey: ["/api/progress-payments"],
   });
 
   const createTransactionMutation = useMutation({
@@ -204,24 +172,17 @@ export default function Transactions() {
       ...data,
       description: data.description || null,
       invoiceNumber: data.invoiceNumber || null,
-      subcontractorId: data.subcontractorId || null,
     };
 
     if (editingTransaction) {
       updateTransactionMutation.mutate({ id: editingTransaction.id, data: cleanedData });
     } else {
-      // "Fatura Oluştur" seçeneği için backend'e ekstra bilgi gönder
-      const submitData = createInvoice && cleanedData.invoiceNumber
-        ? { ...cleanedData, createInvoice: true, invoiceTaxRate }
-        : cleanedData;
-      createTransactionMutation.mutate(submitData as InsertTransaction);
+      createTransactionMutation.mutate(cleanedData);
     }
   };
 
   const handleAddTransaction = () => {
     setEditingTransaction(null);
-    setCreateInvoice(false);
-    setInvoiceTaxRate("20");
     form.reset({
       projectId: activeProjectId || "",
       type: "Gider",
@@ -231,12 +192,11 @@ export default function Transactions() {
       isGrubu: "",
       rayicGrubu: "",
       invoiceNumber: "",
-      subcontractorId: "",
     });
     setIsDialogOpen(true);
   };
 
-  const handleEditTransaction = (transaction: TransactionWithProject) => {
+  const handleEditTransaction = (transaction: Transaction) => {
     setEditingTransaction(transaction);
     form.reset({
       projectId: transaction.projectId,
@@ -247,7 +207,6 @@ export default function Transactions() {
       isGrubu: transaction.isGrubu,
       rayicGrubu: transaction.rayicGrubu,
       invoiceNumber: transaction.invoiceNumber ?? "",
-      subcontractorId: transaction.subcontractorId ?? "",
     });
     setIsDialogOpen(true);
   };
@@ -265,16 +224,12 @@ export default function Transactions() {
   const transactionsWithProjects: TransactionWithProject[] = useMemo(() => {
     return transactions.map((transaction) => {
       const project = projects.find((p) => p.id === transaction.projectId);
-      const subcontractor = transaction.subcontractorId 
-        ? subcontractors.find((s) => s.id === transaction.subcontractorId)
-        : null;
       return {
         ...transaction,
         projectName: project?.name || "Bilinmeyen Proje",
-        subcontractorName: subcontractor?.name,
       };
     });
-  }, [transactions, projects, subcontractors]);
+  }, [transactions, projects]);
 
   const filteredTransactions = transactionsWithProjects.filter((transaction) => {
     const matchesSearch =
@@ -305,8 +260,6 @@ export default function Transactions() {
     "Tarih": transaction.date,
     "Proje": transaction.projectName,
     "Tür": transaction.type,
-    "Gelir Türü": transaction.type === "Gelir" ? (transaction.incomeKind || "-") : "-",
-    "Ödeme Yöntemi": transaction.type === "Gelir" ? (transaction.paymentMethod || "-") : "-",
     "Tutar": parseFloat(transaction.amount).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
     "İş Grubu": transaction.isGrubu || "-",
     "Rayiç Grubu": transaction.rayicGrubu || "-",
@@ -315,12 +268,14 @@ export default function Transactions() {
   }));
 
   return (
-    <div className="responsive-container responsive-spacing">
+    <div className="space-y-6">
       <PrintHeader documentTitle="İŞLEMLER RAPORU" />
       
-      <div className="responsive-header">
-        <h1 className="responsive-header-title">Gelir & Gider İşlemleri</h1>
-        <div className="responsive-actions">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Gelir & Gider İşlemleri</h1>
+        </div>
+        <div className="flex items-center gap-2">
           <ExportToExcel 
             data={excelData} 
             filename="islemler" 
@@ -337,65 +292,62 @@ export default function Transactions() {
             transactions={filteredTransactions}
             filterInfo={typeFilter !== "all" ? `Filtre: ${typeFilter}` : undefined}
           />
-          <Button onClick={handleAddTransaction} data-testid="button-add-transaction" className="w-full sm:w-auto">
+          <Button onClick={handleAddTransaction} data-testid="button-add-transaction">
             <Plus className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Yeni İşlem Ekle</span>
-            <span className="sm:hidden">Ekle</span>
+            Yeni İşlem Ekle
           </Button>
         </div>
       </div>
 
-      <Tabs defaultValue="transactions" className="responsive-spacing">
-        <div className="responsive-tabs">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
-            <TabsTrigger value="transactions" data-testid="tab-transactions-list">
-              İşlem Listesi
-            </TabsTrigger>
-            <TabsTrigger value="taxes" data-testid="tab-tax-summary">
-              <Calculator className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Vergi Hesaplama</span>
-              <span className="sm:hidden">Vergi</span>
-            </TabsTrigger>
-          </TabsList>
-        </div>
+      <Tabs defaultValue="transactions" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsTrigger value="transactions" data-testid="tab-transactions-list">
+            İşlem Listesi
+          </TabsTrigger>
+          <TabsTrigger value="taxes" data-testid="tab-tax-summary">
+            <Calculator className="h-4 w-4 mr-2" />
+            Vergi Hesaplama
+          </TabsTrigger>
+        </TabsList>
 
-        <TabsContent value="transactions" className="responsive-spacing">
-          <div className="responsive-filter-bar no-print">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Ara..."
-                className="pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                data-testid="input-search-transactions"
-              />
+        <TabsContent value="transactions" className="space-y-6">
+          <div className="flex flex-col gap-4 no-print">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="İşlem açıklaması veya proje adı ile ara..."
+                  className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  data-testid="input-search-transactions"
+                />
+              </div>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-full sm:w-[150px]" data-testid="select-type-filter">
+                  <SelectValue placeholder="Tür" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tümü</SelectItem>
+                  <SelectItem value="Gelir">Gelir</SelectItem>
+                  <SelectItem value="Gider">Gider</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={selectedProject} onValueChange={setSelectedProject}>
+                <SelectTrigger className="w-full sm:w-[250px]" data-testid="select-project-filter-transactions">
+                  <SelectValue placeholder="Proje seç" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tüm Projeler</SelectItem>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full sm:w-[120px]" data-testid="select-type-filter">
-                <SelectValue placeholder="Tür" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tümü</SelectItem>
-                <SelectItem value="Gelir">Gelir</SelectItem>
-                <SelectItem value="Gider">Gider</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={selectedProject} onValueChange={setSelectedProject}>
-              <SelectTrigger className="w-full sm:w-[180px]" data-testid="select-project-filter-transactions">
-                <SelectValue placeholder="Proje" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tüm Projeler</SelectItem>
-                {projects.map((project) => (
-                  <SelectItem key={project.id} value={project.id}>
-                    {project.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="responsive-filter-bar no-print">
+            <div className="flex flex-col sm:flex-row gap-4">
               <Select value={isGrubuFilter} onValueChange={setIsGrubuFilter}>
                 <SelectTrigger className="w-full sm:w-[280px]" data-testid="select-is-grubu-filter">
                   <SelectValue placeholder="İş Grubu" />
@@ -422,6 +374,7 @@ export default function Transactions() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
           </div>
 
           {transactionsError && (
@@ -623,7 +576,7 @@ export default function Transactions() {
                           {...field}
                           type="number"
                           step="0.01"
-                          placeholder="0,00 TL"
+                          placeholder="0.00"
                           data-testid="input-transaction-amount"
                         />
                       </FormControl>
@@ -650,239 +603,55 @@ export default function Transactions() {
                   )}
                 />
 
-                {/* Gelir için alanlar */}
-                {form.watch("type") === "Gelir" && (
-                  <>
-                    <FormField
-                      control={form.control}
-                      name="incomeKind"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Gelir Türü *</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value || ""}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-transaction-income-kind">
-                                <SelectValue placeholder="Gelir türü seçin" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {incomeKindEnum.map((kind) => (
-                                <SelectItem key={kind} value={kind}>
-                                  {kind}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                <FormField
+                  control={form.control}
+                  name="isGrubu"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>İş Grubu *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-transaction-is-grubu">
+                            <SelectValue placeholder="İş grubu seçin" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {isGrubuEnum.map((group) => (
+                            <SelectItem key={group} value={group}>
+                              {group}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                    <FormField
-                      control={form.control}
-                      name="paymentMethod"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Ödeme Yöntemi</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value || ""}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-transaction-payment-method">
-                                <SelectValue placeholder="Ödeme yöntemi seçin" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {paymentMethodEnum.map((method) => (
-                                <SelectItem key={method} value={method}>
-                                  {method}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {form.watch("paymentMethod") === "Çek" && (
-                      <FormField
-                        control={form.control}
-                        name="checkDueDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Çek Vade Tarihi</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                value={field.value ?? ""}
-                                type="date"
-                                data-testid="input-transaction-check-due-date"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
-
-                    {form.watch("incomeKind") === "Hakediş Ödemesi" && (
-                      <FormField
-                        control={form.control}
-                        name="linkedProgressPaymentId"
-                        render={({ field }) => {
-                          const selectedProjectId = form.watch("projectId");
-                          const projectProgressPayments = progressPayments.filter(
-                            pp => pp.projectId === selectedProjectId
-                          );
-                          return (
-                            <FormItem>
-                              <FormLabel>Bağlı Hakediş</FormLabel>
-                              <Select 
-                                onValueChange={(value) => field.onChange(value === "__none__" ? null : value)} 
-                                value={field.value || "__none__"}
-                              >
-                                <FormControl>
-                                  <SelectTrigger data-testid="select-transaction-linked-progress-payment">
-                                    <SelectValue placeholder="Hakediş seçin" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="__none__">Belirtilmedi</SelectItem>
-                                  {projectProgressPayments.map((pp) => (
-                                    <SelectItem key={pp.id} value={pp.id}>
-                                      Hakediş #{pp.paymentNumber} - {Number(pp.netPayment || pp.amount).toLocaleString('tr-TR')} ₺
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          );
-                        }}
-                      />
-                    )}
-
-                    {/* Müşteri bilgisi - otomatik projeden gelir */}
-                    {(() => {
-                      const selectedProjectId = form.watch("projectId");
-                      const selectedProject = projects.find(p => p.id === selectedProjectId);
-                      const projectCustomer = selectedProject?.customerId 
-                        ? customers.find(c => c.id === selectedProject.customerId)
-                        : null;
-                      
-                      return projectCustomer ? (
-                        <div className="md:col-span-2 p-3 bg-muted/50 rounded-lg">
-                          <span className="text-sm text-muted-foreground">Müşteri: </span>
-                          <span className="font-medium">{projectCustomer.name}</span>
-                        </div>
-                      ) : null;
-                    })()}
-
-                    <FormField
-                      control={form.control}
-                      name="receiptNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Makbuz/Dekont No</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              value={field.value ?? ""}
-                              placeholder="Örn: MK-2024-001"
-                              data-testid="input-transaction-receipt-number"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </>
-                )}
-
-                {/* Gider için alanlar */}
-                {form.watch("type") === "Gider" && (
-                  <>
-                    <FormField
-                      control={form.control}
-                      name="isGrubu"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>İş Grubu *</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value || ""}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-transaction-is-grubu">
-                                <SelectValue placeholder="İş grubu seçin" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {isGrubuEnum.map((group) => (
-                                <SelectItem key={group} value={group}>
-                                  {group}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="rayicGrubu"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Rayiç Grubu *</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value || ""}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-transaction-rayic-grubu">
-                                <SelectValue placeholder="Rayiç grubu seçin" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {rayicGrubuEnum.map((group) => (
-                                <SelectItem key={group} value={group}>
-                                  {group}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </>
-                )}
-
-                {form.watch("type") === "Gider" && (
-                  <FormField
-                    control={form.control}
-                    name="subcontractorId"
-                    render={({ field }) => (
-                      <FormItem className="md:col-span-2">
-                        <FormLabel>Taşeron/Tedarikçi</FormLabel>
-                        <Select 
-                          onValueChange={(value) => field.onChange(value === "__none__" ? null : value)} 
-                          value={field.value || "__none__"}
-                        >
-                          <FormControl>
-                            <SelectTrigger data-testid="select-transaction-subcontractor">
-                              <SelectValue placeholder="Ödemenin yapıldığı taşeron/tedarikçi seçin" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="__none__">Belirtilmedi</SelectItem>
-                            {subcontractors.map((sub) => (
-                              <SelectItem key={sub.id} value={sub.id}>
-                                {sub.name} {sub.type ? `(${sub.type})` : ''}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
+                <FormField
+                  control={form.control}
+                  name="rayicGrubu"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Rayiç Grubu *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-transaction-rayic-grubu">
+                            <SelectValue placeholder="Rayiç grubu seçin" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {rayicGrubuEnum.map((group) => (
+                            <SelectItem key={group} value={group}>
+                              {group}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}
@@ -902,54 +671,6 @@ export default function Transactions() {
                     </FormItem>
                   )}
                 />
-
-                {/* Otomatik Fatura Oluşturma Seçeneği */}
-                {!editingTransaction && form.watch("invoiceNumber") && (
-                  <div className="md:col-span-2 space-y-4 p-4 bg-muted/50 rounded-lg border border-dashed">
-                    <div className="flex items-start gap-3">
-                      <Checkbox
-                        id="create-invoice"
-                        checked={createInvoice}
-                        onCheckedChange={(checked) => setCreateInvoice(checked === true)}
-                        data-testid="checkbox-create-invoice"
-                      />
-                      <div className="space-y-1">
-                        <label
-                          htmlFor="create-invoice"
-                          className="text-sm font-medium cursor-pointer flex items-center gap-2"
-                        >
-                          <FileText className="h-4 w-4" />
-                          Faturalar bölümüne de kaydet
-                        </label>
-                        <p className="text-xs text-muted-foreground">
-                          Bu işlem için otomatik olarak fatura kaydı oluşturulacak
-                        </p>
-                      </div>
-                    </div>
-                    
-                    {createInvoice && (
-                      <div className="ml-6 space-y-2">
-                        <label className="text-sm text-muted-foreground">KDV Oranı (%)</label>
-                        <Select value={invoiceTaxRate} onValueChange={setInvoiceTaxRate}>
-                          <SelectTrigger className="w-32" data-testid="select-invoice-tax-rate">
-                            <SelectValue placeholder="KDV %" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="0">%0</SelectItem>
-                            <SelectItem value="1">%1</SelectItem>
-                            <SelectItem value="8">%8</SelectItem>
-                            <SelectItem value="10">%10</SelectItem>
-                            <SelectItem value="18">%18</SelectItem>
-                            <SelectItem value="20">%20</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <p className="text-xs text-muted-foreground">
-                          Girilen tutar KDV dahil olarak kabul edilir
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
 
                 <FormField
                   control={form.control}

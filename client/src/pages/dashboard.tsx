@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
 import { StatsCard } from "@/components/stats-card";
 import { ProjectCard } from "@/components/project-card";
 import { TransactionTable } from "@/components/transaction-table";
@@ -49,7 +48,6 @@ export default function Dashboard() {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deleteProjectId, setDeleteProjectId] = useState<string | null>(null);
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
   const { activeProject, activeProjectId, setActiveProjectId, clearActiveProject, projects: contextProjects } = useProjectContext();
 
   // Fetch projects from API
@@ -176,8 +174,19 @@ export default function Dashboard() {
   };
 
   const handleAddProject = () => {
-    // Navigate to projects page with action=new parameter
-    setLocation("/projeler?action=new");
+    setEditingProject(null);
+    form.reset({
+      name: "",
+      location: "",
+      area: "",
+      startDate: "",
+      endDate: "",
+      status: "Planlama",
+      description: "",
+      notes: "",
+      customerId: "none",
+    });
+    setIsDialogOpen(true);
   };
 
   const handleEditProject = (project: Project) => {

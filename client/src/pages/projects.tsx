@@ -158,11 +158,6 @@ export default function Projects() {
       notes: data.notes || null,
       // Explicitly convert empty string, "none", or undefined to null
       customerId: (data.customerId === "" || data.customerId === "none" || !data.customerId) ? null : data.customerId,
-      contractType: (data.contractType === "" || data.contractType === "none" || !data.contractType) ? null : data.contractType,
-      contractAmount: data.contractAmount || null,
-      profitMargin: data.profitMargin || null,
-      advancePayment: data.advancePayment || null,
-      advanceDeductionRate: data.advanceDeductionRate || null,
     };
 
     if (editingProject) {
@@ -184,11 +179,6 @@ export default function Projects() {
       description: "",
       notes: "",
       customerId: "none",
-      contractType: "",
-      contractAmount: "",
-      profitMargin: "",
-      advancePayment: "",
-      advanceDeductionRate: "",
     });
     setIsDialogOpen(true);
   };
@@ -205,11 +195,6 @@ export default function Projects() {
       description: project.description ?? "",
       notes: project.notes ?? "",
       customerId: project.customerId ?? "none",
-      contractType: project.contractType ?? "",
-      contractAmount: project.contractAmount ?? "",
-      profitMargin: project.profitMargin ?? "",
-      advancePayment: project.advancePayment ?? "",
-      advanceDeductionRate: project.advanceDeductionRate ?? "",
     });
     setIsDialogOpen(true);
   }, [form]);
@@ -241,36 +226,29 @@ export default function Projects() {
     };
   };
 
-  // Handle query parameter for editing or adding new project
+  // Handle query parameter for editing
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const editId = params.get('edit');
-    const action = params.get('action');
     
     if (editId && projects.length > 0 && !isDialogOpen) {
       const project = projects.find(p => p.id === editId);
       if (project) {
         handleEditProject(project);
       }
-    } else if (action === 'new' && !isDialogOpen) {
-      handleAddProject();
-      // Clear the action parameter after opening dialog
-      const url = new URL(window.location.href);
-      url.searchParams.delete('action');
-      window.history.replaceState({}, '', url.pathname + url.search);
     }
   }, [location, projects, isDialogOpen, handleEditProject]);
 
   return (
-    <div className="responsive-container responsive-spacing">
+    <div className="space-y-6">
       <PrintHeader documentTitle="PROJELER LİSTESİ" />
       
-      <div className="responsive-header">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="responsive-header-title">Projeler</h1>
-          <p className="text-muted-foreground text-sm mt-1">Tüm projelerinizi görüntüleyin ve yönetin</p>
+          <h1 className="text-3xl font-bold">Projeler</h1>
+          <p className="text-muted-foreground mt-1">Tüm projelerinizi görüntüleyin ve yönetin</p>
         </div>
-        <div className="responsive-actions">
+        <div className="flex items-center gap-2">
           <ExportToExcel
             data={filteredProjects.map((project) => ({
               "Proje Adı": project.name,
@@ -287,19 +265,18 @@ export default function Projects() {
             documentTitle="PROJELER LİSTESİ"
           />
           <PrintButton />
-          <Button onClick={handleAddProject} data-testid="button-add-project" className="w-full sm:w-auto">
+          <Button onClick={handleAddProject} data-testid="button-add-project">
             <Plus className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Yeni Proje Ekle</span>
-            <span className="sm:hidden">Ekle</span>
+            Yeni Proje Ekle
           </Button>
         </div>
       </div>
 
-      <div className="responsive-filter-bar no-print">
-        <div className="relative flex-1 min-w-[180px]">
+      <div className="flex flex-col sm:flex-row gap-4 no-print">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Ara..."
+            placeholder="Proje adı veya konum ile ara..."
             className="pl-10"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -307,8 +284,8 @@ export default function Projects() {
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[160px]" data-testid="select-status-filter">
-            <SelectValue placeholder="Durum" />
+          <SelectTrigger className="w-full sm:w-[200px]" data-testid="select-status-filter">
+            <SelectValue placeholder="Durum filtrele" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tüm Durumlar</SelectItem>
@@ -331,7 +308,7 @@ export default function Projects() {
 
       {/* Loading state */}
       {isLoading && (
-        <div className="responsive-card-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div key={i} className="space-y-3">
               <Skeleton className="h-48 w-full rounded-lg" />
@@ -359,7 +336,7 @@ export default function Projects() {
 
       {/* Projects grid */}
       {!isLoading && !error && filteredProjects.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProjects.map((project) => {
             const projectWithCost = getProjectWithCostPerSqm(project);
             return (
@@ -449,7 +426,7 @@ export default function Projects() {
                     <FormItem>
                       <FormLabel>Alan (m²)</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value ?? ""} type="number" step="0.01" placeholder="0,00" data-testid="input-project-area" />
+                        <Input {...field} value={field.value ?? ""} type="number" step="0.01" placeholder="2500" data-testid="input-project-area" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -561,28 +538,26 @@ export default function Projects() {
                   )}
                 />
 
-                {form.watch("contractType") === "Anahtar Teslim" && (
-                  <FormField
-                    control={form.control}
-                    name="contractAmount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Sözleşme Tutarı (TL)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            {...field} 
-                            value={field.value ?? ""} 
-                            type="number" 
-                            step="0.01" 
-                            placeholder="0,00 TL" 
-                            data-testid="input-contract-amount" 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
+                <FormField
+                  control={form.control}
+                  name="contractAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sözleşme Tutarı (TL)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          value={field.value ?? ""} 
+                          type="number" 
+                          step="0.01" 
+                          placeholder="0.00" 
+                          data-testid="input-contract-amount" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}
@@ -596,7 +571,7 @@ export default function Projects() {
                           value={field.value ?? ""} 
                           type="number" 
                           step="0.01" 
-                          placeholder="0,00 TL" 
+                          placeholder="0.00" 
                           data-testid="input-advance-payment" 
                         />
                       </FormControl>
@@ -605,28 +580,7 @@ export default function Projects() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="advanceDeductionRate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Avans Kesinti Oranı (%)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          value={field.value ?? ""} 
-                          type="number" 
-                          step="0.01" 
-                          placeholder="0" 
-                          data-testid="input-advance-deduction-rate" 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {form.watch("contractType") === "Maliyet + Kar" && (
+                {form.watch("contractType") === "Maliyet + Kar Marjı" && (
                   <FormField
                     control={form.control}
                     name="profitMargin"
@@ -639,7 +593,7 @@ export default function Projects() {
                             value={field.value ?? ""} 
                             type="number" 
                             step="0.01" 
-                            placeholder="0" 
+                            placeholder="15" 
                             data-testid="input-profit-margin" 
                           />
                         </FormControl>

@@ -16,7 +16,6 @@ import { insertBudgetItemSchema, budgetItemStatusEnum, isGrubuEnum, rayicGrubuEn
 import { Plus, Pencil, Trash2, TrendingUp, TrendingDown, DollarSign, Clock, Filter, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { PrintHeader } from "@/components/print-header";
-import { formatCurrency } from "@/lib/format";
 import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -41,27 +40,19 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function BudgetPage() {
   const { toast } = useToast();
-  const { activeProjectId, setActiveProjectId } = useProjectContext();
+  const { activeProjectId } = useProjectContext();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedProject, setSelectedProject] = useState<string>("all");
   const [selectedIsGrubu, setSelectedIsGrubu] = useState<string>("all");
   const [selectedRayicGrubu, setSelectedRayicGrubu] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
 
-  // Local state synced with global context for immediate UI updates
-  const [selectedProject, setSelectedProjectLocal] = useState<string>(activeProjectId || "all");
-  
-  // Sync from context to local state
+  // Sync filter with active project
   useEffect(() => {
-    setSelectedProjectLocal(activeProjectId || "all");
+    setSelectedProject(activeProjectId || "all");
   }, [activeProjectId]);
-  
-  // Update both local state and context when user changes selection
-  const setSelectedProject = (id: string) => {
-    setSelectedProjectLocal(id);
-    setActiveProjectId(id === "all" ? null : id);
-  };
 
   const { data: items = [], isLoading: itemsLoading } = useQuery<BudgetItem[]>({
     queryKey: ["/api/budget-items"],
@@ -259,6 +250,14 @@ export default function BudgetPage() {
     }
   };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('tr-TR', {
+      style: 'currency',
+      currency: 'TRY',
+      minimumFractionDigits: 2,
+    }).format(amount);
+  };
+
   const getProjectName = (projectId: string) => {
     const project = projects.find(p => p.id === projectId);
     return project?.name || "Bilinmiyor";
@@ -423,7 +422,7 @@ export default function BudgetPage() {
                       <FormItem>
                         <FormLabel>Miktar *</FormLabel>
                         <FormControl>
-                          <Input {...field} type="number" step="0.01" placeholder="0,00" data-testid="input-quantity" />
+                          <Input {...field} type="number" step="0.01" placeholder="100" data-testid="input-quantity" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -451,7 +450,7 @@ export default function BudgetPage() {
                       <FormItem>
                         <FormLabel>Birim Fiyat *</FormLabel>
                         <FormControl>
-                          <Input {...field} type="number" step="0.01" placeholder="0,00 TL" data-testid="input-unit-price" />
+                          <Input {...field} type="number" step="0.01" placeholder="1500" data-testid="input-unit-price" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -547,7 +546,7 @@ export default function BudgetPage() {
                         <FormItem>
                           <FormLabel>Gerçekleşen Miktar</FormLabel>
                           <FormControl>
-                            <Input {...field} value={field.value || ""} type="number" step="0.01" placeholder="0,00" data-testid="input-actual-quantity" />
+                            <Input {...field} value={field.value || ""} type="number" step="0.01" placeholder="85" data-testid="input-actual-quantity" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -561,7 +560,7 @@ export default function BudgetPage() {
                         <FormItem>
                           <FormLabel>Gerçekleşen Birim Fiyat</FormLabel>
                           <FormControl>
-                            <Input {...field} value={field.value || ""} type="number" step="0.01" placeholder="0,00 TL" data-testid="input-actual-unit-price" />
+                            <Input {...field} value={field.value || ""} type="number" step="0.01" placeholder="1650" data-testid="input-actual-unit-price" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -593,7 +592,7 @@ export default function BudgetPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold whitespace-nowrap" data-testid="text-total-budget">{formatCurrency(summary.totalBudget)}</div>
+            <div className="text-2xl font-bold" data-testid="text-total-budget">{formatCurrency(summary.totalBudget)}</div>
             <p className="text-xs text-muted-foreground">{summary.totalItems} kalem</p>
           </CardContent>
         </Card>
@@ -604,7 +603,7 @@ export default function BudgetPage() {
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold whitespace-nowrap" data-testid="text-total-actual">{formatCurrency(summary.totalActual)}</div>
+            <div className="text-2xl font-bold" data-testid="text-total-actual">{formatCurrency(summary.totalActual)}</div>
             <p className="text-xs text-muted-foreground">Toplam harcama</p>
           </CardContent>
         </Card>
@@ -619,7 +618,7 @@ export default function BudgetPage() {
             )}
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold whitespace-nowrap ${summary.variance >= 0 ? 'text-red-500' : 'text-green-500'}`} data-testid="text-variance">
+            <div className={`text-2xl font-bold ${summary.variance >= 0 ? 'text-red-500' : 'text-green-500'}`} data-testid="text-variance">
               {formatCurrency(Math.abs(summary.variance))}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -782,13 +781,13 @@ export default function BudgetPage() {
                         <TableCell className="text-right font-mono">
                           {parseFloat(item.quantity).toLocaleString('tr-TR')} {item.unit}
                         </TableCell>
-                        <TableCell className="text-right font-mono whitespace-nowrap">
+                        <TableCell className="text-right font-mono">
                           {formatCurrency(parseFloat(item.unitPrice))}
                         </TableCell>
-                        <TableCell className="text-right font-mono font-semibold whitespace-nowrap">
+                        <TableCell className="text-right font-mono font-semibold">
                           {formatCurrency(budgetTotal)}
                         </TableCell>
-                        <TableCell className="text-right font-mono whitespace-nowrap">
+                        <TableCell className="text-right font-mono">
                           {actualTotal > 0 ? formatCurrency(actualTotal) : "-"}
                         </TableCell>
                         <TableCell>
@@ -832,20 +831,20 @@ export default function BudgetPage() {
                   <div className="grid grid-cols-3 gap-6 max-w-3xl ml-auto">
                     <div className="text-right">
                       <div className="text-sm text-muted-foreground mb-1">Toplam Bütçe</div>
-                      <div className="text-2xl font-bold whitespace-nowrap">
+                      <div className="text-2xl font-bold">
                         {summary.totalBudget.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="text-sm text-muted-foreground mb-1">Gerçekleşen Tutar</div>
-                      <div className="text-2xl font-bold text-blue-600 whitespace-nowrap">
+                      <div className="text-2xl font-bold text-blue-600">
                         {summary.totalActual.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="text-sm text-muted-foreground mb-1">Fark</div>
                       <div className={cn(
-                        "text-2xl font-bold whitespace-nowrap",
+                        "text-2xl font-bold",
                         summary.variance >= 0 ? "text-green-600" : "text-red-600"
                       )}>
                         {summary.variance >= 0 ? "+" : ""}{summary.variance.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL

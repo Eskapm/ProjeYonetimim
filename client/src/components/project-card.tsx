@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MapPin, Calendar, Ruler, Eye, Edit, MoreVertical, Trash } from "lucide-react";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 
 interface ProjectCardProps {
   id: string;
@@ -44,14 +44,8 @@ export function ProjectCard({
   onEdit,
   onDelete,
 }: ProjectCardProps) {
-  const [, setLocation] = useLocation();
-  
-  const handleCardClick = () => {
-    setLocation(`/projeler/${id}`);
-  };
-  
   return (
-    <Card className="hover-elevate cursor-pointer" data-testid={`card-project-${id}`} onClick={handleCardClick}>
+    <Card className="hover-elevate" data-testid={`card-project-${id}`}>
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-lg">{name}</CardTitle>
@@ -60,20 +54,20 @@ export function ProjectCard({
             {(onEdit || onDelete) && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" data-testid={`button-menu-project-${id}`} onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" data-testid={`button-menu-project-${id}`}>
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   {onEdit && (
-                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(); }} data-testid={`button-edit-project-${id}`}>
+                    <DropdownMenuItem onClick={onEdit} data-testid={`button-edit-project-${id}`}>
                       <Edit className="h-4 w-4 mr-2" />
                       Düzenle
                     </DropdownMenuItem>
                   )}
                   {onDelete && (
                     <DropdownMenuItem 
-                      onClick={(e) => { e.stopPropagation(); onDelete(); }} 
+                      onClick={onDelete} 
                       className="text-destructive focus:text-destructive"
                       data-testid={`button-delete-project-${id}`}
                     >
@@ -114,7 +108,7 @@ export function ProjectCard({
         )}
       </CardContent>
       <CardFooter className="flex gap-2">
-        <Link href={`/projeler/${id}`} className="flex-1" onClick={(e) => e.stopPropagation()}>
+        <Link href={`/projeler/${id}`} className="flex-1">
           <Button 
             variant="outline" 
             size="sm" 

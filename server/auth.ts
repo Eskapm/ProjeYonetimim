@@ -5,7 +5,7 @@ import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
-import { User as SelectUser, registerUserSchema } from "@shared/schema";
+import { User as SelectUser } from "@shared/schema";
 
 declare global {
   namespace Express {
@@ -72,51 +72,33 @@ export function setupAuth(app: Express) {
     done(null, user);
   });
 
-  // Kayıt sistemi
+  // Kayıt sistemi - Sadece development ortamında aktif
   app.post("/api/register", async (req, res) => {
-    try {
-      // Validate request body
-      const validationResult = registerUserSchema.safeParse(req.body);
-      if (!validationResult.success) {
-        return res.status(400).json({ 
-          message: "Geçersiz form verileri",
-          errors: validationResult.error.flatten().fieldErrors 
-        });
-      }
-
-      const { fullName, email, password, companyName, country, city } = validationResult.data;
-
-      // E-posta kontrolü
-      const existingUserByEmail = await storage.getUserByEmail(email);
-      if (existingUserByEmail) {
-        return res.status(400).json({ message: "Bu e-posta adresi zaten kullanılıyor." });
-      }
-
-      // E-posta kullanıcı adı olarak kullanılacak
-      const username = email;
-      const existingUser = await storage.getUserByUsername(username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Bu e-posta adresi zaten kullanılıyor." });
-      }
-
-      const hashedPassword = await hashPassword(password);
-      const user = await storage.createUser({
-        username,
-        password: hashedPassword,
-        fullName,
-        email,
-        companyName: companyName || null,
-        country,
-        city,
-      });
-
-      // Remove password from response
-      const { password: _, ...userWithoutPassword } = user;
-      res.status(201).json(userWithoutPassword);
-    } catch (error) {
-      console.error("Registration error:", error);
-      res.status(500).json({ message: "Kayıt sırasında bir hata oluştu." });
+    // Production ortamında kayıt kapalı
+    if (process.env.NODE_ENV === "production") {
+      return res.status(403).send("Kayıt sistemi kapatılmıştır. Yönetici ile iletişime geçin.");
     }
+
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).send("Kullanıcı adı ve şifre gereklidir.");
+    }
+
+    const existingUser = await storage.getUserByUsername(username);
+    if (existingUser) {
+      return res.status(400).send("Bu kullanıcı adı zaten kullanılıyor.");
+    }
+
+    const hashedPassword = await hashPassword(password);
+    const user = await storage.createUser({
+      username,
+      password: hashedPassword,
+    });
+
+    // Remove password from response
+    const { password: _, ...userWithoutPassword } = user;
+    res.status(201).json(userWithoutPassword);
   });
 
   app.post("/api/login", passport.authenticate("local"), (req, res) => {

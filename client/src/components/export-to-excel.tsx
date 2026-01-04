@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { FileSpreadsheet } from "lucide-react";
-import ExcelJS from "exceljs";
+import * as XLSX from "xlsx";
 import { format } from "date-fns";
 
 interface ExportToExcelProps {
@@ -8,55 +8,59 @@ interface ExportToExcelProps {
   filename: string;
   sheetName?: string;
   documentTitle?: string;
-  testId?: string;
 }
 
-export function ExportToExcel({ data, filename, sheetName = "Sayfa1", documentTitle, testId }: ExportToExcelProps) {
-  const handleExport = async () => {
+export function ExportToExcel({ data, filename, sheetName = "Sayfa1", documentTitle }: ExportToExcelProps) {
+  const handleExport = () => {
     if (!data || data.length === 0) {
       alert("Dışa aktarılacak veri yok");
       return;
     }
 
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet(sheetName);
+    // Kurumsal başlık verileri
+    const companyHeader = [
+      ["ESKA YAPI MÜHENDİSLİK İNŞAAT EMLAK TURİZM VE TİCARET LİMİTED ŞİRKETİ"],
+      [],
+      ["Mersis No: 0380 1336 6500 0001", "", "", "E-mail: enginkayserili@gmail.com"],
+      ["Vergi Dairesi: Fethiye V.D. - 3801336650", "", "", "Tel: 0 505 821 54 79"],
+      ["Adres: Foça Mah. 967 (FCA) Sok. Nilüfer Sit. No:30-5 İç Kapı No:2 Fethiye/MUĞLA"],
+      [],
+      [documentTitle || sheetName || "Rapor"],
+      [`Tarih: ${format(new Date(), "dd/MM/yyyy HH:mm")}`],
+      [],
+    ];
 
-    worksheet.addRow(["ESKA YAPI MÜHENDİSLİK İNŞAAT EMLAK TURİZM VE TİCARET LİMİTED ŞİRKETİ"]);
-    worksheet.addRow([]);
-    worksheet.addRow(["Mersis No: 0380 1336 6500 0001", "", "", "E-mail: enginkayserili@gmail.com"]);
-    worksheet.addRow(["Vergi Dairesi: Fethiye V.D. - 3801336650", "", "", "Tel: 0 505 821 54 79"]);
-    worksheet.addRow(["Adres: Foça Mah. 967 (FCA) Sok. Nilüfer Sit. No:30-5 İç Kapı No:2 Fethiye/MUĞLA"]);
-    worksheet.addRow([]);
-    worksheet.addRow([documentTitle || sheetName || "Rapor"]);
-    worksheet.addRow([`Tarih: ${format(new Date(), "dd/MM/yyyy HH:mm")}`]);
-    worksheet.addRow([]);
+    // Veriyi oluştur
+    const worksheet = XLSX.utils.aoa_to_sheet(companyHeader);
+    
+    // Ana veriyi ekle
+    XLSX.utils.sheet_add_json(worksheet, data, { 
+      origin: -1, // Son satırdan sonra ekle
+      skipHeader: false 
+    });
 
-    worksheet.getRow(1).height = 20;
-    worksheet.getRow(2).height = 5;
-    worksheet.getRow(3).height = 15;
-    worksheet.getRow(4).height = 15;
-    worksheet.getRow(5).height = 15;
-    worksheet.getRow(6).height = 5;
-    worksheet.getRow(7).height = 18;
-    worksheet.getRow(8).height = 15;
-    worksheet.getRow(9).height = 5;
+    // Sütun genişliklerini ayarla
+    const colWidths = Object.keys(data[0] || {}).map(() => ({ wch: 20 }));
+    worksheet['!cols'] = colWidths;
 
-    if (data.length > 0) {
-      const headers = Object.keys(data[0]);
-      worksheet.addRow(headers);
-      
-      data.forEach((row) => {
-        const values = headers.map((header) => row[header]);
-        worksheet.addRow(values);
-      });
+    // Satır yüksekliklerini ayarla
+    worksheet['!rows'] = [
+      { hpt: 20 }, // Başlık
+      { hpt: 5 },  // Boşluk
+      { hpt: 15 }, // Mersis
+      { hpt: 15 }, // Vergi
+      { hpt: 15 }, // Adres
+      { hpt: 5 },  // Boşluk
+      { hpt: 18 }, // Belge adı
+      { hpt: 15 }, // Tarih
+      { hpt: 5 },  // Boşluk
+    ];
 
-      headers.forEach((_, index) => {
-        worksheet.getColumn(index + 1).width = 20;
-      });
-    }
-
-    const buffer = await workbook.xlsx.writeBuffer();
-    const dataBlob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+    
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const dataBlob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     
     const url = window.URL.createObjectURL(dataBlob);
     const link = document.createElement("a");
@@ -70,7 +74,7 @@ export function ExportToExcel({ data, filename, sheetName = "Sayfa1", documentTi
     <Button 
       variant="outline" 
       onClick={handleExport}
-      data-testid={testId || "button-export-excel"}
+      data-testid="button-export-excel"
       className="no-print"
     >
       <FileSpreadsheet className="h-4 w-4 mr-2" />

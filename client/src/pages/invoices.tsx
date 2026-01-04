@@ -38,8 +38,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Calendar as CalendarIcon, Loader2, Edit2, Trash2, FileText, TrendingUp, TrendingDown, ArrowLeftRight } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Search, Calendar as CalendarIcon, Loader2, Edit2, Trash2, FileText, TrendingUp, TrendingDown } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { 
@@ -70,29 +69,20 @@ import {
 } from "@/components/ui/table";
 
 export default function Invoices() {
-  const { activeProjectId, setActiveProjectId } = useProjectContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedProject, setSelectedProject] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [deleteInvoiceId, setDeleteInvoiceId] = useState<string | null>(null);
-  const [createTransaction, setCreateTransaction] = useState(false);
   const { toast } = useToast();
+  const { activeProjectId } = useProjectContext();
 
-  // Local state synced with global context for immediate UI updates
-  const [selectedProject, setSelectedProjectLocal] = useState<string>(activeProjectId || "all");
-  
-  // Sync from context to local state
+  // Sync filter with active project
   useEffect(() => {
-    setSelectedProjectLocal(activeProjectId || "all");
+    setSelectedProject(activeProjectId || "all");
   }, [activeProjectId]);
-  
-  // Update both local state and context when user changes selection
-  const setSelectedProject = (id: string) => {
-    setSelectedProjectLocal(id);
-    setActiveProjectId(id === "all" ? null : id);
-  };
 
   // Fetch invoices
   const { data: invoices = [], isLoading: isLoadingInvoices, error: invoicesError } = useQuery<Invoice[]>({
@@ -116,19 +106,17 @@ export default function Invoices() {
 
   // Create invoice mutation
   const createInvoiceMutation = useMutation({
-    mutationFn: async (data: InsertInvoice & { createTransaction?: boolean }) => {
+    mutationFn: async (data: InsertInvoice) => {
       const response = await apiRequest("POST", "/api/invoices", data);
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       toast({
         title: "Başarılı",
         description: "Fatura başarıyla oluşturuldu",
       });
       setIsDialogOpen(false);
-      setCreateTransaction(false);
       form.reset();
     },
     onError: (error: Error) => {
@@ -212,8 +200,6 @@ export default function Invoices() {
   // Watch subtotal and taxRate to calculate taxAmount and total automatically
   const subtotal = form.watch("subtotal");
   const taxRate = form.watch("taxRate");
-  const watchedType = form.watch("type");
-  const watchedProjectId = form.watch("projectId");
 
   // Update calculations when subtotal or taxRate changes
   useEffect(() => {
@@ -225,16 +211,6 @@ export default function Invoices() {
     form.setValue("taxAmount", tax.toFixed(2));
     form.setValue("total", tot.toFixed(2));
   }, [subtotal, taxRate, form]);
-
-  // Auto-select customer when project is selected for sales invoices
-  useEffect(() => {
-    if (watchedType === "Satış" && watchedProjectId) {
-      const selectedProject = projects.find(p => p.id === watchedProjectId);
-      if (selectedProject?.customerId) {
-        form.setValue("customerId", selectedProject.customerId);
-      }
-    }
-  }, [watchedType, watchedProjectId, projects, form]);
 
   const onSubmit = (data: InsertInvoice) => {
     // Convert empty strings to null for optional fields
@@ -260,26 +236,17 @@ export default function Invoices() {
     if (editingInvoice) {
       updateInvoiceMutation.mutate({ id: editingInvoice.id, data: cleanedData });
     } else {
-      // "İşlem Oluştur" seçeneği için backend'e ekstra bilgi gönder
-      const submitData = createTransaction && cleanedData.projectId
-        ? { ...cleanedData, createTransaction: true }
-        : cleanedData;
-      createInvoiceMutation.mutate(submitData);
+      createInvoiceMutation.mutate(cleanedData);
     }
   };
 
   const handleAddInvoice = () => {
     setEditingInvoice(null);
-    setCreateTransaction(false);
-    // Find customer for active project if exists
-    const activeProject = activeProjectId ? projects.find(p => p.id === activeProjectId) : null;
-    const autoCustomerId = activeProject?.customerId || null;
-    
     form.reset({
       invoiceNumber: "",
       type: "",
       projectId: activeProjectId || null,
-      customerId: autoCustomerId,
+      customerId: null,
       subcontractorId: null,
       date: new Date().toISOString().split("T")[0],
       dueDate: null,
@@ -377,15 +344,15 @@ export default function Invoices() {
   };
 
   return (
-    <div className="responsive-container responsive-spacing">
+    <div className="space-y-6">
       <PrintHeader documentTitle="FATURALAR LİSTESİ" />
       
-      <div className="responsive-header">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="responsive-header-title">Faturalar</h1>
-          <p className="text-muted-foreground text-sm mt-1">Alış ve satış faturaları yönetimi</p>
+          <h1 className="text-3xl font-bold">Faturalar</h1>
+          <p className="text-muted-foreground mt-1">Alış ve satış faturaları yönetimi</p>
         </div>
-        <div className="responsive-actions">
+        <div className="flex items-center gap-2">
           <ExportToExcel
             data={filteredInvoices.map((invoice) => ({
               "Fatura No": invoice.invoiceNumber,
@@ -406,50 +373,50 @@ export default function Invoices() {
             documentTitle="FATURALAR LİSTESİ"
           />
           <PrintButton />
-          <Button onClick={handleAddInvoice} data-testid="button-add-invoice" className="w-full sm:w-auto">
+          <Button onClick={handleAddInvoice} data-testid="button-add-invoice">
             <Plus className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Yeni Fatura Ekle</span>
-            <span className="sm:hidden">Ekle</span>
+            Yeni Fatura Ekle
           </Button>
         </div>
       </div>
 
-      <div className="responsive-filter-bar no-print">
-        <div className="relative flex-1 min-w-[180px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Ara..."
-            className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            data-testid="input-search-invoice"
-          />
-        </div>
-        <Select value={selectedType} onValueChange={setSelectedType}>
-          <SelectTrigger className="w-full sm:w-[140px]" data-testid="select-type-filter">
-            <SelectValue placeholder="Tür" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tüm Faturalar</SelectItem>
-            {invoiceTypeEnum.map((type) => (
-              <SelectItem key={type} value={type}>
-                {type}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-          <SelectTrigger className="w-full sm:w-[140px]" data-testid="select-status-filter">
-            <SelectValue placeholder="Durum" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tüm Durumlar</SelectItem>
-            {invoiceStatusEnum.map((status) => (
-              <SelectItem key={status} value={status}>
-                {status}
-              </SelectItem>
-            ))}
-          </SelectContent>
+      <div className="flex flex-col gap-4 no-print">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Fatura numarası, açıklama veya projede ara..."
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              data-testid="input-search-invoice"
+            />
+          </div>
+          <Select value={selectedType} onValueChange={setSelectedType}>
+            <SelectTrigger className="w-full sm:w-[180px]" data-testid="select-type-filter">
+              <SelectValue placeholder="Fatura türü" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tüm Faturalar</SelectItem>
+              {invoiceTypeEnum.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {type} Faturası
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+            <SelectTrigger className="w-full sm:w-[180px]" data-testid="select-status-filter">
+              <SelectValue placeholder="Durum" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tüm Durumlar</SelectItem>
+              {invoiceStatusEnum.map((status) => (
+                <SelectItem key={status} value={status}>
+                  {status}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
           <Select value={selectedProject} onValueChange={setSelectedProject}>
             <SelectTrigger className="w-full sm:w-[200px]" data-testid="select-project-filter">
@@ -464,17 +431,18 @@ export default function Invoices() {
               ))}
             </SelectContent>
           </Select>
+        </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="responsive-summary-grid no-print">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Toplam Satış</CardTitle>
             <TrendingUp className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-mono whitespace-nowrap" data-testid="text-total-sales">
+            <div className="text-2xl font-bold font-mono" data-testid="text-total-sales">
               {totalSales.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
             </div>
             <p className="text-xs text-muted-foreground">
@@ -488,7 +456,7 @@ export default function Invoices() {
             <TrendingDown className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-mono whitespace-nowrap" data-testid="text-total-purchases">
+            <div className="text-2xl font-bold font-mono" data-testid="text-total-purchases">
               {totalPurchases.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
             </div>
             <p className="text-xs text-muted-foreground">
@@ -534,68 +502,67 @@ export default function Invoices() {
               {invoices.length === 0 ? "Henüz fatura eklenmemiş" : "Fatura bulunamadı"}
             </div>
           ) : (
-            <div className="responsive-table-wrapper">
+            <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="min-w-[100px]">Fatura No</TableHead>
-                    <TableHead className="w-[70px]">Tür</TableHead>
-                    <TableHead className="w-[90px]">Tarih</TableHead>
-                    <TableHead className="hide-mobile">Müşteri/Taşeron</TableHead>
-                    <TableHead className="hide-tablet">Proje</TableHead>
-                    <TableHead className="text-right hide-tablet">Tutar</TableHead>
-                    <TableHead className="text-right hide-tablet">KDV</TableHead>
-                    <TableHead className="text-right w-[110px]">Toplam</TableHead>
-                    <TableHead className="text-right hide-mobile">Ödenen</TableHead>
-                    <TableHead className="text-right hide-mobile">Kalan</TableHead>
+                    <TableHead>Fatura No</TableHead>
+                    <TableHead>Tür</TableHead>
+                    <TableHead>Tarih</TableHead>
+                    <TableHead>Müşteri/Taşeron</TableHead>
+                    <TableHead>Proje</TableHead>
+                    <TableHead className="text-right w-[200px] min-w-[200px]">Tutar</TableHead>
+                    <TableHead className="text-right w-[200px] min-w-[200px]">KDV</TableHead>
+                    <TableHead className="text-right w-[200px] min-w-[200px]">Toplam</TableHead>
+                    <TableHead className="text-right w-[200px] min-w-[200px]">Ödenen</TableHead>
+                    <TableHead className="text-right w-[200px] min-w-[200px]">Kalan</TableHead>
                     <TableHead>Durum</TableHead>
-                    <TableHead className="text-right w-[80px]">İşlem</TableHead>
+                    <TableHead className="text-right">İşlemler</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredInvoices.map((invoice) => (
                     <TableRow key={invoice.id} data-testid={`row-invoice-${invoice.id}`}>
-                      <TableCell className="font-medium text-sm">{invoice.invoiceNumber}</TableCell>
+                      <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
                       <TableCell>
-                        <Badge variant={invoice.type === "Satış" ? "default" : "secondary"} className="responsive-badge">
+                        <Badge variant={invoice.type === "Satış" ? "default" : "secondary"}>
                           {invoice.type}
                         </Badge>
                       </TableCell>
-                      <TableCell className="whitespace-nowrap text-sm">
+                      <TableCell className="whitespace-nowrap">
                         {formatDate(invoice.date as string)}
                       </TableCell>
-                      <TableCell className="text-sm hide-mobile">
+                      <TableCell>
                         {invoice.type === "Satış" ? invoice.customerName : invoice.subcontractorName}
                       </TableCell>
-                      <TableCell className="text-muted-foreground text-sm hide-tablet">
+                      <TableCell className="text-muted-foreground">
                         {invoice.projectName || "-"}
                       </TableCell>
-                      <TableCell className="text-right responsive-amount hide-tablet">
+                      <TableCell className="text-right font-mono">
                         {parseFloat(invoice.subtotal).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                       </TableCell>
-                      <TableCell className="text-right responsive-amount hide-tablet">
+                      <TableCell className="text-right font-mono">
                         {parseFloat(invoice.taxAmount).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                       </TableCell>
-                      <TableCell className="text-right responsive-amount font-semibold">
+                      <TableCell className="text-right font-mono font-semibold">
                         {parseFloat(invoice.total).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                       </TableCell>
-                      <TableCell className="text-right responsive-amount text-green-600 dark:text-green-400 hide-mobile">
+                      <TableCell className="text-right font-mono text-green-600 dark:text-green-400">
                         {parseFloat(invoice.paidAmount || "0").toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                       </TableCell>
-                      <TableCell className="text-right responsive-amount text-orange-600 dark:text-orange-400 hide-mobile">
+                      <TableCell className="text-right font-mono text-orange-600 dark:text-orange-400">
                         {(parseFloat(invoice.total) - parseFloat(invoice.paidAmount || "0")).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getStatusBadgeVariant(invoice.status)} className="responsive-badge">
+                        <Badge variant={getStatusBadgeVariant(invoice.status)}>
                           {invoice.status}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
+                        <div className="flex justify-end gap-2">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8"
                             onClick={() => handleEditInvoice(invoice)}
                             data-testid={`button-edit-${invoice.id}`}
                           >
@@ -604,7 +571,6 @@ export default function Invoices() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8"
                             onClick={() => handleDeleteInvoice(invoice.id)}
                             data-testid={`button-delete-${invoice.id}`}
                           >
@@ -900,7 +866,7 @@ export default function Invoices() {
                         <Input
                           type="number"
                           step="0.01"
-                          placeholder="0,00 TL"
+                          placeholder="0.00"
                           {...field}
                           onChange={(e) => {
                             field.onChange(e.target.value);
@@ -931,7 +897,7 @@ export default function Invoices() {
                         <Input
                           type="number"
                           step="0.01"
-                          placeholder="0"
+                          placeholder="20"
                           {...field}
                           onChange={(e) => {
                             field.onChange(e.target.value);
@@ -1002,7 +968,7 @@ export default function Invoices() {
                         <Input
                           type="number"
                           step="0.01"
-                          placeholder="0,00 TL"
+                          placeholder="0.00"
                           {...field}
                           value={field.value || "0"}
                           data-testid="input-paid-amount"
@@ -1055,32 +1021,6 @@ export default function Invoices() {
                   </FormItem>
                 )}
               />
-
-              {/* Otomatik İşlem Oluşturma Seçeneği - sadece yeni faturada ve proje seçildiğinde */}
-              {!editingInvoice && form.watch("projectId") && (
-                <div className="space-y-4 p-4 bg-muted/50 rounded-lg border border-dashed">
-                  <div className="flex items-start gap-3">
-                    <Checkbox
-                      id="create-transaction"
-                      checked={createTransaction}
-                      onCheckedChange={(checked) => setCreateTransaction(checked === true)}
-                      data-testid="checkbox-create-transaction"
-                    />
-                    <div className="space-y-1">
-                      <label
-                        htmlFor="create-transaction"
-                        className="text-sm font-medium cursor-pointer flex items-center gap-2"
-                      >
-                        <ArrowLeftRight className="h-4 w-4" />
-                        Gelir/Gider işlemlerine de kaydet
-                      </label>
-                      <p className="text-xs text-muted-foreground">
-                        Bu fatura için otomatik olarak {form.watch("type") === "Satış" ? "gelir" : "gider"} kaydı oluşturulacak
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               <DialogFooter>
                 <Button

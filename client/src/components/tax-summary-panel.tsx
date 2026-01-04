@@ -63,7 +63,7 @@ export function TaxSummaryPanel({
               <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
               <span className="text-sm text-muted-foreground">Toplam Gelir</span>
             </div>
-            <span className="font-mono font-semibold text-green-600 dark:text-green-400 whitespace-nowrap">
+            <span className="font-mono font-semibold text-green-600 dark:text-green-400">
               {formatCurrency(totalIncome)}
             </span>
           </div>
@@ -73,7 +73,7 @@ export function TaxSummaryPanel({
               <TrendingDown className="h-4 w-4 text-red-600 dark:text-red-400" />
               <span className="text-sm text-muted-foreground">Toplam Gider</span>
             </div>
-            <span className="font-mono font-semibold text-red-600 dark:text-red-400 whitespace-nowrap">
+            <span className="font-mono font-semibold text-red-600 dark:text-red-400">
               {formatCurrency(totalExpense)}
             </span>
           </div>
@@ -83,7 +83,7 @@ export function TaxSummaryPanel({
           <div className="flex items-center justify-between">
             <span className="font-semibold">Brüt Kar</span>
             <span
-              className={`font-mono font-bold text-lg whitespace-nowrap ${
+              className={`font-mono font-bold text-lg ${
                 profit >= 0
                   ? 'text-green-600 dark:text-green-400'
                   : 'text-red-600 dark:text-red-400'
@@ -106,12 +106,12 @@ export function TaxSummaryPanel({
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Tahsil Edilen KDV (%20)</span>
-            <span className="font-mono font-semibold whitespace-nowrap">{formatCurrency(kdvCollected)}</span>
+            <span className="font-mono font-semibold">{formatCurrency(kdvCollected)}</span>
           </div>
 
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Ödenen KDV</span>
-            <span className="font-mono font-semibold whitespace-nowrap">{formatCurrency(kdvPaid)}</span>
+            <span className="font-mono font-semibold">{formatCurrency(kdvPaid)}</span>
           </div>
 
           <Separator />
@@ -128,7 +128,7 @@ export function TaxSummaryPanel({
               >
                 {kdvPayable >= 0 ? 'Borç' : 'Alacak'}
               </Badge>
-              <span className="font-mono font-bold text-lg text-primary whitespace-nowrap">
+              <span className="font-mono font-bold text-lg text-primary">
                 {formatCurrency(Math.abs(kdvPayable))}
               </span>
             </div>
@@ -144,7 +144,7 @@ export function TaxSummaryPanel({
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Vergilendirilebilir Kar</span>
-            <span className="font-mono font-semibold whitespace-nowrap">{formatCurrency(profit)}</span>
+            <span className="font-mono font-semibold">{formatCurrency(profit)}</span>
           </div>
 
           <div className="flex items-center justify-between">
@@ -160,7 +160,7 @@ export function TaxSummaryPanel({
 
           <div className="flex items-center justify-between">
             <span className="font-semibold">Hesaplanan Vergi</span>
-            <span className="font-mono font-bold text-lg text-primary whitespace-nowrap">
+            <span className="font-mono font-bold text-lg text-primary">
               {formatCurrency(isCompany ? corporateTax : incomeTax)}
             </span>
           </div>
@@ -181,7 +181,7 @@ export function TaxSummaryPanel({
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Toplam Vergi Yükü</span>
-            <span className="font-mono font-semibold text-destructive whitespace-nowrap">
+            <span className="font-mono font-semibold text-destructive">
               {formatCurrency(totalTaxBurden)}
             </span>
           </div>
@@ -191,7 +191,7 @@ export function TaxSummaryPanel({
           <div className="flex items-center justify-between">
             <span className="font-bold text-lg">Net Kar (Vergiler Sonrası)</span>
             <span
-              className={`font-mono font-bold text-2xl whitespace-nowrap ${
+              className={`font-mono font-bold text-2xl ${
                 netProfit >= 0
                   ? 'text-green-600 dark:text-green-400'
                   : 'text-red-600 dark:text-red-400'

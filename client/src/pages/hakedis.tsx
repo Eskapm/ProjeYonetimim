@@ -68,8 +68,8 @@ import { PrintButton } from "@/components/print-button";
 import { ExportToExcel } from "@/components/export-to-excel";
 
 export default function Hakedis() {
-  const { activeProjectId, activeProject, setActiveProjectId } = useProjectContext();
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedProject, setSelectedProject] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<ProgressPayment | null>(null);
@@ -77,20 +77,12 @@ export default function Hakedis() {
   const [selectedTransactionIds, setSelectedTransactionIds] = useState<string[]>([]);
   const [viewingPaymentDetail, setViewingPaymentDetail] = useState<ProgressPayment | null>(null);
   const { toast} = useToast();
+  const { activeProjectId, activeProject } = useProjectContext();
 
-  // Local state synced with global context for immediate UI updates
-  const [selectedProject, setSelectedProjectLocal] = useState<string>(activeProjectId || "all");
-  
-  // Sync from context to local state
+  // Sync filter with active project
   useEffect(() => {
-    setSelectedProjectLocal(activeProjectId || "all");
+    setSelectedProject(activeProjectId || "all");
   }, [activeProjectId]);
-  
-  // Update both local state and context when user changes selection
-  const setSelectedProject = (id: string) => {
-    setSelectedProjectLocal(id);
-    setActiveProjectId(id === "all" ? null : id);
-  };
 
   // Fetch progress payments
   const { data: payments = [], isLoading: isLoadingPayments, error: paymentsError } = useQuery<ProgressPayment[]>({
@@ -179,26 +171,6 @@ export default function Hakedis() {
     // Gelirler toplamı = Tahsil Edilen (otomatik hesaplanan)
     form.setValue("receivedAmount", incomeTotal.toFixed(2));
   }, [selectedTransactionIds, allTransactions, form]);
-
-  // Watch projectId for auto-fill when project changes in the form
-  const watchedProjectId = form.watch("projectId");
-
-  // Auto-fill rates and payment number when project changes (only for new payments)
-  useEffect(() => {
-    if (!editingPayment && watchedProjectId && isDialogOpen) {
-      const project = projects.find(p => p.id === watchedProjectId);
-      if (project) {
-        // Auto-fill rates from project settings
-        form.setValue("contractorFeeRate", project.profitMargin || "0");
-        form.setValue("advanceDeductionRate", project.advanceDeductionRate || "0");
-        
-        // Auto-increment payment number - calculate inline
-        const projectPayments = payments.filter(p => p.projectId === watchedProjectId);
-        const nextPaymentNumber = projectPayments.length === 0 ? 1 : Math.max(...projectPayments.map(p => p.paymentNumber)) + 1;
-        form.setValue("paymentNumber", nextPaymentNumber);
-      }
-    }
-  }, [watchedProjectId, projects, payments, editingPayment, isDialogOpen]);
 
   // Auto-set advance deduction rate to 0 if no remaining advance
   useEffect(() => {
@@ -319,36 +291,17 @@ export default function Hakedis() {
     return { totalAmount, totalReceived, pendingAmount };
   }, [filteredPayments]);
 
-  // Calculate next payment number for a project
-  const getNextPaymentNumber = (projectId: string): number => {
-    if (!projectId) return 1;
-    const projectPayments = payments.filter(p => p.projectId === projectId);
-    if (projectPayments.length === 0) return 1;
-    const maxNumber = Math.max(...projectPayments.map(p => p.paymentNumber));
-    return maxNumber + 1;
-  };
-
   // Handlers
   const handleAddPayment = () => {
-    const projectId = activeProjectId || "";
-    const project = projectId ? projects.find(p => p.id === projectId) : null;
-    const nextPaymentNumber = getNextPaymentNumber(projectId);
-    
-    // Auto-fill rates from project settings
-    const contractorFeeRate = project?.profitMargin || "0";
-    const advanceDeductionRate = project?.advanceDeductionRate || "0";
-    
     form.reset({
-      projectId: projectId,
-      paymentNumber: nextPaymentNumber,
+      projectId: activeProjectId || "",
+      paymentNumber: 1,
       date: new Date().toISOString().split("T")[0],
       description: "",
       amount: "0",
       receivedAmount: "0",
       status: "Bekliyor",
       transactionIds: [],
-      contractorFeeRate: contractorFeeRate,
-      advanceDeductionRate: advanceDeductionRate,
     });
     setSelectedTransactionIds([]);
     setEditingPayment(null);
@@ -485,7 +438,7 @@ export default function Hakedis() {
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold font-mono whitespace-nowrap" data-testid="text-total-amount">
+              <div className="text-2xl font-bold font-mono" data-testid="text-total-amount">
                 {summary.totalAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -500,7 +453,7 @@ export default function Hakedis() {
               <TrendingUp className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold font-mono text-green-600 whitespace-nowrap" data-testid="text-total-received">
+              <div className="text-2xl font-bold font-mono text-green-600" data-testid="text-total-received">
                 {summary.totalReceived.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -515,7 +468,7 @@ export default function Hakedis() {
               <TrendingDown className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold font-mono text-orange-600 whitespace-nowrap" data-testid="text-pending-amount">
+              <div className="text-2xl font-bold font-mono text-orange-600" data-testid="text-pending-amount">
                 {summary.pendingAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -666,19 +619,19 @@ export default function Hakedis() {
                   <div className="grid grid-cols-3 gap-6 max-w-3xl ml-auto">
                     <div className="text-right">
                       <div className="text-sm text-muted-foreground mb-1">Toplam Hakediş</div>
-                      <div className="text-2xl font-bold whitespace-nowrap">
+                      <div className="text-2xl font-bold">
                         {summary.totalAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="text-sm text-muted-foreground mb-1">Tahsil Edilen</div>
-                      <div className="text-2xl font-bold text-green-600 whitespace-nowrap">
+                      <div className="text-2xl font-bold text-green-600">
                         {summary.totalReceived.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="text-sm text-muted-foreground mb-1">Bekleyen Ödeme</div>
-                      <div className="text-2xl font-bold text-orange-600 whitespace-nowrap">
+                      <div className="text-2xl font-bold text-orange-600">
                         {summary.pendingAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL
                       </div>
                     </div>
@@ -741,7 +694,7 @@ export default function Hakedis() {
                       <FormControl>
                         <Input
                           type="number"
-                          placeholder="0"
+                          placeholder="1"
                           {...field}
                           onChange={(e) => field.onChange(parseInt(e.target.value))}
                           data-testid="input-payment-number"
@@ -851,7 +804,7 @@ export default function Hakedis() {
                         <Input
                           type="number"
                           step="0.01"
-                          placeholder="0"
+                          placeholder="0.00"
                           {...field}
                           value={field.value || ""}
                           data-testid="input-contractor-fee-rate"
@@ -905,7 +858,7 @@ export default function Hakedis() {
                         <Input
                           type="number"
                           step="0.01"
-                          placeholder="0"
+                          placeholder="0.00"
                           {...field}
                           value={field.value || ""}
                           disabled={remainingAdvance.remaining <= 0}

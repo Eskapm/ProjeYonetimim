@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { ContactCard } from "@/components/contact-card";
 import { PrintButton } from "@/components/print-button";
 import { PrintHeader } from "@/components/print-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Trash2, UserPlus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -32,12 +32,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertCustomerSchema as baseInsertCustomerSchema, type Customer, type ContactPerson } from "@shared/schema";
+import { insertCustomerSchema as baseInsertCustomerSchema, type Customer, type InsertCustomer as BaseInsertCustomer } from "@shared/schema";
 import { z } from "zod";
 
+// Extend schema to handle empty strings instead of null
 const insertCustomerSchema = baseInsertCustomerSchema.extend({
   contactPerson: z.string().optional().transform(val => val || ""),
   phone: z.string().optional().transform(val => val || ""),
@@ -55,13 +55,14 @@ export default function Customers() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [deleteCustomerId, setDeleteCustomerId] = useState<string | null>(null);
-  const [contacts, setContacts] = useState<ContactPerson[]>([]);
   const { toast } = useToast();
 
+  // Fetch customers
   const { data: customers = [], isLoading, error } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
   });
 
+  // Form setup
   const form = useForm<InsertCustomer>({
     resolver: zodResolver(insertCustomerSchema),
     defaultValues: {
@@ -73,28 +74,7 @@ export default function Customers() {
     },
   });
 
-  useEffect(() => {
-    if (isDialogOpen && editingCustomer) {
-      form.reset({
-        name: editingCustomer.name,
-        contactPerson: editingCustomer.contactPerson ?? "",
-        phone: editingCustomer.phone ?? "",
-        email: editingCustomer.email ?? "",
-        address: editingCustomer.address ?? "",
-      });
-      setContacts((editingCustomer.contacts as ContactPerson[]) || []);
-    } else if (isDialogOpen && !editingCustomer) {
-      form.reset({
-        name: "",
-        contactPerson: "",
-        phone: "",
-        email: "",
-        address: "",
-      });
-      setContacts([]);
-    }
-  }, [isDialogOpen, editingCustomer, form]);
-
+  // Create customer mutation
   const createMutation = useMutation({
     mutationFn: async (data: InsertCustomer) => {
       return await apiRequest("POST", "/api/customers", data);
@@ -107,7 +87,6 @@ export default function Customers() {
       });
       setIsDialogOpen(false);
       form.reset();
-      setContacts([]);
     },
     onError: (error: Error) => {
       toast({
@@ -118,6 +97,7 @@ export default function Customers() {
     },
   });
 
+  // Update customer mutation
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: InsertCustomer }) => {
       return await apiRequest("PATCH", `/api/customers/${id}`, data);
@@ -131,7 +111,6 @@ export default function Customers() {
       setIsDialogOpen(false);
       setEditingCustomer(null);
       form.reset();
-      setContacts([]);
     },
     onError: (error: Error) => {
       toast({
@@ -142,6 +121,7 @@ export default function Customers() {
     },
   });
 
+  // Delete customer mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       return await apiRequest("DELETE", `/api/customers/${id}`);
@@ -163,19 +143,16 @@ export default function Customers() {
     },
   });
 
+  // Handle form submit
   const onSubmit = (data: InsertCustomer) => {
-    const submitData = {
-      ...data,
-      contacts: contacts,
-    };
-
     if (editingCustomer) {
-      updateMutation.mutate({ id: editingCustomer.id, data: submitData as InsertCustomer });
+      updateMutation.mutate({ id: editingCustomer.id, data });
     } else {
-      createMutation.mutate(submitData as InsertCustomer);
+      createMutation.mutate(data);
     }
   };
 
+  // Handle add new customer
   const handleAddNew = () => {
     setEditingCustomer(null);
     form.reset({
@@ -185,10 +162,10 @@ export default function Customers() {
       email: "",
       address: "",
     });
-    setContacts([]);
     setIsDialogOpen(true);
   };
 
+  // Handle edit customer
   const handleEdit = (customer: Customer) => {
     setEditingCustomer(customer);
     form.reset({
@@ -198,10 +175,10 @@ export default function Customers() {
       email: customer.email ?? "",
       address: customer.address ?? "",
     });
-    setContacts((customer.contacts as ContactPerson[]) || []);
     setIsDialogOpen(true);
   };
 
+  // Handle delete customer
   const handleDelete = (id: string) => {
     setDeleteCustomerId(id);
   };
@@ -212,20 +189,7 @@ export default function Customers() {
     }
   };
 
-  const addContact = () => {
-    setContacts([...contacts, { name: "", phone: "", email: "", title: "" }]);
-  };
-
-  const updateContact = (index: number, field: keyof ContactPerson, value: string) => {
-    const newContacts = [...contacts];
-    newContacts[index] = { ...newContacts[index], [field]: value };
-    setContacts(newContacts);
-  };
-
-  const removeContact = (index: number) => {
-    setContacts(contacts.filter((_, i) => i !== index));
-  };
-
+  // Filter customers by search term
   const filteredCustomers = customers.filter((customer) =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.contactPerson?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -260,6 +224,7 @@ export default function Customers() {
         />
       </div>
 
+      {/* Loading state */}
       {isLoading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -270,6 +235,7 @@ export default function Customers() {
         </div>
       )}
 
+      {/* Error state */}
       {error && (
         <div className="text-center py-12" data-testid="error-customers">
           <p className="text-destructive">Müşteriler yüklenirken bir hata oluştu</p>
@@ -279,6 +245,7 @@ export default function Customers() {
         </div>
       )}
 
+      {/* Empty state */}
       {!isLoading && !error && filteredCustomers.length === 0 && (
         <div className="text-center py-12" data-testid="empty-customers">
           <p className="text-muted-foreground">
@@ -293,6 +260,7 @@ export default function Customers() {
         </div>
       )}
 
+      {/* Customers grid */}
       {!isLoading && !error && filteredCustomers.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCustomers.map((customer) => (
@@ -304,7 +272,6 @@ export default function Customers() {
               phone={customer.phone ?? undefined}
               email={customer.email ?? undefined}
               address={customer.address ?? undefined}
-              contacts={(customer.contacts as ContactPerson[]) || []}
               type="customer"
               onEdit={() => handleEdit(customer)}
               onDelete={() => handleDelete(customer.id)}
@@ -313,15 +280,15 @@ export default function Customers() {
         </div>
       )}
 
+      {/* Customer form dialog */}
       <Dialog open={isDialogOpen} onOpenChange={(open) => {
         setIsDialogOpen(open);
         if (!open) {
           setEditingCustomer(null);
           form.reset();
-          setContacts([]);
         }
       }}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto" data-testid="dialog-customer-form">
+        <DialogContent className="sm:max-w-[600px]" data-testid="dialog-customer-form">
           <DialogHeader>
             <DialogTitle>
               {editingCustomer ? "Müşteri Düzenle" : "Yeni Müşteri Ekle"}
@@ -340,7 +307,7 @@ export default function Customers() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Firma Adı *</FormLabel>
+                    <FormLabel>Müşteri Adı *</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Örn: Yılmaz Holding A.Ş."
@@ -352,6 +319,63 @@ export default function Customers() {
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="contactPerson"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>İletişim Kişisi</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Örn: Ahmet Yılmaz"
+                        {...field}
+                        data-testid="input-customer-contact-person"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Telefon</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Örn: +90 216 555 66 77"
+                          {...field}
+                          data-testid="input-customer-phone"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>E-posta</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="Örn: ornek@firma.com"
+                          {...field}
+                          data-testid="input-customer-email"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}
@@ -371,126 +395,6 @@ export default function Customers() {
                 )}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Firma Telefonu</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Örn: +90 216 555 66 77"
-                          {...field}
-                          data-testid="input-customer-phone"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Firma E-posta</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="Örn: info@firma.com"
-                          {...field}
-                          data-testid="input-customer-email"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <Card>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">İletişim Kişileri</CardTitle>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={addContact}
-                      data-testid="button-add-contact"
-                    >
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Kişi Ekle
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {contacts.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      Henüz iletişim kişisi eklenmemiş. Yukarıdaki butona tıklayarak ekleyebilirsiniz.
-                    </p>
-                  ) : (
-                    contacts.map((contact, index) => (
-                      <div key={index} className="border rounded-lg p-4 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium">Kişi {index + 1}</span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeContact(index)}
-                            data-testid={`button-remove-contact-${index}`}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <div>
-                            <label className="text-sm font-medium">Ad Soyad *</label>
-                            <Input
-                              placeholder="Örn: Ahmet Yılmaz"
-                              value={contact.name}
-                              onChange={(e) => updateContact(index, "name", e.target.value)}
-                              data-testid={`input-contact-name-${index}`}
-                            />
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium">Ünvan</label>
-                            <Input
-                              placeholder="Örn: Genel Müdür"
-                              value={contact.title || ""}
-                              onChange={(e) => updateContact(index, "title", e.target.value)}
-                              data-testid={`input-contact-title-${index}`}
-                            />
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium">Telefon</label>
-                            <Input
-                              placeholder="Örn: +90 532 555 66 77"
-                              value={contact.phone || ""}
-                              onChange={(e) => updateContact(index, "phone", e.target.value)}
-                              data-testid={`input-contact-phone-${index}`}
-                            />
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium">E-posta</label>
-                            <Input
-                              type="email"
-                              placeholder="Örn: ahmet@firma.com"
-                              value={contact.email || ""}
-                              onChange={(e) => updateContact(index, "email", e.target.value)}
-                              data-testid={`input-contact-email-${index}`}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </CardContent>
-              </Card>
-
               <DialogFooter>
                 <Button
                   type="button"
@@ -499,7 +403,6 @@ export default function Customers() {
                     setIsDialogOpen(false);
                     setEditingCustomer(null);
                     form.reset();
-                    setContacts([]);
                   }}
                   data-testid="button-cancel-customer"
                 >
@@ -522,20 +425,23 @@ export default function Customers() {
         </DialogContent>
       </Dialog>
 
+      {/* Delete confirmation dialog */}
       <AlertDialog open={!!deleteCustomerId} onOpenChange={(open) => !open && setDeleteCustomerId(null)}>
         <AlertDialogContent data-testid="dialog-delete-customer">
           <AlertDialogHeader>
-            <AlertDialogTitle>Müşteriyi silmek istediğinize emin misiniz?</AlertDialogTitle>
+            <AlertDialogTitle>Müşteriyi Sil</AlertDialogTitle>
             <AlertDialogDescription>
-              Bu işlem geri alınamaz. Müşteri kalıcı olarak silinecektir.
+              Bu müşteriyi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-delete">İptal</AlertDialogCancel>
+            <AlertDialogCancel data-testid="button-cancel-delete-customer">
+              İptal
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              data-testid="button-confirm-delete"
+              disabled={deleteMutation.isPending}
+              data-testid="button-confirm-delete-customer"
             >
               {deleteMutation.isPending ? "Siliniyor..." : "Sil"}
             </AlertDialogAction>

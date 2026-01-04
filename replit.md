@@ -53,21 +53,10 @@ Preferred communication style: Simple, everyday language.
 *   **Bütçe-Keşif (Budget-Exploration) Print Feature**: Print functionality for budget items with optimized table layouts.
 *   **Project Detail Page**: Fetches and displays real project data from the API.
 *   **Transactions Module - Advanced Filtering**: İş Grubu and Rayiç Grubu dual-filter system with real-time filtering of transactions, summaries, and Excel exports.
-*   **Excel Export Functionality**: Comprehensive Excel export across all major modules (Transactions, Invoices, Projects, Hakediş) using exceljs library. Exports filtered data with Turkish locale formatting and appropriate column schemas.
+*   **Excel Export Functionality**: Comprehensive Excel export across all major modules (Transactions, Invoices, Projects, Hakediş) using xlsx library. Exports filtered data with Turkish locale formatting and appropriate column schemas.
 *   **Invoices Module - Partial Payment Tracking**: Added "Ödenen" (Paid Amount) and "Kalan" (Remaining Amount) columns to invoice table, displaying partial payment status with color-coded formatting.
 *   **Print Optimization**: Global print CSS with overflow-hidden, fixed table layouts, and 95% zoom to ensure all tables fit on A4 pages without scrollbars.
 *   **Project Edit Flow**: Query parameter-based navigation from project detail page to projects page with auto-opening edit dialog.
-*   **Multi-Contact Person Support**: Both Customers and Subcontractors modules support adding multiple contact persons per record. Features dynamic "Kişi Ekle" button to add contacts before saving, with full CRUD for name, phone, email, and title (Ünvan) fields. ContactCard component displays up to 3 contacts with collapsible view showing "+X kişi daha" for additional contacts.
-*   **Taşeron/Tedarikçi Module**: Renamed from "Taşeronlar" to "Taşeron/Tedarikçi" to support both subcontractors and suppliers. Added type field (Taşeron/Tedarikçi) with tab-based filtering (Tümü, Taşeron, Tedarikçi).
-*   **User Registration System**: Full user registration with fields for Ad Soyad (fullName), E-Posta (email), Şifre (password with visibility toggle), Şifre Tekrar (confirmPassword), Firma Adı (companyName - optional), Ülke (country), Şehir (city). Password visibility toggle (eye icon) on both login and registration forms. Backend validation with Zod schema, email uniqueness check, and password hashing.
-
-### Enterprise Features (New)
-
-*   **Fatura-İşlem Çift Yönlü Entegrasyonu (Bidirectional Invoice-Transaction Linking)**: Faturalar ve Gelir/Gider işlemleri arasında otomatik bağlantı kurularak mükerrer veri girişi önlenir. İşlem oluştururken "Fatura Oluştur" checkbox'ı seçildiğinde otomatik fatura oluşturulur; fatura oluştururken "İşlem Oluştur" seçeneği ile otomatik Gelir/Gider kaydı oluşturulur. Schema'da linkedInvoiceId (transactions) ve linkedTransactionId (invoices) alanları, 409 Conflict mükerrer kontrolü, ve hata durumunda tam rollback mekanizması mevcut. Bağlı kayıtlar tabloda "Fatura" badge'i ile gösterilir.
-*   **Gelir Modülü Yeniden Tasarımı**: Gelir işlemleri artık incomeKind (Avans/Hakediş/Teminat İadesi/Fiyat Farkı), paymentMethod (Nakit/Banka/Çek/Kredi Kartı), müşteri bağlantısı ve onaylı hakediş bağlantısı içeriyor. İş Grubu ve Rayiç Grubu sadece giderler için zorunlu.
-*   **Sözleşme Yönetimi (Contract Management)**: contracts tablosu ile proje bazlı sözleşme yönetimi. Sözleşme numarası, türü (Ana Sözleşme/Alt Sözleşme/Ek Protokol/Tadilat), toplam bedel, avans oranı, teminat kesinti oranı, sözleşme maddeleri ve durum takibi (Taslak/Aktif/Tamamlandı/İptal).
-*   **Ödeme Planları (Payment Plans)**: payment_plans tablosu ile gelir/gider bazlı planlanan ödemeler takvimi. Geciken ödeme uyarıları, planlanan vs gerçekleşen tutar karşılaştırması, sözleşme bağlantısı.
-*   **Döküman Yönetimi (Document Management)**: documents tablosu ile proje bazlı dosya yönetimi. Kategori (Sözleşme/Proje/Hakediş/Fatura/Teknik Çizim/Fotoğraf/Rapor/Diğer), dosya URL, tür ve boyut bilgisi.
 
 ## External Dependencies
 
@@ -88,7 +77,7 @@ Preferred communication style: Simple, everyday language.
 *   **zod**: Schema validation.
 *   **nanoid**: Secure random ID generation.
 *   **cmdk**: Command palette component.
-*   **exceljs**: Excel file generation for data export functionality (replaced xlsx due to CVE vulnerabilities).
+*   **xlsx**: Excel file generation for data export functionality.
 
 ### Session Storage
 

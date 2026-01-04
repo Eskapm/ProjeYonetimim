@@ -1,4 +1,4 @@
-import { eq, and, sum } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "./db";
 import {
   type User,
@@ -23,12 +23,6 @@ import {
   type InsertTask,
   type BudgetItem,
   type InsertBudgetItem,
-  type Contract,
-  type InsertContract,
-  type PaymentPlan,
-  type InsertPaymentPlan,
-  type Document,
-  type InsertDocument,
   users,
   projects,
   customers,
@@ -40,9 +34,6 @@ import {
   progressPayments,
   tasks,
   budgetItems,
-  contracts,
-  paymentPlans,
-  documents,
 } from "@shared/schema";
 import session, { type Store } from "express-session";
 import createMemoryStore from "memorystore";
@@ -53,7 +44,6 @@ export interface IStorage {
   // User methods
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
 
   // Project methods
@@ -94,7 +84,6 @@ export interface IStorage {
   // Timesheet methods
   getTimesheets(): Promise<Timesheet[]>;
   getTimesheet(id: string): Promise<Timesheet | undefined>;
-  getTimesheetWorkerCount(projectId: string, date: string): Promise<number>;
   createTimesheet(timesheet: InsertTimesheet): Promise<Timesheet>;
   updateTimesheet(id: string, timesheet: Partial<InsertTimesheet>): Promise<Timesheet | undefined>;
   deleteTimesheet(id: string): Promise<boolean>;
@@ -127,27 +116,6 @@ export interface IStorage {
   updateBudgetItem(id: string, item: Partial<InsertBudgetItem>): Promise<BudgetItem | undefined>;
   deleteBudgetItem(id: string): Promise<boolean>;
 
-  // Contract methods
-  getContracts(): Promise<Contract[]>;
-  getContract(id: string): Promise<Contract | undefined>;
-  createContract(contract: InsertContract): Promise<Contract>;
-  updateContract(id: string, contract: Partial<InsertContract>): Promise<Contract | undefined>;
-  deleteContract(id: string): Promise<boolean>;
-
-  // Payment Plan methods
-  getPaymentPlans(): Promise<PaymentPlan[]>;
-  getPaymentPlan(id: string): Promise<PaymentPlan | undefined>;
-  createPaymentPlan(plan: InsertPaymentPlan): Promise<PaymentPlan>;
-  updatePaymentPlan(id: string, plan: Partial<InsertPaymentPlan>): Promise<PaymentPlan | undefined>;
-  deletePaymentPlan(id: string): Promise<boolean>;
-
-  // Document methods
-  getDocuments(projectId?: string): Promise<Document[]>;
-  getDocument(id: string): Promise<Document | undefined>;
-  createDocument(doc: InsertDocument): Promise<Document>;
-  updateDocument(id: string, doc: Partial<InsertDocument>): Promise<Document | undefined>;
-  deleteDocument(id: string): Promise<boolean>;
-
   sessionStore: Store;
 }
 
@@ -168,11 +136,6 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.username, username)).limit(1);
-    return user;
-  }
-
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
     return user;
   }
 
@@ -217,12 +180,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCustomer(customer: InsertCustomer): Promise<Customer> {
-    const [newCustomer] = await db.insert(customers).values(customer as any).returning();
+    const [newCustomer] = await db.insert(customers).values(customer).returning();
     return newCustomer;
   }
 
   async updateCustomer(id: string, customer: Partial<InsertCustomer>): Promise<Customer | undefined> {
-    const [updated] = await db.update(customers).set(customer as any).where(eq(customers.id, id)).returning();
+    const [updated] = await db.update(customers).set(customer).where(eq(customers.id, id)).returning();
     return updated;
   }
 
@@ -242,12 +205,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createSubcontractor(subcontractor: InsertSubcontractor): Promise<Subcontractor> {
-    const [newSubcontractor] = await db.insert(subcontractors).values(subcontractor as any).returning();
+    const [newSubcontractor] = await db.insert(subcontractors).values(subcontractor).returning();
     return newSubcontractor;
   }
 
   async updateSubcontractor(id: string, subcontractor: Partial<InsertSubcontractor>): Promise<Subcontractor | undefined> {
-    const [updated] = await db.update(subcontractors).set(subcontractor as any).where(eq(subcontractors.id, id)).returning();
+    const [updated] = await db.update(subcontractors).set(subcontractor).where(eq(subcontractors.id, id)).returning();
     return updated;
   }
 
@@ -314,14 +277,6 @@ export class DatabaseStorage implements IStorage {
   async getTimesheet(id: string): Promise<Timesheet | undefined> {
     const [timesheet] = await db.select().from(timesheets).where(eq(timesheets.id, id)).limit(1);
     return timesheet;
-  }
-
-  async getTimesheetWorkerCount(projectId: string, date: string): Promise<number> {
-    const result = await db
-      .select({ total: sum(timesheets.workerCount) })
-      .from(timesheets)
-      .where(and(eq(timesheets.projectId, projectId), eq(timesheets.date, date)));
-    return Number(result[0]?.total || 0);
   }
 
   async createTimesheet(timesheet: InsertTimesheet): Promise<Timesheet> {
@@ -439,84 +394,6 @@ export class DatabaseStorage implements IStorage {
 
   async deleteBudgetItem(id: string): Promise<boolean> {
     const result = await db.delete(budgetItems).where(eq(budgetItems.id, id));
-    return result.rowCount ? result.rowCount > 0 : false;
-  }
-
-  // Contract methods
-  async getContracts(): Promise<Contract[]> {
-    return await db.select().from(contracts);
-  }
-
-  async getContract(id: string): Promise<Contract | undefined> {
-    const [contract] = await db.select().from(contracts).where(eq(contracts.id, id)).limit(1);
-    return contract;
-  }
-
-  async createContract(contract: InsertContract): Promise<Contract> {
-    const [newContract] = await db.insert(contracts).values(contract).returning();
-    return newContract;
-  }
-
-  async updateContract(id: string, contract: Partial<InsertContract>): Promise<Contract | undefined> {
-    const [updated] = await db.update(contracts).set(contract).where(eq(contracts.id, id)).returning();
-    return updated;
-  }
-
-  async deleteContract(id: string): Promise<boolean> {
-    const result = await db.delete(contracts).where(eq(contracts.id, id));
-    return result.rowCount ? result.rowCount > 0 : false;
-  }
-
-  // Payment Plan methods
-  async getPaymentPlans(): Promise<PaymentPlan[]> {
-    return await db.select().from(paymentPlans);
-  }
-
-  async getPaymentPlan(id: string): Promise<PaymentPlan | undefined> {
-    const [plan] = await db.select().from(paymentPlans).where(eq(paymentPlans.id, id)).limit(1);
-    return plan;
-  }
-
-  async createPaymentPlan(plan: InsertPaymentPlan): Promise<PaymentPlan> {
-    const [newPlan] = await db.insert(paymentPlans).values(plan).returning();
-    return newPlan;
-  }
-
-  async updatePaymentPlan(id: string, plan: Partial<InsertPaymentPlan>): Promise<PaymentPlan | undefined> {
-    const [updated] = await db.update(paymentPlans).set(plan).where(eq(paymentPlans.id, id)).returning();
-    return updated;
-  }
-
-  async deletePaymentPlan(id: string): Promise<boolean> {
-    const result = await db.delete(paymentPlans).where(eq(paymentPlans.id, id));
-    return result.rowCount ? result.rowCount > 0 : false;
-  }
-
-  // Document methods
-  async getDocuments(projectId?: string): Promise<Document[]> {
-    if (projectId) {
-      return await db.select().from(documents).where(eq(documents.projectId, projectId));
-    }
-    return await db.select().from(documents);
-  }
-
-  async getDocument(id: string): Promise<Document | undefined> {
-    const [doc] = await db.select().from(documents).where(eq(documents.id, id)).limit(1);
-    return doc;
-  }
-
-  async createDocument(doc: InsertDocument): Promise<Document> {
-    const [newDoc] = await db.insert(documents).values(doc).returning();
-    return newDoc;
-  }
-
-  async updateDocument(id: string, doc: Partial<InsertDocument>): Promise<Document | undefined> {
-    const [updated] = await db.update(documents).set(doc).where(eq(documents.id, id)).returning();
-    return updated;
-  }
-
-  async deleteDocument(id: string): Promise<boolean> {
-    const result = await db.delete(documents).where(eq(documents.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 }

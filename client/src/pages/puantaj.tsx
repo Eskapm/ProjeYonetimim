@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
 import { PrintButton } from "@/components/print-button";
 import { PrintHeader } from "@/components/print-header";
 import { useProjectContext } from "@/hooks/use-project-context";
@@ -37,7 +36,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Plus, Search, Calendar as CalendarIcon, Loader2, Edit2, Trash2, Users, Clock, X, Eye, Building2, FileText } from "lucide-react";
+import { Plus, Search, Calendar as CalendarIcon, Loader2, Edit2, Trash2, Users, Clock, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertTimesheetSchema, isGrubuEnum, type InsertTimesheet, type Timesheet, type Project, type Subcontractor } from "@shared/schema";
@@ -68,30 +67,15 @@ interface PendingEntry {
 }
 
 export default function Puantaj() {
-  const { activeProjectId, setActiveProjectId } = useProjectContext();
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedProject, setSelectedProject] = useState("all");
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<Timesheet | null>(null);
   const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null);
-  const [viewingEntry, setViewingEntry] = useState<(Timesheet & { projectName: string; subcontractorName: string }) | null>(null);
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
-
-  // Local state synced with global context for immediate UI updates
-  const [selectedProject, setSelectedProjectLocal] = useState<string>(activeProjectId || "all");
-  
-  // Sync from context to local state
-  useEffect(() => {
-    setSelectedProjectLocal(activeProjectId || "all");
-  }, [activeProjectId]);
-  
-  // Update both local state and context when user changes selection
-  const setSelectedProject = (id: string) => {
-    setSelectedProjectLocal(id);
-    setActiveProjectId(id === "all" ? null : id);
-  };
+  const { activeProjectId } = useProjectContext();
 
   // Batch entry state
   const [pendingEntries, setPendingEntries] = useState<PendingEntry[]>([]);
@@ -102,6 +86,11 @@ export default function Puantaj() {
   const [currentHours, setCurrentHours] = useState("");
   const [currentNotes, setCurrentNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+
+  // Sync filter with active project
+  useEffect(() => {
+    setSelectedProject(activeProjectId || "all");
+  }, [activeProjectId]);
 
   // Fetch timesheet entries
   const { data: timesheets = [], isLoading: isLoadingTimesheets, error: timesheetsError } = useQuery<Timesheet[]>({
@@ -221,12 +210,11 @@ export default function Puantaj() {
     }
 
     const subcontractor = subcontractors.find(s => s.id === currentSubcontractorId);
-    const actualSubcontractorId = currentSubcontractorId && currentSubcontractorId !== "none" ? currentSubcontractorId : null;
     
     const newEntry: PendingEntry = {
       id: `pending-${Date.now()}-${Math.random()}`,
       isGrubu: currentIsGrubu,
-      subcontractorId: actualSubcontractorId,
+      subcontractorId: currentSubcontractorId || null,
       subcontractorName: subcontractor?.name || "Belirtilmedi",
       workerCount: parseInt(currentWorkerCount),
       hours: currentHours,
@@ -299,16 +287,10 @@ export default function Puantaj() {
         description: `${pendingEntries.length} puantaj kaydı başarıyla oluşturuldu`,
       });
 
-      // Store the date for redirect
-      const savedDate = batchDate;
-      
       // Reset all
       setPendingEntries([]);
       setBatchDate(new Date().toISOString().split("T")[0]);
       setIsDialogOpen(false);
-      
-      // Redirect to site diary with date parameter
-      setLocation(`/santiye-defteri?date=${savedDate}&fromPuantaj=true`);
     } catch (error) {
       toast({
         title: "Hata",
@@ -419,7 +401,7 @@ export default function Puantaj() {
           <PrintButton />
           <Button onClick={handleAddEntry} data-testid="button-add-timesheet">
             <Plus className="h-4 w-4 mr-2" />
-            Yeni Puantaj Ekle
+            Toplu Puantaj Girişi
           </Button>
         </div>
       </div>
@@ -585,7 +567,7 @@ export default function Puantaj() {
                 </TableHeader>
                 <TableBody>
                   {filteredTimesheets.map((entry) => (
-                    <TableRow key={entry.id} data-testid={`row-timesheet-${entry.id}`} className="cursor-pointer hover:bg-muted/50" onClick={() => setViewingEntry(entry)}>
+                    <TableRow key={entry.id} data-testid={`row-timesheet-${entry.id}`}>
                       <TableCell>
                         {format(new Date(entry.date), "dd MMMM yyyy", { locale: tr })}
                       </TableCell>
@@ -602,15 +584,7 @@ export default function Puantaj() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={(e) => { e.stopPropagation(); setViewingEntry(entry); }}
-                            data-testid={`button-view-${entry.id}`}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => { e.stopPropagation(); handleEditEntry(entry); }}
+                            onClick={() => handleEditEntry(entry)}
                             data-testid={`button-edit-${entry.id}`}
                           >
                             <Edit2 className="h-4 w-4" />
@@ -618,7 +592,7 @@ export default function Puantaj() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={(e) => { e.stopPropagation(); handleDeleteEntry(entry.id); }}
+                            onClick={() => handleDeleteEntry(entry.id)}
                             data-testid={`button-delete-${entry.id}`}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -638,7 +612,7 @@ export default function Puantaj() {
       <Dialog open={isDialogOpen && !editingEntry} onOpenChange={(open) => { if (!open) setIsDialogOpen(false); }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Yeni Puantaj Ekle</DialogTitle>
+            <DialogTitle>Toplu Puantaj Girişi</DialogTitle>
             <DialogDescription>
               {activeProject ? (
                 <span>Proje: <strong>{activeProject.name}</strong> - Birden fazla ekip için puantaj girişi yapabilirsiniz.</span>
@@ -714,7 +688,7 @@ export default function Puantaj() {
                         <SelectValue placeholder="Seçin" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">Belirtilmedi</SelectItem>
+                        <SelectItem value="">Belirtilmedi</SelectItem>
                         {subcontractors.map((sub) => (
                           <SelectItem key={sub.id} value={sub.id}>
                             {sub.name}
@@ -740,7 +714,7 @@ export default function Puantaj() {
                     <Input
                       type="number"
                       step="0.5"
-                      placeholder="0,00"
+                      placeholder="8"
                       value={currentHours}
                       onChange={(e) => setCurrentHours(e.target.value)}
                       data-testid="input-hours"
@@ -970,14 +944,14 @@ export default function Puantaj() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Taşeron</FormLabel>
-                      <Select onValueChange={(val) => field.onChange(val === "none" ? null : val)} value={field.value || "none"}>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger data-testid="select-subcontractor-edit">
                             <SelectValue placeholder="Taşeron seçin" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="none">Belirtilmedi</SelectItem>
+                          <SelectItem value="">Belirtilmedi</SelectItem>
                           {subcontractors.map((sub) => (
                             <SelectItem key={sub.id} value={sub.id}>
                               {sub.name}
@@ -1023,7 +997,7 @@ export default function Puantaj() {
                         <Input
                           type="number"
                           step="0.5"
-                          placeholder="0,00"
+                          placeholder="8"
                           {...field}
                           data-testid="input-hours-edit"
                         />
@@ -1071,95 +1045,6 @@ export default function Puantaj() {
               </DialogFooter>
             </form>
           </Form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Detail View Dialog */}
-      <Dialog open={!!viewingEntry} onOpenChange={(open) => { if (!open) setViewingEntry(null); }}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CalendarIcon className="h-5 w-5" />
-              Puantaj Detayı
-            </DialogTitle>
-          </DialogHeader>
-          
-          {viewingEntry && (
-            <div className="space-y-4 mt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="text-sm font-semibold text-muted-foreground mb-1">Tarih</h4>
-                  <p className="text-sm">{format(new Date(viewingEntry.date), "dd MMMM yyyy, EEEE", { locale: tr })}</p>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-semibold text-muted-foreground mb-1">İş Grubu</h4>
-                  <p className="text-sm">{viewingEntry.isGrubu}</p>
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="text-sm font-semibold text-muted-foreground mb-1 flex items-center gap-2">
-                  <Building2 className="h-4 w-4" />
-                  Proje
-                </h4>
-                <p className="text-sm font-medium">{viewingEntry.projectName}</p>
-              </div>
-              
-              {viewingEntry.subcontractorName && (
-                <div>
-                  <h4 className="text-sm font-semibold text-muted-foreground mb-1">Taşeron</h4>
-                  <p className="text-sm">{viewingEntry.subcontractorName}</p>
-                </div>
-              )}
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <h4 className="text-sm font-semibold text-muted-foreground mb-1 flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    İşçi Sayısı
-                  </h4>
-                  <p className="text-2xl font-bold font-mono">{viewingEntry.workerCount}</p>
-                </div>
-                
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <h4 className="text-sm font-semibold text-muted-foreground mb-1 flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    Çalışma Saati
-                  </h4>
-                  <p className="text-2xl font-bold font-mono">{viewingEntry.hours}</p>
-                </div>
-              </div>
-              
-              {viewingEntry.notes && (
-                <div>
-                  <h4 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    Notlar
-                  </h4>
-                  <p className="text-sm whitespace-pre-wrap bg-muted/50 rounded-lg p-3">{viewingEntry.notes}</p>
-                </div>
-              )}
-            </div>
-          )}
-          
-          <div className="flex gap-2 mt-6">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => { setViewingEntry(null); if (viewingEntry) handleEditEntry(viewingEntry); }}
-            >
-              <Edit2 className="h-4 w-4 mr-2" />
-              Düzenle
-            </Button>
-            <Button
-              variant="secondary"
-              className="flex-1"
-              onClick={() => setViewingEntry(null)}
-            >
-              Kapat
-            </Button>
-          </div>
         </DialogContent>
       </Dialog>
 
