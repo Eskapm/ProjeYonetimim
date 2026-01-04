@@ -1249,13 +1249,14 @@ export default function Reports() {
                 />
               </CardHeader>
               <CardContent>
+                <div className="overflow-x-auto -mx-6 px-6">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Proje Adı</TableHead>
-                      <TableHead className="text-right">Gelir</TableHead>
-                      <TableHead className="text-right">Gider</TableHead>
-                      <TableHead className="text-right">Kâr/Zarar</TableHead>
+                      <TableHead className="min-w-[150px]">Proje Adı</TableHead>
+                      <TableHead className="text-right whitespace-nowrap">Gelir</TableHead>
+                      <TableHead className="text-right whitespace-nowrap">Gider</TableHead>
+                      <TableHead className="text-right whitespace-nowrap">Kâr/Zarar</TableHead>
                       <TableHead className="text-right">Durum</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -1286,6 +1287,7 @@ export default function Reports() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           )}
