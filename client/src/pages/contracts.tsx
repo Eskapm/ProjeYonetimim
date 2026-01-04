@@ -49,6 +49,7 @@ import {
 } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { formatCurrency } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
@@ -238,9 +239,9 @@ export default function Contracts() {
     });
   };
 
-  const formatCurrency = (amount: string | null) => {
+  const formatCurrencyValue = (amount: string | null) => {
     if (!amount) return "-";
-    return Number(amount).toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + " ₺";
+    return formatCurrency(Number(amount));
   };
 
   const getStatusBadgeVariant = (status: string) => {
@@ -302,7 +303,7 @@ export default function Contracts() {
             <FileText className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{formatCurrency(totalContractValue.toString())}</div>
+            <div className="text-2xl font-bold text-blue-600">{formatCurrency(totalContractValue)}</div>
           </CardContent>
         </Card>
       </div>
@@ -364,7 +365,7 @@ export default function Contracts() {
                     <TableCell className="font-medium">{contract.title}</TableCell>
                     <TableCell>{project?.name || "-"}</TableCell>
                     <TableCell>{contract.contractType || "-"}</TableCell>
-                    <TableCell className="font-mono">{formatCurrency(contract.totalAmount)}</TableCell>
+                    <TableCell className="font-mono">{formatCurrencyValue(contract.totalAmount)}</TableCell>
                     <TableCell>{formatDate(contract.startDate)}</TableCell>
                     <TableCell>{formatDate(contract.endDate)}</TableCell>
                     <TableCell>

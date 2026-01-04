@@ -16,6 +16,7 @@ import { insertBudgetItemSchema, budgetItemStatusEnum, isGrubuEnum, rayicGrubuEn
 import { Plus, Pencil, Trash2, TrendingUp, TrendingDown, DollarSign, Clock, Filter, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { PrintHeader } from "@/components/print-header";
+import { formatCurrency } from "@/lib/format";
 import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -256,14 +257,6 @@ export default function BudgetPage() {
       default:
         return <Badge variant="outline" className="no-default-hover-elevate">{status}</Badge>;
     }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency: 'TRY',
-      minimumFractionDigits: 2,
-    }).format(amount);
   };
 
   const getProjectName = (projectId: string) => {

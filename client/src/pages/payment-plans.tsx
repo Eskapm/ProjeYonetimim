@@ -49,6 +49,7 @@ import {
 } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { formatCurrency } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
@@ -225,9 +226,9 @@ export default function PaymentPlans() {
     });
   };
 
-  const formatCurrency = (amount: string | null) => {
+  const formatCurrencyValue = (amount: string | null) => {
     if (!amount) return "-";
-    return Number(amount).toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + " ₺";
+    return formatCurrency(Number(amount));
   };
 
   const getStatusBadgeVariant = (status: string) => {
@@ -307,7 +308,7 @@ export default function PaymentPlans() {
             <Calendar className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{formatCurrency(totalPlannedAmount.toString())}</div>
+            <div className="text-2xl font-bold text-blue-600">{formatCurrency(totalPlannedAmount)}</div>
           </CardContent>
         </Card>
       </div>
@@ -377,9 +378,9 @@ export default function PaymentPlans() {
                     </TableCell>
                     <TableCell>{project?.name || "-"}</TableCell>
                     <TableCell>{formatDate(plan.plannedDate)}</TableCell>
-                    <TableCell className="font-mono">{formatCurrency(plan.plannedAmount)}</TableCell>
+                    <TableCell className="font-mono">{formatCurrencyValue(plan.plannedAmount)}</TableCell>
                     <TableCell>{formatDate(plan.actualDate)}</TableCell>
-                    <TableCell className="font-mono">{formatCurrency(plan.actualAmount)}</TableCell>
+                    <TableCell className="font-mono">{formatCurrencyValue(plan.actualAmount)}</TableCell>
                     <TableCell>
                       <Badge variant={getStatusBadgeVariant(plan.status)}>
                         {plan.status}

@@ -21,13 +21,26 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { type TransactionWithProject, type Project, type Invoice, type Task, type ProgressPayment, type Timesheet, type SiteDiary, type Subcontractor, type BudgetItem, type PaymentPlan } from "@shared/schema";
 import { calculateTaxSummary } from "@shared/taxCalculations";
-import { BarChart, Bar, PieChart as RePieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, PieChart as RePieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from 'recharts';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ExportToExcel } from "@/components/export-to-excel";
+import { formatCurrency } from "@/lib/format";
 
 type DateFilter = "all" | "this-month" | "this-year" | "custom";
+
+// Chart typography configuration for readable labels
+const chartTickStyle = { fontSize: 11, fill: 'hsl(var(--muted-foreground))' };
+const chartLabelStyle = { fontSize: 10, fill: 'hsl(var(--foreground))' };
+const chartLegendStyle = { fontSize: 12 };
+
+// Format currency for chart axis (compact)
+const formatChartCurrency = (value: number) => {
+  if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M ₺`;
+  if (value >= 1000) return `${(value / 1000).toFixed(0)}K ₺`;
+  return `${value.toFixed(0)} ₺`;
+};
 
 // Safe number parsing helper - returns 0 for invalid/missing values
 const safeNumber = (value: string | number | null | undefined): number => {
@@ -512,14 +525,6 @@ export default function Reports() {
 
     return Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
   }, [filteredProjects]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency: 'TRY',
-      minimumFractionDigits: 2,
-    }).format(amount);
-  };
 
   // Kurumsal renk paleti
   const CORPORATE_COLORS = {
@@ -1134,10 +1139,10 @@ export default function Reports() {
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={monthlyTrend}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis tickFormatter={(value) => `₺${(value / 1000).toFixed(0)}k`} />
+                    <XAxis dataKey="month" tick={chartTickStyle} />
+                    <YAxis tickFormatter={formatChartCurrency} tick={chartTickStyle} width={70} />
                     <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                    <Legend />
+                    <Legend wrapperStyle={chartLegendStyle} />
                     <Line type="monotone" dataKey="income" stroke="#10b981" name="Gelir" strokeWidth={2} />
                     <Line type="monotone" dataKey="expense" stroke="#ef4444" name="Gider" strokeWidth={2} />
                   </LineChart>
@@ -1469,15 +1474,15 @@ export default function Reports() {
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={timesheetStats.byProject.slice(0, 10)} layout="vertical">
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis type="number" />
-                        <YAxis type="category" dataKey="name" width={150} />
+                        <XAxis type="number" tick={chartTickStyle} />
+                        <YAxis type="category" dataKey="name" width={150} tick={chartTickStyle} />
                         <Tooltip 
                           formatter={(value: number, name: string) => [
                             value.toLocaleString('tr-TR'),
                             name === 'workers' ? 'İşçi-Gün' : 'Çalışma Saati'
                           ]}
                         />
-                        <Legend />
+                        <Legend wrapperStyle={chartLegendStyle} />
                         <Bar dataKey="workers" name="İşçi-Gün" fill={CORPORATE_COLORS.primary} />
                         <Bar dataKey="hours" name="Çalışma Saati" fill={CORPORATE_COLORS.secondary} />
                       </BarChart>
@@ -1765,12 +1770,12 @@ export default function Reports() {
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={budgetAnalysis.byProject.slice(0, 10)}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
-                        <YAxis tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`} />
+                        <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={chartTickStyle} />
+                        <YAxis tickFormatter={formatChartCurrency} tick={chartTickStyle} width={70} />
                         <Tooltip 
                           formatter={(value: number) => formatCurrency(value)}
                         />
-                        <Legend />
+                        <Legend wrapperStyle={chartLegendStyle} />
                         <Bar dataKey="plannedBudget" name="Planlanan" fill={CORPORATE_COLORS.primary} />
                         <Bar dataKey="actualSpent" name="Gerçekleşen" fill={CORPORATE_COLORS.success} />
                       </BarChart>
@@ -2111,15 +2116,13 @@ export default function Reports() {
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={cashflowData.months}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`} />
+                        <XAxis dataKey="month" tick={chartTickStyle} />
+                        <YAxis tickFormatter={formatChartCurrency} tick={chartTickStyle} width={70} />
                         <Tooltip
-                          formatter={(value: number) =>
-                            `${value.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`
-                          }
+                          formatter={(value: number) => formatCurrency(value)}
                           labelFormatter={(label) => `Dönem: ${label}`}
                         />
-                        <Legend />
+                        <Legend wrapperStyle={chartLegendStyle} />
                         <Bar dataKey="planned" name="Planlanan Net" fill="hsl(var(--primary))" />
                         <Bar dataKey="actual" name="Gerçekleşen Net" fill="hsl(var(--accent))" />
                       </BarChart>
@@ -2141,14 +2144,12 @@ export default function Reports() {
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={cashflowData.months}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`} />
+                        <XAxis dataKey="month" tick={chartTickStyle} />
+                        <YAxis tickFormatter={formatChartCurrency} tick={chartTickStyle} width={70} />
                         <Tooltip
-                          formatter={(value: number) =>
-                            `${value.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} TL`
-                          }
+                          formatter={(value: number) => formatCurrency(value)}
                         />
-                        <Legend />
+                        <Legend wrapperStyle={chartLegendStyle} />
                         <Line
                           type="monotone"
                           dataKey="cumulative"
