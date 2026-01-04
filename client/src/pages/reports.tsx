@@ -51,7 +51,7 @@ const normalizeWeather = (weather: string | null | undefined): string => {
 export default function Reports() {
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("financial");
-  const [dateFilter, setDateFilter] = useState<DateFilter>("this-year");
+  const [dateFilter, setDateFilter] = useState<DateFilter>("all");
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
   
