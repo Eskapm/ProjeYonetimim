@@ -229,8 +229,8 @@
    with fluid typography (clamp-based)
    ============================================ */
 
-/* Fluid typography CSS custom properties */
-:root {
+/* Fluid typography CSS custom properties - added to html for clean override */
+html {
   /* Fluid font sizes using clamp() - automatically scales between min and max */
   --font-xs: clamp(0.65rem, 0.6rem + 0.25vw, 0.75rem);
   --font-sm: clamp(0.75rem, 0.7rem + 0.3vw, 0.875rem);
