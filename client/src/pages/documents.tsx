@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useProjectContext } from "@/hooks/use-project-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -52,9 +53,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export default function Documents() {
+  const { activeProjectId, setActiveProjectId } = useProjectContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [projectFilter, setProjectFilter] = useState("all");
+  
+  // Use global project context - convert null to "all" for UI compatibility
+  const projectFilter = activeProjectId || "all";
+  const setProjectFilter = (id: string) => {
+    setActiveProjectId(id === "all" ? null : id);
+  };
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingDocument, setEditingDocument] = useState<Document | null>(null);
   const [deleteDocumentId, setDeleteDocumentId] = useState<string | null>(null);

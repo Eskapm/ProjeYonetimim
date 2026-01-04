@@ -40,19 +40,19 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function BudgetPage() {
   const { toast } = useToast();
-  const { activeProjectId } = useProjectContext();
+  const { activeProjectId, setActiveProjectId } = useProjectContext();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedProject, setSelectedProject] = useState<string>("all");
   const [selectedIsGrubu, setSelectedIsGrubu] = useState<string>("all");
   const [selectedRayicGrubu, setSelectedRayicGrubu] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
 
-  // Sync filter with active project
-  useEffect(() => {
-    setSelectedProject(activeProjectId || "all");
-  }, [activeProjectId]);
+  // Use global project context - convert null to "all" for UI compatibility
+  const selectedProject = activeProjectId || "all";
+  const setSelectedProject = (id: string) => {
+    setActiveProjectId(id === "all" ? null : id);
+  };
 
   const { data: items = [], isLoading: itemsLoading } = useQuery<BudgetItem[]>({
     queryKey: ["/api/budget-items"],

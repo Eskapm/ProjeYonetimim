@@ -70,21 +70,21 @@ import {
 } from "@/components/ui/table";
 
 export default function Invoices() {
+  const { activeProjectId, setActiveProjectId } = useProjectContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
-  const [selectedProject, setSelectedProject] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [deleteInvoiceId, setDeleteInvoiceId] = useState<string | null>(null);
   const [createTransaction, setCreateTransaction] = useState(false);
   const { toast } = useToast();
-  const { activeProjectId } = useProjectContext();
 
-  // Sync filter with active project
-  useEffect(() => {
-    setSelectedProject(activeProjectId || "all");
-  }, [activeProjectId]);
+  // Use global project context - convert null to "all" for UI compatibility
+  const selectedProject = activeProjectId || "all";
+  const setSelectedProject = (id: string) => {
+    setActiveProjectId(id === "all" ? null : id);
+  };
 
   // Fetch invoices
   const { data: invoices = [], isLoading: isLoadingInvoices, error: invoicesError } = useQuery<Invoice[]>({

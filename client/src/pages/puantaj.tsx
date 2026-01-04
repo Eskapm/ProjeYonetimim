@@ -68,8 +68,8 @@ interface PendingEntry {
 }
 
 export default function Puantaj() {
+  const { activeProjectId, setActiveProjectId } = useProjectContext();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedProject, setSelectedProject] = useState("all");
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -77,8 +77,13 @@ export default function Puantaj() {
   const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null);
   const [viewingEntry, setViewingEntry] = useState<(Timesheet & { projectName: string; subcontractorName: string }) | null>(null);
   const { toast } = useToast();
-  const { activeProjectId } = useProjectContext();
   const [, setLocation] = useLocation();
+
+  // Use global project context - convert null to "all" for UI compatibility
+  const selectedProject = activeProjectId || "all";
+  const setSelectedProject = (id: string) => {
+    setActiveProjectId(id === "all" ? null : id);
+  };
 
   // Batch entry state
   const [pendingEntries, setPendingEntries] = useState<PendingEntry[]>([]);
@@ -89,11 +94,6 @@ export default function Puantaj() {
   const [currentHours, setCurrentHours] = useState("");
   const [currentNotes, setCurrentNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-
-  // Sync filter with active project
-  useEffect(() => {
-    setSelectedProject(activeProjectId || "all");
-  }, [activeProjectId]);
 
   // Fetch timesheet entries
   const { data: timesheets = [], isLoading: isLoadingTimesheets, error: timesheetsError } = useQuery<Timesheet[]>({

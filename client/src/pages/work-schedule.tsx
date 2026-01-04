@@ -100,19 +100,19 @@ const statusIcons: Record<string, typeof Clock> = {
 
 export default function WorkSchedule() {
   const { toast } = useToast();
-  const { activeProjectId } = useProjectContext();
+  const { activeProjectId, setActiveProjectId } = useProjectContext();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
-  const [projectFilter, setProjectFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("dueDate");
 
-  // Sync filter with active project
-  useEffect(() => {
-    setProjectFilter(activeProjectId || "all");
-  }, [activeProjectId]);
+  // Use global project context - convert null to "all" for UI compatibility
+  const projectFilter = activeProjectId || "all";
+  const setProjectFilter = (id: string) => {
+    setActiveProjectId(id === "all" ? null : id);
+  };
 
   const { data: tasks, isLoading: isLoadingTasks } = useQuery<Task[]>({
     queryKey: ["/api/tasks"],
@@ -350,22 +350,23 @@ export default function WorkSchedule() {
               <p className="text-sm text-muted-foreground mt-2">Görev yönetimi ve takip sistemi</p>
             </div>
             <div className="flex gap-2">
-              <ExportToExcel
-                data={filteredAndSortedTasks.map(task => ({
-                  "Görev": task.title,
-                  "Proje": getProjectName(task.projectId),
-                  "Durum": task.status,
-                  "Öncelik": task.priority,
-                  "İlerleme %": task.progress,
-                  "Atanan": task.assignedTo || "-",
-                  "Başlangıç": task.startDate || "-",
-                  "Bitiş": task.dueDate || "-",
-                  "Açıklama": task.description || "-",
-                }))}
-                filename="is-programi"
-                sheetName="Görevler"
-                className="no-print"
-              />
+              <div className="no-print">
+                <ExportToExcel
+                  data={filteredAndSortedTasks.map(task => ({
+                    "Görev": task.title,
+                    "Proje": getProjectName(task.projectId),
+                    "Durum": task.status,
+                    "Öncelik": task.priority,
+                    "İlerleme %": task.progress,
+                    "Atanan": task.assignedTo || "-",
+                    "Başlangıç": task.startDate || "-",
+                    "Bitiş": task.dueDate || "-",
+                    "Açıklama": task.description || "-",
+                  }))}
+                  filename="is-programi"
+                  sheetName="Görevler"
+                />
+              </div>
               <PrintButton className="no-print" />
               <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
               <DialogTrigger asChild>

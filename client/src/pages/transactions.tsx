@@ -68,9 +68,9 @@ interface TransactionWithProject extends Transaction {
 }
 
 export default function Transactions() {
+  const { activeProjectId, activeProject, setActiveProjectId } = useProjectContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [selectedProject, setSelectedProject] = useState("all");
   const [isGrubuFilter, setIsGrubuFilter] = useState("all");
   const [rayicGrubuFilter, setRayicGrubuFilter] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -79,12 +79,12 @@ export default function Transactions() {
   const [createInvoice, setCreateInvoice] = useState(false);
   const [invoiceTaxRate, setInvoiceTaxRate] = useState("20");
   const { toast } = useToast();
-  const { activeProjectId, activeProject } = useProjectContext();
 
-  // Sync filter with active project
-  useEffect(() => {
-    setSelectedProject(activeProjectId || "all");
-  }, [activeProjectId]);
+  // Use global project context - convert null to "all" for UI compatibility
+  const selectedProject = activeProjectId || "all";
+  const setSelectedProject = (id: string) => {
+    setActiveProjectId(id === "all" ? null : id);
+  };
 
   const { data: transactions = [], isLoading: isLoadingTransactions, error: transactionsError } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],

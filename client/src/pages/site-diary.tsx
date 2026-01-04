@@ -55,13 +55,18 @@ import { Label } from "@/components/ui/label";
 const weatherOptions = ["Güneşli", "Bulutlu", "Yağmurlu", "Karlı"] as const;
 
 export default function SiteDiary() {
+  const { activeProjectId, activeProject, setActiveProjectId } = useProjectContext();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedProject, setSelectedProject] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<SiteDiary | null>(null);
   const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null);
   const { toast } = useToast();
-  const { activeProjectId, activeProject } = useProjectContext();
+
+  // Use global project context - convert null to "all" for UI compatibility
+  const selectedProject = activeProjectId || "all";
+  const setSelectedProject = (id: string) => {
+    setActiveProjectId(id === "all" ? null : id);
+  };
   const [, setLocation] = useLocation();
   const searchString = useSearch();
   

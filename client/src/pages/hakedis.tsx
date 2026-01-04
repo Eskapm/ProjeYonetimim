@@ -68,8 +68,8 @@ import { PrintButton } from "@/components/print-button";
 import { ExportToExcel } from "@/components/export-to-excel";
 
 export default function Hakedis() {
+  const { activeProjectId, activeProject, setActiveProjectId } = useProjectContext();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedProject, setSelectedProject] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<ProgressPayment | null>(null);
@@ -77,12 +77,12 @@ export default function Hakedis() {
   const [selectedTransactionIds, setSelectedTransactionIds] = useState<string[]>([]);
   const [viewingPaymentDetail, setViewingPaymentDetail] = useState<ProgressPayment | null>(null);
   const { toast} = useToast();
-  const { activeProjectId, activeProject } = useProjectContext();
 
-  // Sync filter with active project
-  useEffect(() => {
-    setSelectedProject(activeProjectId || "all");
-  }, [activeProjectId]);
+  // Use global project context - convert null to "all" for UI compatibility
+  const selectedProject = activeProjectId || "all";
+  const setSelectedProject = (id: string) => {
+    setActiveProjectId(id === "all" ? null : id);
+  };
 
   // Fetch progress payments
   const { data: payments = [], isLoading: isLoadingPayments, error: paymentsError } = useQuery<ProgressPayment[]>({

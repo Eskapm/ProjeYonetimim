@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { useProjectContext } from "@/hooks/use-project-context";
 import { PrintButton } from "@/components/print-button";
 import { PrintHeader } from "@/components/print-header";
 import { StatsCard } from "@/components/stats-card";
@@ -50,13 +51,19 @@ const normalizeWeather = (weather: string | null | undefined): string => {
 
 export default function Reports() {
   const [, setLocation] = useLocation();
+  const { activeProjectId, setActiveProjectId } = useProjectContext();
   const [activeTab, setActiveTab] = useState("financial");
   const [dateFilter, setDateFilter] = useState<DateFilter>("all");
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
   
-  // Advanced multi-level filters - default to "all" (Tüm Projeler)
-  const [selectedProjectId, setSelectedProjectId] = useState<string>("all");
+  // Use global project context - convert null to "all" for UI compatibility
+  const selectedProjectId = activeProjectId || "all";
+  const setSelectedProjectId = (id: string) => {
+    setActiveProjectId(id === "all" ? null : id);
+  };
+  
+  // Advanced multi-level filters
   const [selectedWorkGroup, setSelectedWorkGroup] = useState<string>("all");
   const [selectedCostGroup, setSelectedCostGroup] = useState<string>("all");
 
