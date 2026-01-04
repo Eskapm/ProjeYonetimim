@@ -239,6 +239,7 @@ export const users = pgTable("users", {
   companyName: text("company_name"),
   country: text("country"),
   city: text("city"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
