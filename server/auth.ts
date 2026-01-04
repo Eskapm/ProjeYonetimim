@@ -72,17 +72,12 @@ export function setupAuth(app: Express) {
     done(null, user);
   });
 
-  // Kayıt sistemi - Sadece development ortamında aktif
+  // Kayıt sistemi
   app.post("/api/register", async (req, res) => {
-    // Production ortamında kayıt kapalı
-    if (process.env.NODE_ENV === "production") {
-      return res.status(403).send("Kayıt sistemi kapatılmıştır. Yönetici ile iletişime geçin.");
-    }
-
-    const { username, password } = req.body;
+    const { username, password, fullName, email, companyName, country, city } = req.body;
     
-    if (!username || !password) {
-      return res.status(400).send("Kullanıcı adı ve şifre gereklidir.");
+    if (!username || !password || !fullName || !email || !country || !city) {
+      return res.status(400).send("Zorunlu alanları doldurunuz.");
     }
 
     const existingUser = await storage.getUserByUsername(username);
@@ -94,6 +89,11 @@ export function setupAuth(app: Express) {
     const user = await storage.createUser({
       username,
       password: hashedPassword,
+      fullName,
+      email,
+      companyName,
+      country,
+      city,
     });
 
     // Remove password from response
