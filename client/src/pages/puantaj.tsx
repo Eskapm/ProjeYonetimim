@@ -79,9 +79,17 @@ export default function Puantaj() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  // Use global project context - convert null to "all" for UI compatibility
-  const selectedProject = activeProjectId || "all";
+  // Local state synced with global context for immediate UI updates
+  const [selectedProject, setSelectedProjectLocal] = useState<string>(activeProjectId || "all");
+  
+  // Sync from context to local state
+  useEffect(() => {
+    setSelectedProjectLocal(activeProjectId || "all");
+  }, [activeProjectId]);
+  
+  // Update both local state and context when user changes selection
   const setSelectedProject = (id: string) => {
+    setSelectedProjectLocal(id);
     setActiveProjectId(id === "all" ? null : id);
   };
 

@@ -57,9 +57,17 @@ export default function Reports() {
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
   
-  // Use global project context - convert null to "all" for UI compatibility
-  const selectedProjectId = activeProjectId || "all";
+  // Local state synced with global context for immediate UI updates
+  const [selectedProjectId, setSelectedProjectIdLocal] = useState<string>(activeProjectId || "all");
+  
+  // Sync from context to local state
+  useEffect(() => {
+    setSelectedProjectIdLocal(activeProjectId || "all");
+  }, [activeProjectId]);
+  
+  // Update both local state and context when user changes selection
   const setSelectedProjectId = (id: string) => {
+    setSelectedProjectIdLocal(id);
     setActiveProjectId(id === "all" ? null : id);
   };
   

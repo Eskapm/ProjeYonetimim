@@ -108,9 +108,17 @@ export default function WorkSchedule() {
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("dueDate");
 
-  // Use global project context - convert null to "all" for UI compatibility
-  const projectFilter = activeProjectId || "all";
+  // Local state synced with global context for immediate UI updates
+  const [projectFilter, setProjectFilterLocal] = useState<string>(activeProjectId || "all");
+  
+  // Sync from context to local state
+  useEffect(() => {
+    setProjectFilterLocal(activeProjectId || "all");
+  }, [activeProjectId]);
+  
+  // Update both local state and context when user changes selection
   const setProjectFilter = (id: string) => {
+    setProjectFilterLocal(id);
     setActiveProjectId(id === "all" ? null : id);
   };
 
